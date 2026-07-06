@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.occupation</groupId>
+        <artifactId>occupation-platform</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>occupation-web</artifactId>
+    <packaging>jar</packaging>
+    <name>occupation-web</name>
+    <description>启动模块 — SpringBoot 入口、全局配置</description>
+
+    <dependencies>
+        <!-- 依赖全部子模块 -->
+        <dependency>
+            <groupId>com.occupation</groupId>
+            <artifactId>occupation-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.occupation</groupId>
+            <artifactId>occupation-auth</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.occupation</groupId>
+            <artifactId>occupation-crawler</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.occupation</groupId>
+            <artifactId>occupation-analysis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.occupation</groupId>
+            <artifactId>occupation-report</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.occupation</groupId>
+            <artifactId>occupation-recommend</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.occupation</groupId>
+            <artifactId>occupation-api</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
