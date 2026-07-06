@@ -4,7 +4,7 @@
 > 包含：模块状态、数据库 Schema、API 接口、部署组件。
 
 > **最后更新**: 2026-07-06
-> **状态**: P1 Step 1.1 已完成 — Maven 多模块骨架就绪
+> **状态**: P1 Step 1.2 已完成 — 统一响应 + 异常处理 + 健康检查
 
 ---
 
@@ -12,14 +12,14 @@
 
 | 模块                        | 状态     | 说明                         |
 | --------------------------- | -------- | ---------------------------- |
-| occupation-common           | ✅ 已创建 | POM + 包结构就绪，待 Step 1.2-1.4 实现公共类 |
+| occupation-common           | ✅ 已实现 | Result<T> + BizException + GlobalExceptionHandler |
 | occupation-auth             | ✅ 已创建 | POM + 包结构就绪，待 Step 1.5 实现认证 |
 | occupation-crawler          | ✅ 已创建 | POM + 包结构就绪，待 Step 1.7-1.9 实现采集 |
 | occupation-analysis         | ✅ 已创建 | POM + 包结构就绪，待 P2 实现分析 |
 | occupation-report           | ✅ 已创建 | POM + 包结构就绪，待 P3 实现报告 |
 | occupation-recommend        | ✅ 已创建 | POM + 包结构就绪，待 P4 实现推荐 |
 | occupation-api              | ✅ 已创建 | POM + 包结构就绪，待 P5 实现对外 API |
-| occupation-web              | ✅ 已创建 | Application.java + application.yml 已就绪 |
+| occupation-web              | ✅ 已运行 | Application + HealthController + 2 项测试通过 |
 | occupation-web-ui (Vue 3)   | ⏳ 待开发 | P3 Step 3.1 |
 
 ---
@@ -84,11 +84,12 @@ occupation-web (启动入口)
 ## 五、API 接口清单
 
 > 完整定义见 `implementation-plan.md` 各步骤。
-> 当前实现数：0
+> 当前已实现：2
 
-| 接口 | 方法 | 说明 | 所属 Step |
-|---|---|---|---|
-| GET /api/health | GET | 健康检查 | Step 1.2 |
+| 接口 | 方法 | 说明 | 所属 Step | 状态 |
+|---|---|---|---|---|
+| GET /api/health | GET | 健康检查 | Step 1.2 | ✅ |
+| GET /api/health/error | GET | 异常测试（验证全局异常处理器） | Step 1.2 | ✅ |
 
 ---
 
@@ -114,3 +115,4 @@ occupation-web (启动入口)
 | ---------- | ---------------- | --------- |
 | 2026-07-06 | 初始架构骨架创建 | 设计阶段  |
 | 2026-07-06 | P1 Step 1.1 完成：8 模块 Maven 项目 + docker-compose + nginx + application.yml | Step 1.1 |
+| 2026-07-06 | P1 Step 1.2 完成：Result<T> + BizException + GlobalExceptionHandler + HealthController + 2 项测试通过 | Step 1.2 |
