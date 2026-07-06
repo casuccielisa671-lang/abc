@@ -1,0 +1,38 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+.codebuddy/
+
+# Maven
+target/
+*.jar
+*.war
+
+# Node
+node_modules/
+dist/
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Docker
+docker-compose.override.yml
+
+# Temp
+*.tmp
+*.swp
+*.swo
