@@ -21,17 +21,21 @@
             <artifactId>occupation-common</artifactId>
         </dependency>
 
+        <!-- 跨模块：调用 JobDetailService 提供开放职位查询 -->
+        <dependency>
+            <groupId>com.occupation</groupId>
+            <artifactId>occupation-analysis</artifactId>
+        </dependency>
+
         <!-- Knife4j -->
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
             <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
         </dependency>
 
-        <!-- OAuth2 资源服务器（拦截 /api/open/**） -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
-        </dependency>
+        <!-- 说明：开放 API 鉴权采用轻量方案（apiKey+apiSecret 换 Redis 临时 Token + 拦截器校验），
+             不引入 OAuth2 资源服务器，降低 12 天实训周期内的配置复杂度；
+             若后续需要标准 OAuth2，可替换 ApiTokenInterceptor 为 spring-boot-starter-oauth2-resource-server -->
     </dependencies>
 
 </project>

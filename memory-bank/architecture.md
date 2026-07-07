@@ -3,8 +3,11 @@
 > 本文档记录项目当前的架构状态，由 AI 在每完成一个 Step 后自动更新。
 > 包含：模块状态、数据库 Schema、API 接口、部署组件。
 
-> **最后更新**: 2026-07-07
-> **状态**: P2 已完成 — A组 analysis 模块实现完毕（Dashboard + 职位查询 API）
+> **最后更新**: 2026-07-07（深度优化轮）
+> **状态**: 全模块框架就绪 — 数据管道(采集→清洗→统计)贯通 + report/recommend/api/auth 框架落地
+> **⚠️ 重要**: 本轮起以 `docs/项目开发说明书.md` 为唯一权威开发指南（含架构、分工、待办清单）；
+> 技术栈已收敛：HDFS/Hive/HBase/Neo4j/ES 移出必做范围，Spark 以可插拔接口预留（AnalysisJobService），
+> 调度默认 Spring @Scheduled（XXL-Job 改为 xxl.job.enabled 开关，默认关闭）。
 
 ---
 
@@ -16,9 +19,9 @@
 | occupation-auth             | ✅ 已实现 | JWT 签发/校验 + 登录接口 + JwtAuthenticationFilter + SecurityConfig |
 | occupation-crawler          | ✅ 已实现 | WebMagic 爬虫框架 + CrawlerTask/CrawlerLog + 模拟+真实采集 + XXL-Job Handler |
 | occupation-analysis         | ✅ 已实现 | Dashboard 5维度查询 + 职位分页查询 + Controller API |
-| occupation-report           | ✅ 骨架就绪 | Entity+Mapper+依赖就绪，待 P3 实现报告 |
-| occupation-recommend        | ✅ 骨架就绪 | Entity+Mapper+依赖就绪，待 P4 实现推荐 |
-| occupation-api              | ✅ 骨架就绪 | Entity+Mapper+Knife4j+OAuth2 依赖就绪，待 P5 实现 |
+| occupation-report           | ✅ 框架落地 | 模板 CRUD + 生成引擎(六步) + AI 摘要(LLM+降级) + PDF/Word 导出器 + 下载接口 |
+| occupation-recommend        | ✅ 框架落地 | 画像 CRUD + 匹配算法(四维打分) + 推送 + 行为闭环 + 教师/HR 接口 + 每日推送调度 |
+| occupation-api              | ✅ 框架落地 | Token 签发(Redis) + 校验/限流拦截器 + 开放数据接口(职位/大盘/技能/行业) |
 | occupation-web              | ✅ 已运行 | Application + HealthController + 2 项测试通过 |
 | occupation-web-ui (Vue 3)   | ✅ 脚手搭好 | Vite + 路由 + 16 页面占位，待填具体页面 |
 
@@ -178,3 +181,4 @@ com.occupation.<模块名>
 | 2026-07-07 | P1 Step 1.9 完成：采集任务管理 API（CRUD + 启停 + 日志查询）+ XXL-Job 调度集成（定时扫描/手动触发/全停）| Step 1.9 |
 | 2026-07-07 | 骨架代码完成：8 Entity + 8 Mapper + 2 跨模块 Service 接口 + 4 DTO/VO + POM 依赖更新 + api_client 表 + Vue 3 脚手架 | 骨架 |
 | 2026-07-07 | P2 A组完成：AnalysisServiceImpl + JobDetailServiceImpl + AnalysisController（Dashboard + 职位查询 API） | P2 |
+| 2026-07-07 | **深度优化轮**：①基础设施修补（common 补 Redis/Security 依赖、JWT 白名单放行 /api/open+文档、@PreAuthorize 启用、UserContextHolder、PageResult、XXL-Job 条件装配、HealthControllerTest 修复）②analysis：JobDataCleanListener(Kafka 双消费组)+DataCleanService(清洗规则)+AnalysisJobService(5维度统计)+AnalysisScheduler+/rebuild+saveJob/getJobById/removeJob ③report：模板 CRUD+生成引擎+AiSummaryService(LLM+降级)+Pdf/WordExporter+下载 ④recommend：画像+JobMatchService(40/25/20/15打分)+推送+行为闭环+教师/HR 接口+RecommendScheduler ⑤api：OpenAuthService(Redis Token)+双拦截器(鉴权/限流)+OpenDataService ⑥auth：UserController 用户管理 ⑦新增 docs/项目开发说明书.md（权威指南）。全模块 mvn compile + 测试通过 | 深度优化 |

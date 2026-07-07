@@ -59,6 +59,24 @@ app:
   kafka:
     # 开发环境不自动创建 Kafka Topic（避免未启动 Kafka 时启动失败）
     auto-create-topics: false
+  scheduler:
+    # 内置定时任务总开关（分析汇总 / 每日推荐推送 / 定时报告）
+    enabled: true
+  report:
+    # 生成的报告文件落盘目录
+    storage-path: ${REPORT_STORAGE_PATH:./data/reports}
+  ai:
+    # LLM 智能报告摘要（差异化亮点）。关闭时报告引擎自动降级为模板化文字
+    enabled: false
+    # OpenAI 兼容接口（DeepSeek / 通义千问 / 智谱均可），密钥用环境变量注入，严禁硬编码
+    base-url: ${AI_BASE_URL:https://api.deepseek.com/v1}
+    api-key: ${AI_API_KEY:}
+    model: ${AI_MODEL:deepseek-chat}
+  open-api:
+    # 开放 API Token 有效期（秒）
+    token-ttl: 7200
+    # 每个 apiKey 每分钟请求上限（超出返回 429）
+    rate-limit-per-minute: 60
 
 # ========== JWT 配置 ==========
 jwt:
@@ -71,9 +89,10 @@ logging:
     com.occupation: INFO
     com.baomidou.mybatisplus: DEBUG
 
-# ========== XXL-Job 调度器 ==========
+# ========== XXL-Job 调度器（可选，默认关闭；开启需先部署 xxl-job-admin） ==========
 xxl:
   job:
+    enabled: false
     admin:
       # XXL-Job Admin 管理端地址（需单独部署）
       addresses: ${XXL_JOB_ADMIN:http://localhost:8081/xxl-job-admin}

@@ -40,6 +40,18 @@
             <artifactId>hutool-all</artifactId>
         </dependency>
 
+        <!-- Redis（缓存、开放 API Token、限流计数器） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <!-- Spring Security（各业务模块 Controller 使用 @PreAuthorize 做角色控制） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
         <!-- Fastjson -->
         <dependency>
             <groupId>com.alibaba</groupId>
