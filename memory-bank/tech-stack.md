@@ -84,6 +84,27 @@
 - 模块间通过接口隔离（API 模块定义接口，Impl 模块实现）。
 - 当某个模块需要独立扩缩容时，再拆分为独立微服务（Spring Cloud 或 K8s Native）。
 
+**⭐ MVC 分层架构 — 所有模块统一遵循**：
+
+每个业务模块内部采用标准 MVC（Model-View-Controller）分层：
+
+```
+com.occupation.<模块名>
+├── controller/          ← Controller 层：接收请求、参数校验、调用 Service、封装 Result<T>
+├── service/             ← Service 接口：定义业务逻辑契约
+├── service/impl/        ← Service 实现：业务逻辑实现 + 事务管理
+├── mapper/              ← Mapper 接口：继承 MyBatis-Plus BaseMapper，数据访问
+├── entity/              ← 数据库实体：@TableName 映射，纯数据对象
+├── dto/                 ← 请求体：前端入参，含 JSR-303 校验注解
+├── vo/                  ← 响应体：出参组装，不含业务逻辑
+└── config/              ← 模块配置：如多租户插件、拦截器等
+```
+
+**调用链路（不可越级）：**
+`Controller → Service(接口) → ServiceImpl → Mapper → DB`
+
+> 详细规范见 `AGENTS.md` 规则5。
+
 ### 2.3 分析辅助服务（Python）
 
 | 选择       | 版本  | 理由                                         |

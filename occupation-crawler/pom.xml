@@ -21,6 +21,18 @@
             <artifactId>occupation-common</artifactId>
         </dependency>
 
+        <!-- WebMagic 爬虫框架 -->
+        <dependency>
+            <groupId>us.codecraft</groupId>
+            <artifactId>webmagic-core</artifactId>
+            <version>0.10.1</version>
+        </dependency>
+        <dependency>
+            <groupId>us.codecraft</groupId>
+            <artifactId>webmagic-extension</artifactId>
+            <version>0.10.1</version>
+        </dependency>
+
         <!-- XXL-Job -->
         <dependency>
             <groupId>com.xuxueli</groupId>

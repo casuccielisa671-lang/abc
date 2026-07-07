@@ -12,7 +12,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${DB_URL:jdbc:mysql://localhost:3306/occupation?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false}
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:root}
+    password: ${DB_PASSWORD:Smx123218023..}
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
       initial-size: 5
@@ -51,6 +51,14 @@ mybatis-plus:
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0
+    # 禁用 DDL 自动创建（已有 init.sql 管理表结构）
+    enable-ddl: false
+
+# ========== 业务能力开关 ==========
+app:
+  kafka:
+    # 开发环境不自动创建 Kafka Topic（避免未启动 Kafka 时启动失败）
+    auto-create-topics: false
 
 # ========== JWT 配置 ==========
 jwt:
@@ -62,3 +70,16 @@ logging:
   level:
     com.occupation: INFO
     com.baomidou.mybatisplus: DEBUG
+
+# ========== XXL-Job 调度器 ==========
+xxl:
+  job:
+    admin:
+      # XXL-Job Admin 管理端地址（需单独部署）
+      addresses: ${XXL_JOB_ADMIN:http://localhost:8081/xxl-job-admin}
+    accessToken: ${XXL_JOB_TOKEN:}
+    executor:
+      appname: occupation-crawler-executor
+      port: ${XXL_JOB_EXECUTOR_PORT:9999}
+      logpath: ./logs/xxl-job
+      logretentiondays: 7

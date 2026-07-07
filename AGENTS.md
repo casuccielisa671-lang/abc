@@ -52,13 +52,42 @@
 
 ```
 规则5:
-  名称: "分层架构"
+  名称: "MVC 分层架构"
   触发: 编写后端代码时
   内容: >
-    Controller → Service → Mapper 严格分层。
-    Controller 只做参数校验和响应封装，不写业务逻辑。
-    Service 层处理业务逻辑，通过接口定义（如 JobService），实现类放在 impl 包下。
-    使用 MyBatis-Plus 的 BaseMapper，减少手写 SQL。
+    本项目采用标准 MVC（Model-View-Controller）分层架构，每个业务模块内部按以下包结构组织代码：
+
+    【包结构约定 — 以 occupation-web 为例】
+    com.occupation.web
+    ├── controller/          ← Controller 层（接收 HTTP 请求）
+    ├── service/             ← Service 接口（业务逻辑定义）
+    ├── service/impl/        ← Service 实现（业务逻辑实现）
+    ├── mapper/              ← Mapper 接口（MyBatis-Plus 数据访问）
+    ├── entity/              ← 数据库实体（映射数据表）
+    ├── dto/                 ← 请求体对象（入参，如 CreateUserDTO）
+    ├── vo/                  ← 响应体对象（出参，如 UserProfileVO）
+    └── config/              ← 本模块配置类（如多租户插件配置）
+
+    【各层职责边界】
+    Controller → 只做：接收参数、@Valid 校验、调用 Service、封装 Result<T> 返回
+                 严禁：写业务逻辑、直接调 Mapper、拼装 SQL
+    Service   → 只做：业务逻辑编排、事务管理（@Transactional）、调用 Mapper/其他 Service
+                 严禁：操作 HttpServletRequest/Response、直接返回 JSON 字符串
+    Mapper    → 只做：数据库 CRUD（继承 MyBatis-Plus BaseMapper）、自定义 SQL 注解
+                 严禁：写业务判断逻辑、调用外部 API
+    Entity    → 只做：字段映射、@TableName/@TableId 注解
+                 严禁：包含业务方法（那是 Service 的职责）
+    DTO       → 只做：接收前端入参，定义 @NotNull/@NotBlank 校验注解
+    VO        → 只做：组装出参数据，不包含任何业务逻辑
+
+    【调用链路】
+    前端请求 → Controller → Service(接口) → ServiceImpl → Mapper → 数据库
+                    ↓
+                 Result<T> 封装 → JSON 响应
+
+    【跨模块调用】
+    模块间通过 Service 接口调用（如 occupation-report 调用 occupation-analysis 的 AnalysisService）。
+    不跨模块直接调 Mapper。
 
 规则6:
   名称: "多租户数据隔离"
