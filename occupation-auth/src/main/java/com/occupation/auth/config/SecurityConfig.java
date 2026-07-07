@@ -21,6 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  */
 @Configuration
 @EnableWebSecurity
+@org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -40,6 +41,10 @@ public class SecurityConfig {
             // 权限配置
             .authorizeRequests()
             .antMatchers("/api/auth/login", "/api/health/**").permitAll()
+            // 对外开放 API：由 occupation-api 模块的 ApiTokenInterceptor 独立鉴权（apiKey 换 Token）
+            .antMatchers("/api/open/**").permitAll()
+            // Knife4j / OpenAPI 接口文档
+            .antMatchers("/doc.html", "/v3/api-docs/**", "/webjars/**", "/favicon.ico").permitAll()
             .anyRequest().authenticated()
             .and()
             // 注册 JWT 过滤器（在 Spring Security 用户名密码过滤器之前）

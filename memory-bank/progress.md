@@ -48,3 +48,22 @@
 | A4 | RedisCacheConfig | ⏭️ 跳过（需 Redis 依赖） |
 
 > **A 组 100% 完成**：`mvn compile` 通过 ✅，B/C 组可基于此并行开工。
+
+---
+
+## 深度优化轮 — 2026-07-07
+
+> 详见 `docs/项目开发说明书.md`（本轮起的唯一权威开发指南，含架构详解、待办清单、四人分工）。
+
+| 类别 | 内容 | 状态 |
+|---|---|---|
+| 技术栈收敛 | HDFS/Hive/HBase/Neo4j/ES 移出必做；Spark 改为 AnalysisJobService 可插拔预留；XXL-Job → @Scheduled（开关保留） | ✅ |
+| 基础设施修补 | Redis/Security 依赖、JWT 白名单、@PreAuthorize、UserContextHolder、PageResult、测试修复 | ✅ |
+| analysis | 清洗链路（Kafka 双消费组 + 清洗规则 + 存量补偿）+ 5 维度统计引擎 + 调度 + 手动重算 + 职位写入口 | ✅ |
+| report | 模板 CRUD + 生成引擎六步流程 + AI 摘要（LLM+降级）+ PDF/Word 导出 + 下载 | ✅ 框架 |
+| recommend | 画像 + 匹配算法（四维打分/理由/缺失技能）+ 推送 + 行为闭环 + 教师/HR 接口 + 每日推送 | ✅ 框架 |
+| api | Redis Token 鉴权 + 限流拦截器 + 开放数据接口（带缓存） | ✅ 框架 |
+| auth | 管理员用户管理接口 | ✅ |
+| 验证 | `mvn clean compile` 全模块通过 + HealthControllerTest 2 项通过 | ✅ |
+
+> 剩余 TODO 均已在代码中以 `TODO(阶段-组别)` 标注，并汇总于说明书第七章（P0/P1/P2 分级）。

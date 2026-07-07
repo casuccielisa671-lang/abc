@@ -2,6 +2,7 @@ package com.occupation.auth.config;
 
 import com.occupation.auth.util.JwtUtil;
 import com.occupation.common.config.TenantContextHolder;
+import com.occupation.common.config.UserContextHolder;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,11 +39,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     /** Bearer Token 前缀 */
     private static final String BEARER_PREFIX = "Bearer ";
 
-    /** 白名单路径（无需认证） */
+    /** 白名单路径（无需认证）
+     *  /api/open/** 由 occupation-api 模块的 ApiTokenInterceptor 独立鉴权（apiKey → Token），
+     *  /doc.html、/v3/api-docs、/webjars 为 Knife4j 接口文档静态资源。 */
     private static final String[] WHITE_LIST = {
             "/api/auth/login",
             "/api/health",
-            "/api/health/error"
+            "/api/health/error",
+            "/api/open/",
+            "/doc.html",
+            "/v3/api-docs",
+            "/webjars/",
+            "/favicon.ico"
     };
 
     @Override
@@ -82,6 +90,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // 设置 Spring Security 认证信息（否则 authorizeRequests 会返回 403）
             String role = jwtUtil.getRole(jwt);
+            // 设置用户上下文（业务层通过 UserContextHolder 获取当前操作人）
+            UserContextHolder.set(jwtUtil.getUserId(jwt), role);
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             jwtUtil.getUserId(jwt), null,
@@ -94,6 +104,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } finally {
             // 请求结束后清除上下文，防止内存泄漏
             TenantContextHolder.clear();
+            UserContextHolder.clear();
             SecurityContextHolder.clearContext();
         }
     }
