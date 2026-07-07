@@ -35,3 +35,16 @@
 | Vue 3 脚手架 | ~27 文件 | Vite + Vue 3 + Element Plus + ECharts + Axios + Pinia + Vue Router，16 个占位页面 + 4 角色路由骨架 |
 
 > 骨架代码已全部通过 `mvn compile` 编译验证 ✅
+
+---
+
+## P2：大数据分析模块 — 2026-07-07
+
+| # | 文件 | 状态 |
+|---|---|---|
+| A1 | `AnalysisServiceImpl.java` — Dashboard 5维度查询（行业/城市/技能/学历/趋势） | ✅ 已完成 |
+| A2 | `JobDetailServiceImpl.java` — 职位分页查询（7种筛选 + Entity→VO） | ✅ 已完成 |
+| A3 | `AnalysisController.java` — `GET /api/analysis/dashboard` + `GET /api/analysis/jobs` | ✅ 已完成 |
+| A4 | RedisCacheConfig | ⏭️ 跳过（需 Redis 依赖） |
+
+> **A 组 100% 完成**：`mvn compile` 通过 ✅，B/C 组可基于此并行开工。

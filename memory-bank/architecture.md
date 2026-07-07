@@ -4,7 +4,7 @@
 > 包含：模块状态、数据库 Schema、API 接口、部署组件。
 
 > **最后更新**: 2026-07-07
-> **状态**: P1 Step 1.7~1.9 已完成 — 爬虫基础框架 + BOSS直聘采集器 + 采集任务管理 + XXL-Job 调度
+> **状态**: P2 已完成 — A组 analysis 模块实现完毕（Dashboard + 职位查询 API）
 
 ---
 
@@ -15,7 +15,7 @@
 | occupation-common           | ✅ 已实现 | 统一响应 + 异常处理 + BaseEntity + 多租户 + 分页 + 13张表SQL + Kafka管道 |
 | occupation-auth             | ✅ 已实现 | JWT 签发/校验 + 登录接口 + JwtAuthenticationFilter + SecurityConfig |
 | occupation-crawler          | ✅ 已实现 | WebMagic 爬虫框架 + CrawlerTask/CrawlerLog + 模拟+真实采集 + XXL-Job Handler |
-| occupation-analysis         | ✅ 骨架就绪 | Entity+Mapper+Service接口+DTO/VO 就绪，待 P2 实现分析 |
+| occupation-analysis         | ✅ 已实现 | Dashboard 5维度查询 + 职位分页查询 + Controller API |
 | occupation-report           | ✅ 骨架就绪 | Entity+Mapper+依赖就绪，待 P3 实现报告 |
 | occupation-recommend        | ✅ 骨架就绪 | Entity+Mapper+依赖就绪，待 P4 实现推荐 |
 | occupation-api              | ✅ 骨架就绪 | Entity+Mapper+Knife4j+OAuth2 依赖就绪，待 P5 实现 |
@@ -140,6 +140,8 @@ com.occupation.<模块名>
 | PUT /api/admin/crawler/task/{id}/start | PUT | 手动启动任务 | Step 1.9 | ✅ |
 | PUT /api/admin/crawler/task/{id}/stop | PUT | 停止任务 | Step 1.9 | ✅ |
 | POST /api/admin/crawler/task/mock | POST | 启动模拟爬虫（便捷测试） | Step 1.7 | ✅ |
+| GET /api/analysis/dashboard | GET | Dashboard 分析数据（行业/城市/技能/学历/趋势） | P2 | ✅ |
+| GET /api/analysis/jobs | GET | 职位分页查询（城市/行业/薪资/学历/经验/关键词） | P2 | ✅ |
 
 ---
 
@@ -175,3 +177,4 @@ com.occupation.<模块名>
 | 2026-07-07 | P1 Step 1.8 完成：BossJobPageProcessor 真实采集器 — 列表页解析（标题/公司/薪资/城市/学历/经验）+ 详情页解析（描述/技能标签）+ 分页翻页 + 反爬策略（5-15s 随机延迟）| Step 1.8 |
 | 2026-07-07 | P1 Step 1.9 完成：采集任务管理 API（CRUD + 启停 + 日志查询）+ XXL-Job 调度集成（定时扫描/手动触发/全停）| Step 1.9 |
 | 2026-07-07 | 骨架代码完成：8 Entity + 8 Mapper + 2 跨模块 Service 接口 + 4 DTO/VO + POM 依赖更新 + api_client 表 + Vue 3 脚手架 | 骨架 |
+| 2026-07-07 | P2 A组完成：AnalysisServiceImpl + JobDetailServiceImpl + AnalysisController（Dashboard + 职位查询 API） | P2 |
