@@ -19,3 +19,19 @@
 | 1.9 | 采集任务管理接口 + 调度集成 | ✅ 已完成 | 2026-07-07 |
 
 > **P1 已 100% 完成**：后端骨架 + JWT 认证 + 多租户 + Kafka 链路 + 爬虫采集 🎉
+
+---
+
+## 骨架代码（跨模块基础设施）— 2026-07-07
+
+| 类别 | 文件数 | 说明 |
+|---|---|---|
+| Entity | 8 | AnalysisResult、JobDetail、ReportTemplate、ReportRecord、SysStudentProfile、PushRecord、StudentBehavior、ApiClient |
+| Mapper | 8 | 每个 Entity 对应一个 Mapper |
+| Service 接口 | 2 | AnalysisService、JobDetailService（跨模块契约） |
+| DTO/VO | 4 | DashboardQueryDTO、DashboardVO、JobQueryDTO、JobDetailVO |
+| POM 更新 | 3 模块 | report（+freemarker/poi/flying-saucer/analysis）、recommend（+analysis）、api（+spring-boot-starter-oauth2-resource-server） |
+| SQL | +1 表 | api_client 表 + 种子数据 |
+| Vue 3 脚手架 | ~27 文件 | Vite + Vue 3 + Element Plus + ECharts + Axios + Pinia + Vue Router，16 个占位页面 + 4 角色路由骨架 |
+
+> 骨架代码已全部通过 `mvn compile` 编译验证 ✅

@@ -253,7 +253,27 @@ CREATE TABLE student_behavior (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学生行为记录表';
 
 -- ============================================================
--- 13. 系统告警表
+-- 13. API 客户端表（对外 API 鉴权）
+-- ============================================================
+DROP TABLE IF EXISTS api_client;
+CREATE TABLE api_client (
+    id          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '客户端ID',
+    tenant_id   BIGINT       NOT NULL COMMENT '所属租户ID',
+    client_name VARCHAR(100) NOT NULL COMMENT '客户端名称',
+    api_key     VARCHAR(64)  NOT NULL COMMENT 'API Key（客户端标识）',
+    api_secret  VARCHAR(255) NOT NULL COMMENT 'API Secret（加密存储）',
+    scopes      VARCHAR(200) DEFAULT NULL COMMENT '授权范围（逗号分隔）',
+    status      TINYINT      NOT NULL DEFAULT 1 COMMENT '状态：1=启用 0=禁用',
+    deleted     TINYINT      NOT NULL DEFAULT 0 COMMENT '逻辑删除',
+    create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_api_key (api_key),
+    KEY idx_tenant_id (tenant_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='API 客户端表';
+
+-- ============================================================
+-- 14. 系统告警表
 -- ============================================================
 DROP TABLE IF EXISTS sys_alert;
 CREATE TABLE sys_alert (
@@ -281,3 +301,7 @@ INSERT INTO sys_user (id, tenant_id, username, password_hash, role, real_name, s
 VALUES (1, 1, 'admin',
         '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q',
         'ADMIN', '系统管理员', 1);
+
+-- 测试用 API 客户端：client_demo / demo_secret_key_for_dev
+INSERT INTO api_client (id, tenant_id, client_name, api_key, api_secret, scopes, status)
+VALUES (1, 1, '测试客户端', 'occ_test_2026', 'demo_secret_key_for_dev', 'jobs:read,reports:read,skills:read', 1);

@@ -20,6 +20,12 @@
             <groupId>com.occupation</groupId>
             <artifactId>occupation-common</artifactId>
         </dependency>
+
+        <!-- 跨模块：调用 JobDetailService 获取职位数据 -->
+        <dependency>
+            <groupId>com.occupation</groupId>
+            <artifactId>occupation-analysis</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

@@ -1,220 +1,289 @@
-# 职业能力大数据服务平台 — 团队同步
+# 职业能力大数据服务平台 — 团队同步文档
 
-> **日期**: 2026-07-06  
-> **状态**: 设计阶段完成，尚未开始编码
-
----
-
-## 1. 项目简介
-
-搭建一套基于大数据 + AI 的职业能力分析 SaaS 平台，解决高校人才培养与就业市场之间的信息不对称问题。
-
-**核心能力**: 全量数据采集 → 大数据智能分析 → 自动化报告生成 → 个性化岗位推送 → 对外开放 API。
+> **版本**: v2.0 — 骨架代码就绪  
+> **日期**: 2026-07-07  
+> **负责人**: 你  
+> **状态**: P1 全部完成 + 骨架代码交付，即日起四人并行开发
 
 ---
 
-## 2. 文档结构
+## 0. 速查：我分到哪个模块？
+
+| 组员 | 模块 | 阶段 | 文件位置 |
+|---|---|---|---|
+| **A** | 大数据分析 | P2 | `occupation-analysis/` |
+| **B** | 报告引擎 + 对外 API | P3 + P5 | `occupation-report/` + `occupation-api/` |
+| **C** | 岗位推荐推送 + 教师/HR 后端 | P4 + P5 | `occupation-recommend/` |
+| **D** | 前端（全四端） | P3～P5 | `occupation-web-ui/` |
+
+> **前提**：A 先把 `AnalysisService` 和 `JobDetailService` 实现好，B 和 C 才能正常启动。
+
+---
+
+## 1. 项目已就绪的基础设施
+
+### 1.1 可以直接用的（无需修改）
+
+| 基础设施 | 位置 | 说明 |
+|---|---|---|
+| 多租户架构 | `occupation-common/.../config/MyBatisPlusConfig.java` | `tenant_id` 自动注入，全平台共享表（`job_detail`、`raw_job_data`、`sys_tenant`）已配置忽略 |
+| 统一响应 | `com.occupation.common.result.Result<T>` | `Result.ok(data)` / `Result.error(msg)` |
+| 全局异常 | `GlobalExceptionHandler.java` | 用 `throw new BizException("原因")` 即可 |
+| JWT 认证 | `occupation-auth/` | 登录返回 Token，前端带 `Authorization: Bearer xxx` |
+| JWT 过滤器 | `JwtAuthenticationFilter` | 已注册 Security 过滤器链，`@PermitAll`/`@PreAuthorize` 可用 |
+| Kafka 链路 | `occupation-common/.../config/Kafka*Config.java` | 生产者/消费者/Topic 全部配好 |
+| XXL-Job | `occupation-crawler/.../config/XxlJobConfig.java` | 参考 CrawlerJobHandler 写法即可 |
+| 14 张数据库表 | `occupation-common/.../sql/init.sql` | 含种子数据（admin / admin123） |
+
+### 1.2 骨架代码已交付（编译通过）
+
+每个模块的 `entity/`、`mapper/`、`service/`、`dto/`、`vo/` 目录下已有下列文件：
 
 ```
-e:\occupation\
-├── AGENTS.md                  # AI 编码规范（模块化、分层架构、多租户等硬性规则）
-├── vibe-coding-guide.md       # Vibe Coding 工作流指南
-└── memory-bank/               # 项目文档唯一来源
-    ├── design-document.md     # 产品设计文档
-    ├── tech-stack.md          # 技术选型文档
-    ├── implementation-plan.md # 实施计划（5 阶段 36 步）
-    ├── architecture.md        # 架构状态（Schema、模块、API、部署组件）
-    └── progress.md            # AI 开发进度追踪
+occupation-analysis/
+├── entity/JobDetail.java          ← 映射 job_detail 表（全平台共享）
+├── entity/AnalysisResult.java     ← 映射 analysis_result 表
+├── mapper/JobDetailMapper.java
+├── mapper/AnalysisResultMapper.java
+├── service/AnalysisService.java   ← 接口：getDashboard(DashboardQueryDTO)
+├── service/JobDetailService.java  ← 接口：queryJobs(JobQueryDTO) → Page<JobDetailVO>
+├── dto/DashboardQueryDTO.java
+├── dto/JobQueryDTO.java
+├── vo/DashboardVO.java
+└── vo/JobDetailVO.java
+
+occupation-report/
+├── entity/ReportTemplate.java     ← 继承 BaseEntity
+├── entity/ReportRecord.java       ← 继承 BaseEntity
+├── mapper/ReportTemplateMapper.java
+└── mapper/ReportRecordMapper.java
+
+occupation-recommend/
+├── entity/SysStudentProfile.java  ← 继承 BaseEntity
+├── entity/PushRecord.java
+├── entity/StudentBehavior.java
+├── mapper/SysStudentProfileMapper.java
+├── mapper/PushRecordMapper.java
+└── mapper/StudentBehaviorMapper.java
+
+occupation-api/
+├── entity/ApiClient.java          ← 继承 BaseEntity
+└── mapper/ApiClientMapper.java
+
+occupation-web-ui/ (Vue 3 脚手架)
+├── package.json                   ← Vite + Vue 3 + Element Plus + ECharts + Axios + Pinia
+├── src/router/index.js            ← 4 角色路由已配好
+├── src/api/request.js             ← Axios 拦截器已写好
+├── src/store/user.js              ← Pinia 用户状态
+├── src/components/AppLayout.vue   ← 通用布局（侧边栏+头部+内容区）
+└── src/views/                     ← 16 个占位页面，路由可跳转
+    ├── login/LoginView.vue
+    ├── admin/  5个页面 (Dashboard/CrawlerTask/ReportTemplate/ReportList/UserManage)
+    ├── student/5个页面 (StudentHome/JobDetail/Profile/Favorites/Reports)
+    ├── teacher/3个页面 (TeacherHome/Students/Suggestions)
+    └── hr/     3个页面 (HrHome/JobManage/Talents)
 ```
 
 ---
 
-## 3. 五层系统架构
+## 2. 跨模块接口契约（所有组员必须遵守）
 
+### 2.1 A 组提供 → B 组调用
+
+```java
+// occupation-analysis/.../service/AnalysisService.java
+public interface AnalysisService {
+    DashboardVO getDashboard(DashboardQueryDTO query);
+}
+// 返回字段：industryTop、cityDist、skillHot、educationDist、trend
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                      展示层 / API 层                              │
-│  管理后台 │ 学生端 │ 教师端 │ 企业HR端 │ 3D可视化大屏 │ 对外API   │
-├──────────────────────────────────────────────────────────────────┤
-│                       业务应用层                                  │
-│  报告分析  │ 报告自动生成  │ 岗位推送  │ 技能缺口诊断 │ 教学改革助手 │
-├──────────────────────────────────────────────────────────────────┤
-│                   ⭐ AI 智能引擎层（差异化核心）                    │
-│   LLM 自然语言洞察  │ 知识图谱推理  │ NLP 语义匹配  │ 趋势预测模型  │
-├──────────────────────────────────────────────────────────────────┤
-│                       分析引擎层                                  │
-│   Spark 离线分析  │ 实时流分析(Kafka Streaming)  │ 多维OLAP        │
-├──────────────────────────────────────────────────────────────────┤
-│                    数据处理与存储层                                │
-│   HDFS │ Hive │ HBase │ Redis │ MySQL 8.0 │ Neo4j │ Elasticsearch │
-├──────────────────────────────────────────────────────────────────┤
-│                       数据采集层                                  │
-│   BOSS直聘/智联招聘 │ 企业官网 │ 政府公开数据 │ 第三方API │ 课程数据  │
-└──────────────────────────────────────────────────────────────────┘
+
+### 2.2 A 组提供 → C 组调用
+
+```java
+// occupation-analysis/.../service/JobDetailService.java
+public interface JobDetailService {
+    Page<JobDetailVO> queryJobs(JobQueryDTO query);
+}
+// 入参：city、industry、salaryMin/Max、education、experience、keyword、pageNum、pageSize
+// 返回：分页 JobDetailVO 列表
 ```
+
+### 2.3 调用方式（B 组 / C 组）
+
+```java
+// 在自己的 ServiceImpl 中通过 @Autowired 注入 A 组的 Service 接口：
+@Autowired
+private AnalysisService analysisService;    // B 组用
+
+@Autowired
+private JobDetailService jobDetailService;   // C 组用
+```
+
+> **A 组必须优先实现这两个接口的 ServiceImpl**，否则 B、C 启动时会因缺少 Bean 而报错。
+> 可以先写一个返回 null/空对象的空实现，让 B、C 通过编译。
 
 ---
 
-## 4. 四大用户角色（多租户 SaaS）
+## 3. 各组开发任务
 
-| 角色 | 核心功能 | 典型场景 |
-|---:|---|---|
-| **学生** | 个人画像、岗位推荐、就业报告查看、投递/收藏 | 了解行业趋势，匹配合适岗位 |
-| **教师/辅导员** | 班级就业动态、教学建议报告、学生数据导出 | 掌握学生就业情况，调整教学内容 |
-| **管理员** | 系统配置、数据采集调度、报告模板、用户管理 | 平台日常运维与配置管理 |
-| **企业 HR** | 发布职位、人才画像浏览（脱敏）、投递管理 | 企业发布岗位，对接院校人才 |
+### A 组 — `occupation-analysis`（大数据分析）
 
-**数据隔离**: 所有业务表通过 `tenant_id` 行级隔离，JWT Token 携带租户标识。
+编译即用的文件已在你的模块，**你需要新建**：
 
----
-
-## 5. 功能模块总览
-
-### 基础模块（P1-P5）
-
-| 模块 | 职责 |
+| 新建文件 | 说明 |
 |---|---|
-| **分布式数据采集** | BOSS直聘等主流招聘平台爬虫，反爬策略，Kafka 解耦采集与处理链路 |
-| **报告分析系统** | 行业/技能/地域/学历/时间趋势 五维分析，Spark 离线批处理 |
-| **报告自动生成** | 模板管理 + Freemarker 渲染，PDF/Word/HTML 导出，定时+手动触发 |
-| **岗位推送系统** | 学生画像构建 + 规则/协同/内容推荐，站内通知/邮件/短信推送 |
-| **对外公开 API** | OAuth2 鉴权 + 限流，职位查询/报告摘要/技能热度/统计大盘 |
-| **系统监控** | Actuator + Prometheus + Grafana，Kafka 延迟/爬虫异常告警 |
+| `service/impl/AnalysisServiceImpl.java` | 实现 `AnalysisService.getDashboard()`，调用 Mapper 查 analysis_result 表 |
+| `service/impl/JobDetailServiceImpl.java` | 实现 `JobDetailService.queryJobs()`，调用 Mapper 查 job_detail 表 |
+| `controller/AnalysisController.java` | `GET /api/analysis/dashboard` |
+| `config/RedisCacheConfig.java` | Dashboard 数据缓存 |
+| `dto/`、`vo/` 可按需新增 | 当前 DTO/VO 不够用可自行扩展 |
 
-### ⭐ 差异化模块（P6）
-
-| 模块 | 核心价值 |
-|---|---|
-| **技能缺口诊断引擎** | 自动对比"学校教了什么 vs 市场要了什么"，输出课程改革建议 |
-| **职业能力知识图谱** | Neo4j + G6 可视化，查询"学完 Java 再学 Spring，匹配岗位增 3 倍" |
-| **LLM 智能报告引擎** | AI 生成自然语言洞察，学生/教师/校领导三版个性化报告 |
-| **实时市场脉搏大屏** | Kafka Streaming 实时更新，像股市指数一样的"就业热度指数" |
-| **NLP 简历-JD 语义匹配** | BGE 向量化 + FAISS 检索，语义级匹配 + 技能差距分析 |
-| **就业趋势预测模型** | Prophet 时序预测，3/6 个月后岗位数量/薪资走势预测 |
+**⚠️ 注意**：`job_detail` 表不含 `tenant_id`，查询时不要加租户过滤。`analysis_result` 表含 `tenant_id`，多租户插件会自动注入。
 
 ---
 
-## 6. 技术选型总览
+### B 组 — `occupation-report` + `occupation-api`（报告 + 对外 API）
+
+**report 模块需新建**：
+
+| 新建文件 | 说明 |
+|---|---|
+| `service/ReportTemplateService.java` + `impl/` | 模板 CRUD |
+| `service/ReportGeneratorService.java` + `impl/` | 调 AnalysisService → 数据填充 → Freemarker 渲染 |
+| `service/PdfExporter.java` | HTML → PDF（Flying Saucer） |
+| `service/WordExporter.java` | HTML → Word（POI） |
+| `controller/ReportTemplateController.java` | 模板管理 API |
+| `controller/ReportRecordController.java` | 报告生成/下载 API |
+| `dto/`、`vo/` | 按需新建 |
+
+**api 模块需新建**：
+
+| 新建文件 | 说明 |
+|---|---|
+| `service/impl/ApiAuthServiceImpl.java` | OAuth2 注册/签发 Token |
+| `service/impl/OpenApiServiceImpl.java` | 职位查询/报告摘要/技能热度/大盘统计 |
+| `controller/OpenAuthController.java` | `POST /api/open/auth/token` |
+| `controller/OpenJobController.java` | `GET /api/open/jobs` |
+| `controller/OpenStatsController.java` | `GET /api/open/stats/*` |
+| `config/RateLimitConfig.java` | Redis 令牌桶限流 |
+| `config/SwaggerConfig.java` | Knife4j 文档分组 |
+| `config/OAuth2Config.java` | OAuth2 资源服务器配置 |
+
+**依赖说明**：已有 `knife4j-openapi3-spring-boot-starter` 和 `spring-boot-starter-oauth2-resource-server`。
+
+---
+
+### C 组 — `occupation-recommend`（推荐推送 + 教师/HR 后端）
+
+**需新建**：
+
+| 新建文件 | 说明 |
+|---|---|
+| `service/impl/StudentProfileServiceImpl.java` | 画像 CRUD |
+| `service/impl/JobMatchServiceImpl.java` | 调 JobDetailService → 规则打分（技能40%+城市25%+薪资20%+学历15%） |
+| `service/impl/PushServiceImpl.java` | 推送通知 + XXL-Job 定时推送 |
+| `service/impl/BehaviorServiceImpl.java` | VIEW/FAVORITE/APPLY 行为记录 |
+| `controller/StudentProfileController.java` | 画像 API |
+| `controller/RecommendController.java` | 推荐/收藏/投递 API |
+| `controller/PushController.java` | 推送列表/已读 API |
+| `controller/TeacherController.java` | 教师端：学生列表/行为统计/导出 |
+| `controller/HrController.java` | 企业端：职位发布/人才浏览/投递管理 |
+| `job/RecommendJobHandler.java` | XXL-Job：每日推送 Top5 新匹配 |
+| `dto/`、`vo/` | 按需新建 |
+
+---
+
+### D 组 — `occupation-web-ui`（Vue 3 前端，全四端）
+
+脚手架已就绪：`npm install` → `npm run dev` 即可启动。
+
+**需实现**（按优先级）：
+
+| 优先级 | 页面 | 说明 |
+|---|---|---|
+| P0 | `views/login/LoginView.vue` | 对接 `POST /api/auth/login`，存 token |
+| P0 | `views/admin/Dashboard.vue` | 5 个 ECharts 图表（行业/城市/技能/学历/趋势） |
+| P1 | `views/admin/CrawlerTask.vue` | 采集任务 CRUD 表格 + 启停 |
+| P1 | `views/admin/ReportTemplate.vue` | 模板 CRUD + JSON 编辑器 |
+| P1 | `views/admin/ReportList.vue` | 报告生成/下载 |
+| P1 | `views/admin/UserManage.vue` | 用户管理表格 |
+| P2 | `views/student/*.vue` | 推荐流/详情/画像/收藏/报告 |
+| P2 | `views/teacher/*.vue` | 班级概览/学生列表/建议 |
+| P2 | `views/hr/*.vue` | 工作台/职位管理/人才浏览 |
+
+**API 封装目录**：`src/api/` 下已提供 `request.js`（Axios 拦截器），参照它创建 `auth.js`、`crawler.js`、`analysis.js` 等模块。
+
+---
+
+## 4. 代码规范速查
 
 ### 后端（Java）
 
-| 技术 | 版本 | 说明 |
-|---|---|---|
-| SpringBoot | 2.7.x | 模块化单体架构，7 个 Maven Module |
-| MyBatis-Plus | 3.5.x | ORM + 多租户插件 |
-| Spring Security + JWT | 5.x | 认证鉴权 |
-| XXL-Job | 2.x | 分布式定时任务调度 |
-| Kafka | 3.4.x | 消息队列（采集↔清洗↔分析解耦） |
-| WebMagic | — | 爬虫框架 |
+| 规范 | 要点 |
+|---|---|
+| Controller | 只做参数校验 + 调 Service + 封装 `Result<T>`，不写业务逻辑 |
+| Service | 接口 + impl 配对，`@Transactional` 放 impl |
+| Mapper | 只做 CRUD，继承 `BaseMapper<Entity>` |
+| Entity | 有 `tenant_id+deleted+createTime+updateTime` 的表继承 `BaseEntity`，否则 `implements Serializable` |
+| DTO | 入参，加 `@NotNull`/`@NotBlank` 校验 |
+| VO | 出参，纯字段，无逻辑 |
+| 文件长度 | ≤ 500 行（Vue ≤ 300 行） |
 
 ### 前端（Vue 3）
 
-| 技术 | 说明 |
+| 规范 | 要点 |
 |---|---|
-| Vue 3 + Vite 5 | 组合式 API，TypeScript |
-| Element Plus | 管理后台 UI 组件库 |
-| ECharts 5 | 数据可视化图表 |
-| G6 ⭐ | 知识图谱可视化 |
-| Three.js ⭐ | 3D 可视化大屏 |
-| Pinia + Axios | 状态管理 + HTTP 客户端 |
-
-### 大数据 & AI
-
-| 技术 | 用途 |
-|---|---|
-| Spark 3.4 + Hive 3.1 + HBase 2.4 | 离线批处理 + 数据仓库 + 明细查询 |
-| Kafka + Zookeeper + Yarn | 消息队列 + 协调 + 资源调度 |
-| Neo4j 5.x ⭐ | 知识图谱存储与查询 |
-| Elasticsearch 8.x ⭐ | 全文检索 + 职位搜索 |
-| DeepSeek/通义千问 ⭐ | LLM 智能报告生成 |
-| Sentence-Transformers + FAISS ⭐ | NLP 语义匹配 |
-| Prophet ⭐ | 就业趋势预测 |
-
-### 基础设施
-
-| 技术 | 说明 |
-|---|---|
-| MySQL 8.0 | 业务主库 |
-| Redis 6.2 | 缓存、Session、实时计数器 |
-| Nginx 1.24 | 反向代理 + 静态资源 |
-| Docker + Docker Compose | 本地开发环境一键部署 |
+| 语法 | `<script setup>` 组合式 API |
+| 请求 | 通过 `src/api/` 封装，不直接在 `.vue` 里写 `axios.get` |
+| 状态 | 通过 `src/store/` 的 Pinia store，不滥用 `localStorage` |
+| 组件拆分 | 页面放 `views/`，复用 UI 放 `components/` |
 
 ---
 
-## 7. 模块划分（Maven 7 模块）
+## 5. 开发流程
 
 ```
-occupation-platform (父 POM)
-├── occupation-common        # 公共：统一响应、异常、多租户拦截器、工具类
-├── occupation-auth          # 认证授权：登录、JWT、Token 校验
-├── occupation-crawler       # 采集管理：爬虫调度、采集任务 API
-├── occupation-analysis      # 分析服务：Spark Job、数据清洗管道
-├── occupation-report        # 报告生成：模板管理、PDF/Word 导出、LLM 引擎
-├── occupation-recommend     # 推荐推送：画像匹配、推荐算法、通知推送
-├── occupation-api           # 对外开放：OAuth2 鉴权、限流、Swagger 文档
-└── occupation-web           # 启动模块：入口类、全局配置
+1. git pull (获取骨架代码)
+2. 阅读自己的模块文件 → 了解 Entity 字段/Mapper/接口契约
+3. A 组先写 AnalysisServiceImpl + JobDetailServiceImpl（返回空对象也可）
+4. B、C 组启动依赖 A 的 Bean，先写自己的 ServiceImpl
+5. Controller 最后写，联调时逐步实现
+6. D 组可以先启动 vue，跑通 login 页面，然后逐步连 B、C 的 API
 ```
 
-> 初期使用模块化单体架构，按需拆分为微服务（Spring Cloud 或 K8s）。
+---
+
+## 6. 常用命令
+
+```bash
+# 后端编译
+cd e:\occupation
+mvn compile -DskipTests
+
+# 后端启动（需要先 docker-compose up 启动 MySQL/Redis/Kafka）
+cd e:\occupation\occupation-web
+mvn spring-boot:run
+
+# 前端
+cd e:\occupation\occupation-web-ui
+npm install
+npm run dev
+
+# 一键启动基础设施
+docker-compose up -d
+```
 
 ---
 
-## 8. 数据库核心表（12 张）
+## 7. 关键文件索引
 
-| 表名 | 模块 | 说明 |
-|---|---|---|
-| sys_tenant | common | 租户表 |
-| sys_user | auth | 用户表（含 role: STUDENT/TEACHER/ADMIN/HR） |
-| sys_student_profile | recommend | 学生画像表 |
-| crawler_task | crawler | 采集任务表 |
-| crawler_log | crawler | 采集日志表 |
-| raw_job_data | crawler | 原始职位数据表 |
-| job_detail | analysis | 清洗后职位表 |
-| analysis_result | analysis | 分析结果表 |
-| report_template | report | 报告模板表 |
-| report_record | report | 报告记录表 |
-| push_record | recommend | 推送记录表 |
-| student_behavior | recommend | 学生行为表 |
-| sys_alert | web/common | 告警表 |
-
----
-
-## 9. 实施计划总览
-
-| 阶段 | 内容 | 步骤数 | 状态 |
-|---:|---|---|---|
-| **P1** | 项目骨架 + JWT 认证 + 多租户 + Kafka + 爬虫采集 | 9 步 | ⏳ 设计完成，待开发 |
-| **P2** | 大数据清洗 + 5 维度分析 + 定时调度 + 职位查询 API | 8 步 | ⏳ 待开发 |
-| **P3** | Vue 3 管理后台 + 分析看板 + 报告生成/导出 + 用户管理 | 7 步 | ⏳ 待开发 |
-| **P4** | 学生端 + 画像匹配 + 推荐引擎 + 推送通知 + 行为闭环 | 6 步 | ⏳ 待开发 |
-| **P5** | 对外 API + 教师端 + 企业端 + 监控告警 + 压测 + 文档 | 6 步 | ⏳ 待开发 |
-| **P6** | ⭐ 6 大 AI 差异化亮点模块 | — | 远期规划 |
-
----
-
-## 10. P1 首阶段目标（即将开始）
-
-1. Maven 多模块项目初始化
-2. SpringBoot 基础骨架 + 统一响应格式
-3. 数据库表设计 + init.sql
-4. MyBatis-Plus + 多租户插件
-5. JWT 认证 + 登录接口
-6. Kafka 生产者/消费者基础配置
-7. 爬虫基础框架（WebMagic）
-8. 实现一个真实采集源（BOSS直聘等）
-9. 采集任务管理接口 + XXL-Job 调度
-
----
-
-## 11. 开发环境
-
-- **Java**: IntelliJ IDEA + JDK 8+/11+
-- **前端**: VS Code + Node 18+
-- **Docker Compose**: 一键启动 MySQL + Redis + Kafka + Nginx
-- **大数据组件**: HDFS + Hive + HBase + Spark（Docker 部署）
-- **AI 组件**: P6 阶段再接入（Neo4j + ES + LLM API）
-
----
-
-> **下一步**: 启动 P1 Step 1.1 — 初始化 Maven 多模块项目结构。  
-> 文档权威来源: `memory-bank/`，AI 编码规范: `AGENTS.md`，工作流: `vibe-coding-guide.md`
+| 文件 | 用途 |
+|---|---|
+| `memory-bank/design-document.md` | 产品设计（功能描述、数据流、角色定义） |
+| `memory-bank/tech-stack.md` | 技术选型与版本号 |
+| `memory-bank/architecture.md` | 当前架构状态（Schema、API、部署组件） |
+| `memory-bank/progress.md` | 开发进度追踪 |
+| `AGENTS.md` | AI 编码规范（分层架构、多租户、禁止事项） |
+| `docker-compose.yml` | 本地基础设施一键启动 |
+| `occupation-common/.../sql/init.sql` | 14 张表 DDL + 种子数据 |

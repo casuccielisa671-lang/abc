@@ -15,12 +15,12 @@
 | occupation-common           | ✅ 已实现 | 统一响应 + 异常处理 + BaseEntity + 多租户 + 分页 + 13张表SQL + Kafka管道 |
 | occupation-auth             | ✅ 已实现 | JWT 签发/校验 + 登录接口 + JwtAuthenticationFilter + SecurityConfig |
 | occupation-crawler          | ✅ 已实现 | WebMagic 爬虫框架 + CrawlerTask/CrawlerLog + 模拟+真实采集 + XXL-Job Handler |
-| occupation-analysis         | ✅ 已创建 | POM + 包结构就绪，待 P2 实现分析 |
-| occupation-report           | ✅ 已创建 | POM + 包结构就绪，待 P3 实现报告 |
-| occupation-recommend        | ✅ 已创建 | POM + 包结构就绪，待 P4 实现推荐 |
-| occupation-api              | ✅ 已创建 | POM + 包结构就绪，待 P5 实现对外 API |
+| occupation-analysis         | ✅ 骨架就绪 | Entity+Mapper+Service接口+DTO/VO 就绪，待 P2 实现分析 |
+| occupation-report           | ✅ 骨架就绪 | Entity+Mapper+依赖就绪，待 P3 实现报告 |
+| occupation-recommend        | ✅ 骨架就绪 | Entity+Mapper+依赖就绪，待 P4 实现推荐 |
+| occupation-api              | ✅ 骨架就绪 | Entity+Mapper+Knife4j+OAuth2 依赖就绪，待 P5 实现 |
 | occupation-web              | ✅ 已运行 | Application + HealthController + 2 项测试通过 |
-| occupation-web-ui (Vue 3)   | ⏳ 待开发 | P3 Step 3.1 |
+| occupation-web-ui (Vue 3)   | ✅ 脚手搭好 | Vite + 路由 + 16 页面占位，待填具体页面 |
 
 ---
 
@@ -64,12 +64,14 @@ occupation-web (启动入口)
   ├── occupation-auth → common
   ├── occupation-crawler → common
   ├── occupation-analysis → common
-  ├── occupation-report → common
-  ├── occupation-recommend → common
-  └── occupation-api → common
+  ├── occupation-report → common, analysis ←跨模块
+  ├── occupation-recommend → common, analysis ←跨模块
+  ├── occupation-api → common
+  └── occupation-web-ui (Vue 3, 独立前端)
 ```
 
 所有业务模块依赖 common，web 聚合全部模块。
+**跨模块依赖**：report 和 recommend 依赖 analysis（通过 Service 接口调用）。
 
 ### MVC 包结构规范（所有模块统一遵循）
 
@@ -109,6 +111,7 @@ com.occupation.<模块名>
 | push_record            | recommend       | 推送记录表           | ✅ |
 | student_behavior       | recommend       | 学生行为记录表       | ✅ |
 | sys_alert              | web/common      | 系统告警表           | ✅ |
+| api_client             | api             | API 客户端鉴权表     | ✅ |
 
 ### 种子数据
 
@@ -171,3 +174,4 @@ com.occupation.<模块名>
 | 2026-07-07 | P1 Step 1.7 完成：WebMagic 爬虫框架集成 — JobPageProcessor 抽象基类（UA 池 + 随机延迟 + 重试）+ JobPipeline（Kafka 管道）+ MockJobPageProcessor（本地 JSON 模拟）+ 20 条测试数据 | Step 1.7 |
 | 2026-07-07 | P1 Step 1.8 完成：BossJobPageProcessor 真实采集器 — 列表页解析（标题/公司/薪资/城市/学历/经验）+ 详情页解析（描述/技能标签）+ 分页翻页 + 反爬策略（5-15s 随机延迟）| Step 1.8 |
 | 2026-07-07 | P1 Step 1.9 完成：采集任务管理 API（CRUD + 启停 + 日志查询）+ XXL-Job 调度集成（定时扫描/手动触发/全停）| Step 1.9 |
+| 2026-07-07 | 骨架代码完成：8 Entity + 8 Mapper + 2 跨模块 Service 接口 + 4 DTO/VO + POM 依赖更新 + api_client 表 + Vue 3 脚手架 | 骨架 |
