@@ -4,6 +4,19 @@
 
 ---
 
+## 先启阶段文档 — 2026-07-07
+
+| # | 文档 | 状态 |
+|---|---|---|
+| 1 | `docs/inception/project-development-plan.md` — 项目开发计划 | ✅ 已完成 |
+| 2 | `docs/inception/project-schedule-plan.md` — 项目进度计划 | ✅ 已完成 |
+| 3 | `docs/inception/configuration-management-plan.md` — 配置管理计划 | ✅ 已完成 |
+| 4 | `docs/inception/software-requirements-specification.md` — 软件需求规约（含用例模型） | ✅ 已完成 |
+
+> **先启阶段 100% 完成**：4 份管理/技术文档已交付，可进入精化阶段架构设计。
+
+---
+
 ## P1：项目骨架 + 数据采集模块
 
 | Step | 内容 | 状态 | 完成日期 |
