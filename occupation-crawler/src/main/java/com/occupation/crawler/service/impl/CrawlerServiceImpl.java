@@ -56,34 +56,47 @@ public class CrawlerServiceImpl implements CrawlerService {
         PageProcessor processor = createProcessor(task);
 
         // 4. 启动爬虫
-        Spider spider = Spider.create(processor)
-                .addPipeline(jobPipeline)
-                .addPipeline(new ConsolePipeline())
-                .thread(3);
-
-        // 根据处理器类型添加种子请求
         if (processor instanceof MockJobPageProcessor) {
-            spider.addRequest(MockJobPageProcessor.firstPageRequest());
-        } else if (processor instanceof BossJobPageProcessor) {
-            Map<String, String> params = parseUrlParams(task.getUrlPattern());
-            String keyword = params.getOrDefault("query", "Java");
-            String city = params.getOrDefault("city", "101010100");
-            spider.addRequest(BossJobPageProcessor.seedRequest(keyword, city));
+            // Mock 爬虫不通过 Spider 框架，直接调用 process 方法处理数据
+            MockJobPageProcessor mockProcessor = (MockJobPageProcessor) processor;
+            mockProcessor.processAll(jobPipeline);
+            // 更新日志状态
+            crawlerLog.setEndTime(LocalDateTime.now());
+            crawlerLog.setRecordCount(mockProcessor.getCollectedCount());
+            crawlerLog.setStatus("SUCCESS");
+            crawlerLogMapper.updateById(crawlerLog);
+            // 更新任务状态为停止
+            task.setStatus(0);
+            crawlerTaskMapper.updateById(task);
+            log.info("Mock 采集完成 — taskId={}, 共 {} 条", task.getId(), mockProcessor.getCollectedCount());
         } else {
-            spider.addUrl(task.getUrlPattern());
+            Spider spider = Spider.create(processor)
+                    .addPipeline(jobPipeline)
+                    .addPipeline(new ConsolePipeline())
+                    .thread(3);
+
+            if (processor instanceof BossJobPageProcessor) {
+                Map<String, String> params = parseUrlParams(task.getUrlPattern());
+                String keyword = params.getOrDefault("query", "Java");
+                String city = params.getOrDefault("city", "101010100");
+                spider.addRequest(BossJobPageProcessor.seedRequest(keyword, city));
+            } else {
+                spider.addUrl(task.getUrlPattern());
+            }
+
+            spider.start();
+
+            // 记录运行状态
+            runningSpiders.put(task.getId(), spider);
+            runningLogIds.put(task.getId(), crawlerLog.getId());
+
+            // 更新任务状态为运行中
+            task.setStatus(1);
+            crawlerTaskMapper.updateById(task);
+
+            log.info("爬虫启动成功 — taskId={}, source={}", task.getId(), task.getSourceType());
         }
 
-        spider.start();
-
-        // 5. 记录运行状态
-        runningSpiders.put(task.getId(), spider);
-        runningLogIds.put(task.getId(), crawlerLog.getId());
-
-        // 6. 更新任务状态为运行中
-        task.setStatus(1);
-        crawlerTaskMapper.updateById(task);
-
-        log.info("爬虫启动成功 — taskId={}, source={}", task.getId(), task.getSourceType());
         return crawlerLog;
     }
 
@@ -166,9 +179,9 @@ public class CrawlerServiceImpl implements CrawlerService {
         switch (task.getSourceType()) {
             case "MOCK":
                 // 模拟爬虫：从 classpath 加载 mock 数据
-                String dataPath = getClass().getClassLoader()
-                        .getResource("mock/" + task.getUrlPattern()).getPath();
-                return new MockJobPageProcessor(dataPath);
+                // 使用 InputStream 方式读取，兼容 JAR 包内运行
+                String resourcePath = "mock/" + task.getUrlPattern();
+                return new MockJobPageProcessor(resourcePath, true);
             case "BOSS_ZHIPIN":
                 // 真实采集：从 urlPattern 解析 keyword 和 city
                 Map<String, String> params = parseUrlParams(task.getUrlPattern());

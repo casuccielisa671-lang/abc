@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "timestamp": 1783496228891,
+  "projectRoot": "e:\\occupation",
+  "entries": [
+    {
+      "path": "occupation-web\\target\\classes\\com\\occupation\\web\\Application.class",
+      "mtime": 1783430283815.2693,
+      "size": 1101,
+      "mapperScan": {
+        "basePackages": [
+          "com.occupation.analysis.mapper",
+          "com.occupation.api.mapper",
+          "com.occupation.auth.mapper",
+          "com.occupation.common.mapper",
+          "com.occupation.crawler.mapper",
+          "com.occupation.recommend.mapper",
+          "com.occupation.report.mapper",
+          "com.occupation.web.mapper"
+        ],
+        "sourceFile": "e:\\occupation\\occupation-web\\target\\classes\\com\\occupation\\web\\Application.class"
+      }
+    },
+    {
+      "path": "occupation-common\\target\\classes\\com\\occupation\\common\\config\\DataSourceConfig.class",
+      "mtime": 1783495324141.6924,
+      "size": 751
+    },
+    {
+      "path": "occupation-web\\target\\classes\\com\\occupation\\web\\config\\SchedulingConfig.class",
+      "mtime": 1783496062042.7275,
+      "size": 660
+    },
+    {
+      "path": "occupation-common\\target\\classes\\com\\occupation\\common\\config\\MyBatisPlusConfig.class",
+      "mtime": 1783496215124.8132,
+      "size": 1544
+    },
+    {
+      "path": "occupation-auth\\target\\classes\\com\\occupation\\auth\\config\\SecurityConfig.class",
+      "mtime": 1783496218001.11,
+      "size": 4975
+    },
+    {
+      "path": "occupation-api\\target\\classes\\com\\occupation\\api\\config\\OpenApiWebConfig.class",
+      "mtime": 1783496221498.7478,
+      "size": 1907
+    },
+    {
+      "path": "occupation-crawler\\target\\classes\\com\\occupation\\crawler\\config\\XxlJobConfig.class",
+      "mtime": 1783496223238.391,
+      "size": 2314
+    }
+  ]
+}

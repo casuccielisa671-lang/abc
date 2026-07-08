@@ -1,7 +1,5 @@
 package com.occupation.common.service;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.occupation.common.config.KafkaTopicConfig;
 import com.occupation.common.dto.JobDataMessage;
 import com.occupation.common.entity.RawJobData;
@@ -37,21 +35,17 @@ public class KafkaConsumerService {
     @KafkaListener(topics = KafkaTopicConfig.TOPIC_RAW_JOB_DATA,
                    groupId = "data-cleaner-group",
                    concurrency = "3")
-    public void consume(String messageJson) {
-        log.info("收到 Kafka 消息: {}", messageJson.length() > 200
-                ? messageJson.substring(0, 200) + "..." : messageJson);
+    public void consume(JobDataMessage message) {
+        log.info("收到 Kafka 消息: source={}, sourceUrl={}",
+                message.getSource(), message.getSourceUrl());
 
         try {
-            JSONObject json = JSON.parseObject(messageJson);
             RawJobData data = new RawJobData();
-            data.setSource(json.getString("source"));
-            data.setSourceUrl(json.getString("sourceUrl"));
-            data.setRawContent(json.getString("rawContent"));
-            // fetchTime 是 LocalDateTime 序列化的数组格式，用字符串方式解析
-            String fetchTimeStr = json.getString("fetchTime");
-            data.setFetchTime(fetchTimeStr != null
-                    ? LocalDateTime.parse(fetchTimeStr, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-                    : LocalDateTime.now());
+            data.setSource(message.getSource());
+            data.setSourceUrl(message.getSourceUrl());
+            data.setRawContent(message.getRawContent());
+            data.setFetchTime(message.getFetchTime() != null
+                    ? message.getFetchTime() : LocalDateTime.now());
             data.setStatus("RAW");
             data.setCreateTime(LocalDateTime.now());
 
@@ -60,7 +54,8 @@ public class KafkaConsumerService {
                     data.getSource(), rows, data.getId());
 
         } catch (Exception e) {
-            log.error("Kafka 消息消费失败: {}", messageJson, e);
+            log.error("Kafka 消息消费失败: source={}, sourceUrl={}",
+                    message.getSource(), message.getSourceUrl(), e);
         }
     }
 }

@@ -8,11 +8,16 @@ import lombok.extern.slf4j.Slf4j;
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Request;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 模拟爬虫 — 从本地 JSON 文件读取职位数据，模拟完整采集流程
@@ -25,8 +30,11 @@ public class MockJobPageProcessor extends JobPageProcessor {
 
     private static final String SOURCE = "MOCK";
 
-    /** 模拟数据文件路径 */
+    /** 模拟数据文件路径（文件系统路径或 classpath 资源路径） */
     private final String dataFilePath;
+
+    /** 是否从 classpath 加载 */
+    private final boolean fromClasspath;
 
     /** 每次处理的条数 */
     private final int batchSize;
@@ -38,12 +46,21 @@ public class MockJobPageProcessor extends JobPageProcessor {
     private int currentIndex = 0;
 
     public MockJobPageProcessor(String dataFilePath) {
-        this(dataFilePath, 10, 1000L);
+        this(dataFilePath, false, 10, 1000L);
+    }
+
+    public MockJobPageProcessor(String dataFilePath, boolean fromClasspath) {
+        this(dataFilePath, fromClasspath, 10, 1000L);
     }
 
     public MockJobPageProcessor(String dataFilePath, int batchSize, long batchIntervalMs) {
+        this(dataFilePath, false, batchSize, batchIntervalMs);
+    }
+
+    public MockJobPageProcessor(String dataFilePath, boolean fromClasspath, int batchSize, long batchIntervalMs) {
         super(SOURCE);
         this.dataFilePath = dataFilePath;
+        this.fromClasspath = fromClasspath;
         this.batchSize = batchSize;
         this.batchIntervalMs = batchIntervalMs;
     }
@@ -110,7 +127,18 @@ public class MockJobPageProcessor extends JobPageProcessor {
 
     private void loadData() {
         try {
-            String content = new String(Files.readAllBytes(Paths.get(dataFilePath)));
+            String content;
+            if (fromClasspath) {
+                // 从 classpath 读取（兼容 JAR 包内运行）
+                ClassLoader classLoader = getClass().getClassLoader();
+                try (InputStream is = classLoader.getResourceAsStream(dataFilePath);
+                     BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+                    content = reader.lines().collect(Collectors.joining("\n"));
+                }
+            } else {
+                // 从文件系统读取
+                content = new String(Files.readAllBytes(Paths.get(dataFilePath)), StandardCharsets.UTF_8);
+            }
             JSONArray array = JSON.parseArray(content);
             allRecords = new ArrayList<>(array.size());
             for (int i = 0; i < array.size(); i++) {
@@ -141,6 +169,44 @@ public class MockJobPageProcessor extends JobPageProcessor {
      */
     public static Request firstPageRequest() {
         return new Request("http://mock.local/api/jobs?page=1&size=10");
+    }
+
+    /**
+     * 直接处理所有 mock 数据（不通过 Spider 框架）
+     * 加载 JSON 数据 → 构建 JobDataMessage → 通过 Pipeline 发送到 Kafka
+     */
+    public void processAll(JobPipeline pipeline) {
+        if (allRecords == null) {
+            loadData();
+        }
+
+        if (allRecords.isEmpty()) {
+            log.warn("模拟数据为空，跳过采集");
+            return;
+        }
+
+        List<JobDataMessage> jobs = new ArrayList<>();
+        for (JSONObject record : allRecords) {
+            String rawContent = JSON.toJSONString(record);
+            JobDataMessage message = buildMessage(
+                    record.getString("sourceUrl"),
+                    rawContent
+            );
+            jobs.add(message);
+            addJob(message);
+        }
+
+        // 通过 Pipeline 发送到 Kafka
+        try {
+            // 使用反射或直接调用 KafkaProducerService
+            // 由于 JobPipeline.process 需要 ResultItems，这里直接构建
+            us.codecraft.webmagic.ResultItems resultItems = new us.codecraft.webmagic.ResultItems();
+            resultItems.put("jobs", jobs);
+            pipeline.process(resultItems, null);
+            log.info("Mock 采集完成 — 共 {} 条数据已发送到 Kafka", jobs.size());
+        } catch (Exception e) {
+            log.error("Mock 数据发送 Kafka 失败", e);
+        }
     }
 
 }

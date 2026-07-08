@@ -5,7 +5,8 @@ const routes = [
   {
     path: '/login',
     name: 'Login',
-    component: () => import('@/views/login/LoginView.vue')
+    component: () => import('@/views/login/LoginView.vue'),
+    meta: { guest: true }
   },
 
   // ========== 管理后台 ==========
@@ -70,5 +71,42 @@ const router = createRouter({
   routes
 })
 
-// TODO: 路由守卫 — 校验 JWT Token 有效期 + 角色权限
+// 路由守卫 — 校验 JWT Token + 角色权限
+router.beforeEach((to, _from, next) => {
+  const token = localStorage.getItem('token')
+
+  // 登录页：已登录则跳转首页
+  if (to.meta.guest) {
+    if (token) {
+      // 从 localStorage 读角色判断跳转
+      const role = localStorage.getItem('role')
+      const ROLE_HOME = { ADMIN: '/admin', STUDENT: '/student', TEACHER: '/teacher', HR: '/hr' }
+      next(ROLE_HOME[role] || '/admin')
+    } else {
+      next()
+    }
+    return
+  }
+
+  // 非登录页：无 token → 跳登录
+  if (!token) {
+    next('/login')
+    return
+  }
+
+  // 角色校验
+  const requiredRole = to.meta.role
+  if (requiredRole) {
+    const userRole = localStorage.getItem('role')
+    if (userRole !== requiredRole && userRole !== 'ADMIN') {
+      // 非 ADMIN 用户访问不匹配角色页面 → 跳回自己的首页
+      const ROLE_HOME = { ADMIN: '/admin', STUDENT: '/student', TEACHER: '/teacher', HR: '/hr' }
+      next(ROLE_HOME[userRole] || '/login')
+      return
+    }
+  }
+
+  next()
+})
+
 export default router

@@ -1,18 +1,28 @@
 server:
   port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 spring:
   application:
     name: occupation-platform
   profiles:
     active: dev
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
   # ========== MySQL 数据源 ==========
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${DB_URL:jdbc:mysql://localhost:3306/occupation?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/occupation?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:Smx123218023..}
+    password: ${DB_PASSWORD:root}
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
       initial-size: 5
