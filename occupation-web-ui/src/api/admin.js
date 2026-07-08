@@ -68,3 +68,41 @@ export function updateUser(id, data) {
 export function updateUserStatus(id, status) {
   return request.put(`/admin/users/${id}/status`, null, { params: { status } })
 }
+
+// ========== 报告模板 ==========
+export function getReportTemplates(params) {
+  return request.get('/admin/report/template', { params })
+}
+
+export function getReportTemplate(id) {
+  return request.get(`/admin/report/template/${id}`)
+}
+
+export function createReportTemplate(data) {
+  return request.post('/admin/report/template', data)
+}
+
+export function updateReportTemplate(id, data) {
+  return request.put(`/admin/report/template/${id}`, data)
+}
+
+export function deleteReportTemplate(id) {
+  return request.delete(`/admin/report/template/${id}`)
+}
+
+// ========== 报告记录 ==========
+export function getReportRecords(params) {
+  return request.get('/report/records', { params })
+}
+
+export function deleteReportRecord(id) {
+  return request.delete(`/report/records/${id}`)
+}
+
+export function downloadReport(id) {
+  return `/api/report/download/${id}`
+}
+
+export function generateReport(data) {
+  return request.post('/report/generate', data)
+}

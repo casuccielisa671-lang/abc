@@ -1,7 +1,7 @@
 # Progress — 开发进度
 
 > 每完成一个 Step 后由 AI 更新，便于新会话恢复上下文。
-> **最后更新**: 2026-07-08（全模块深度审计：API 清单 + 数据库 Schema + Service 实现度 + 前端页面状态）
+> **最后更新**: 2026-07-08（P0 端到端验证完成：学生端全流程 + 报告生成链路 + JAR 重建）
 
 ---
 
@@ -12,9 +12,9 @@
 | 先启阶段 | 4 份管理/技术文档 | — | — | ✅ 100% |
 | P1 | 项目骨架 + 数据采集 | 8/8 方法完整 | 登录+采集管理 | ✅ 100% |
 | P2 | 大数据分析模块 | 16/16 方法完整 | Dashboard+职位查询 | ✅ 100% |
-| P3 | 报告自动生成系统 | 10/10 方法完整 | 模板/列表页(占位) | ✅ 后端完整，前端待开发 |
-| P4 | 岗位推送 + 学生端 | 16/16 方法完整 | 首页/详情/画像/收藏 | ✅ 后端完整，学生端已实现 |
-| P5 | 对外 API + 教师/HR端 | 5/5 方法完整 | 教师/HR页(占位) | ✅ 后端完整，前端待开发 |
+| P3 | 报告自动生成系统 | 10/10 方法完整 | 模板/列表页 | ✅ 100%（前后端完整） |
+| P4 | 岗位推送 + 学生端 | 16/16 方法完整 | 首页/详情/画像/收藏/报告 | ✅ 100%（前后端完整） |
+| P5 | 对外 API + 教师/HR端 | 5/5 方法完整 | 教师/HR页（全部完整实现） | ✅ 100%（前后端完整） |
 | P6 | AI 差异化升级 | 0% | 0% | ⏳ 规划中 |
 
 > **后端 Service 总计：16 个实现类，62 个方法，61 个完整实现，仅 1 个部分实现（智联招聘采集器）。**
@@ -118,16 +118,16 @@
 | 学生端个人画像 | 画像填写/编辑表单 | ✅ 已实现 |
 | 学生端收藏夹 | 收藏列表管理 | ✅ 已实现 |
 | AppLayout | 侧边栏导航 + 顶部用户信息 + 退出登录 | ✅ 已实现 |
-| 管理员用户管理 | UserManage.vue | ⚠️ 占位组件（231B） |
-| 管理员报告模板 | ReportTemplate.vue | ⚠️ 占位组件（243B） |
-| 管理员报告列表 | ReportList.vue | ⚠️ 占位组件（278B） |
-| 学生端报告 | Reports.vue | ⚠️ 占位组件（238B） |
-| 教师端首页 | TeacherHome.vue | ⚠️ 占位组件（244B） |
-| 教师端学生管理 | Students.vue | ⚠️ 占位组件（242B） |
-| 教师端建议 | Suggestions.vue | ⚠️ 占位组件（251B） |
-| HR 端首页 | HrHome.vue | ⚠️ 占位组件（228B） |
-| HR 端职位管理 | JobManage.vue | ⚠️ 占位组件（209B） |
-| HR 端人才库 | Talents.vue | ⚠️ 占位组件（218B） |
+| 管理员用户管理 | UserManage.vue | ✅ 已实现（196行，含CRUD+启用/禁用+角色筛选） |
+| 管理员报告模板 | ReportTemplate.vue | ✅ 已实现（158行，含模板CRUD+Freemarker语法提示） |
+| 管理员报告列表 | ReportList.vue | ✅ 已实现（155行，含报告生成+下载+删除） |
+| 学生端报告 | Reports.vue | ✅ 已实现（75行，含报告列表+下载） |
+| 教师端首页 | TeacherHome.vue | ✅ 已实现（129行，含统计卡片+学生列表） |
+| 教师端学生管理 | Students.vue | ✅ 已实现（168行，含搜索+详情面板+行为统计） |
+| 教师端建议 | Suggestions.vue | ✅ 已实现（170行，含技能缺口表+ECharts趋势图） |
+| HR 端首页 | HrHome.vue | ✅ 已实现（151行，含统计卡片+职位/人才列表） |
+| HR 端职位管理 | JobManage.vue | ✅ 已实现（226行，含CRUD+技能标签管理） |
+| HR 端人才库 | Talents.vue | ✅ 已实现（139行，含搜索+脱敏展示+详情） |
 
 ---
 
@@ -286,23 +286,23 @@
 | `sys_user` | admin / admin123（BCrypt）/ ADMIN 角色 | 默认管理员 |
 | `api_client` | apiKey=`occ_test_2026`, apiSecret=`demo_secret_key_for_dev` | 测试 API 客户端 |
 
-### 4.4 数据库现状（2026-07-08）
+### 4.4 数据库现状（2026-07-08 — P0 验证后）
 
 | 表名 | 数据量 | 说明 |
 |---|---|---|
 | `sys_tenant` | 1 | 测试学院 |
-| `sys_user` | 1 | admin / ADMIN 角色 |
+| `sys_user` | 2 | admin / student01（STUDENT 角色） |
 | `crawler_task` | 若干 | 采集任务记录 |
 | `crawler_log` | 若干 | 采集日志 |
 | `raw_job_data` | 40 条 | 原始采集数据（状态：CLEANED） |
 | `job_detail` | 20 条 | 清洗后职位数据（腾讯/阿里/字节/百度等） |
 | `analysis_result` | 119 条 | 5 维度分析结果 |
 | `api_client` | 1 | 测试客户端（occ_test_2026） |
-| `sys_student_profile` | 0 | 待学生注册填写 |
-| `report_template` | 0 | 待管理员配置 |
-| `report_record` | 0 | 待触发生成 |
-| `push_record` | 0 | 待推荐推送产生 |
-| `student_behavior` | 0 | 待学生操作产生 |
+| `sys_student_profile` | 1 | 测试学生画像（Java/Python/Spring Boot/MySQL） |
+| `report_template` | 1 | 互联网行业就业月报模板（MONTHLY） |
+| `report_record` | 1 | 报告生成记录（SUCCESS，HTML 格式） |
+| `push_record` | 1 | 投递推送通知（未读） |
+| `student_behavior` | 2 | APPLY(1) + FAVORITE(1) |
 
 ---
 
@@ -379,18 +379,18 @@
 | 学生端职位详情 | `views/student/JobDetail.vue` | 3.72 KB | ✅ 已实现 |
 | 学生端个人画像 | `views/student/Profile.vue` | 4.72 KB | ✅ 已实现 |
 | 学生端收藏夹 | `views/student/Favorites.vue` | 2.49 KB | ✅ 已实现 |
-| 管理员报告模板 | `views/admin/ReportTemplate.vue` | 243 B | ⚠️ 占位 |
-| 管理员报告列表 | `views/admin/ReportList.vue` | 278 B | ⚠️ 占位 |
-| 管理员用户管理 | `views/admin/UserManage.vue` | 231 B | ⚠️ 占位 |
-| 学生端报告 | `views/student/Reports.vue` | 238 B | ⚠️ 占位 |
-| 教师端首页 | `views/teacher/TeacherHome.vue` | 244 B | ⚠️ 占位 |
-| 教师端学生管理 | `views/teacher/Students.vue` | 242 B | ⚠️ 占位 |
-| 教师端建议 | `views/teacher/Suggestions.vue` | 251 B | ⚠️ 占位 |
-| HR 端首页 | `views/hr/HrHome.vue` | 228 B | ⚠️ 占位 |
-| HR 端职位管理 | `views/hr/JobManage.vue` | 209 B | ⚠️ 占位 |
-| HR 端人才库 | `views/hr/Talents.vue` | 218 B | ⚠️ 占位 |
+| 管理员报告模板 | `views/admin/ReportTemplate.vue` | 158行 | ✅ 已实现（含模板CRUD+Freemarker语法提示） |
+| 管理员报告列表 | `views/admin/ReportList.vue` | 155行 | ✅ 已实现（含报告生成+下载+删除） |
+| 管理员用户管理 | `views/admin/UserManage.vue` | 196行 | ✅ 已实现（含CRUD+启用/禁用+角色筛选） |
+| 学生端报告 | `views/student/Reports.vue` | 75行 | ✅ 已实现（含报告列表+下载） |
+| 教师端首页 | `views/teacher/TeacherHome.vue` | 129行 | ✅ 已实现（含统计卡片+学生列表） |
+| 教师端学生管理 | `views/teacher/Students.vue` | 168行 | ✅ 已实现（含搜索+详情面板+行为统计） |
+| 教师端建议 | `views/teacher/Suggestions.vue` | 170行 | ✅ 已实现（含技能缺口表+ECharts趋势图） |
+| HR 端首页 | `views/hr/HrHome.vue` | 151行 | ✅ 已实现（含统计卡片+职位/人才列表） |
+| HR 端职位管理 | `views/hr/JobManage.vue` | 226行 | ✅ 已实现（含CRUD+技能标签管理） |
+| HR 端人才库 | `views/hr/Talents.vue` | 139行 | ✅ 已实现（含搜索+脱敏展示+详情） |
 
-> **已实现 7 个页面，10 个占位页面待开发。**
+> **全部 17 个页面已实现（2026-07-08 最终确认），合计约 1,567 行业务代码。**
 
 ---
 
@@ -433,6 +433,56 @@ POST /api/auth/login {username, password, tenantName}
 | `POST /api/analysis/pipeline` | ✅ 200 OK |
 | `GET /api/analysis/jobs` | ✅ 200 OK（20 条职位） |
 | `GET /api/analysis/dashboard` | ✅ 200 OK（5 维度数据） |
+| `POST /api/admin/users` | ✅ 200 OK（创建 student01） |
+| `GET /api/student/profile` | ✅ 200 OK |
+| `PUT /api/student/profile` | ✅ 200 OK（创建画像） |
+| `GET /api/student/recommend` | ✅ 200 OK（20 条推荐，含匹配分+理由+缺失技能） |
+| `POST /api/student/job/1/favorite` | ✅ 200 OK |
+| `POST /api/student/job/1/apply` | ✅ 200 OK |
+| `GET /api/student/favorites` | ✅ 200 OK（1 条收藏） |
+| `GET /api/push/unread/count` | ✅ 200 OK（1 条未读） |
+| `GET /api/student/profile/stats` | ✅ 200 OK（APPLY:1, FAVORITE:1） |
+| `POST /api/admin/report/template` | ✅ 200 OK（创建月报模板） |
+| `GET /api/admin/report/template` | ✅ 200 OK（1 条模板） |
+| `POST /api/report/generate` | ✅ 200 OK（SUCCESS，HTML 格式） |
+| `GET /api/report/download/{id}` | ✅ 200 OK（HTML 内容正确渲染） |
+
+### 7.4 学生端全流程验证 ✅
+
+```
+创建学生账号 (POST /api/admin/users {username:student01, password:student123, role:STUDENT})
+  → 学生登录 (POST /api/auth/login) → JWT Token (role=STUDENT)
+  → 创建画像 (PUT /api/student/profile {major:计算机科学与技术, skills:Java/Python/Spring Boot/MySQL, city:深圳})
+  → 个性化推荐 (GET /api/student/recommend)
+    → 候选集 20 条，四维打分（技能40%+学历25%+城市20%+薪资15%）
+    → 返回 matchScore + matchReason + missingSkills
+    → 例：Java开发工程师@腾讯科技 深圳 | score=20 | 技能匹配3/6 | 缺失:Redis/Docker/K8s
+  → 收藏职位 (POST /api/student/job/1/favorite) → 200
+  → 投递职位 (POST /api/student/job/1/apply) → 200 (自动生成推送通知)
+  → 收藏列表 (GET /api/student/favorites) → 1 条
+  → 未读推送 (GET /api/push/unread/count) → 1 条
+  → 求职统计 (GET /api/student/profile/stats) → APPLY:1, FAVORITE:1
+```
+
+### 7.5 报告生成端到端验证 ✅
+
+```
+创建模板 (POST /api/admin/report/template {name:互联网行业就业月报, type:MONTHLY, industry:互联网})
+  → 模板使用 Freemarker 占位变量: ${industry}/${jobCount}/${avgSalary}/${hotSkills}/${topCities}/${generateTime}
+  → 触发生成 (POST /api/report/generate {templateId, format:HTML})
+    → 六步流水线：读模板→取分析数据→AI摘要→Freemarker渲染→格式导出→归档落盘
+    → AI 摘要自动降级为规则模板（LLM 不可用时）
+  → 状态: SUCCESS, 文件: ./data/reports/.../xxx.html
+  → 下载报告 (GET /api/report/download/{id})
+    → Content-Type: text/html
+    → HTML 内容正确渲染：行业概况/技能需求/城市分布等章节
+```
+
+### 7.6 JAR 包重建记录
+
+> 运行中的 JAR（12KB）仅包含 occupation-web 模块类，缺少其他模块导致 `/api/admin/users` 返回 404。
+> **重建后 JAR: 106MB**，包含全部 7 个子模块（auth/crawler/analysis/report/recommend/api）。
+> 根因: `spring-boot-maven-plugin` repackage 需要先 `mvn install` 将各模块安装到本地仓库。
 
 ---
 
@@ -444,40 +494,41 @@ POST /api/auth/login {username, password, tenantName}
 | 2 | 残留 Java 进程端口占用 | 多次启动未清理旧进程 | 重启前 `Stop-Process -Name java -Force` | ✅ |
 | 3 | 清洗数据不自动入库 | Kafka 消费者静默失败 | 新增 `POST /api/analysis/clean` 和 `/api/analysis/pipeline` | ✅ |
 | 4 | Dashboard 无数据 | 缺少手动分析重算链路 | 调用 pipeline 端到端填充数据 | ✅ |
+| 5 | JAR 仅 12KB，`/api/admin/users` 返回 404 | 运行中的 JAR 只包含 occupation-web 模块，缺少其他 7 个子模块的 class | `mvn clean package -DskipTests` 完整重编 → 106MB fat JAR | ✅ |
 
 ---
 
 ## 九、待完成事项
 
-> **总体评估**：后端 62 个方法中 61 个已完整实现（98.4%），前端 17 个页面中 7 个已实现（41.2%），**最大短板在前端占位页面**。
+> **总体评估**：后端 62 个方法中 61 个已完整实现（98.4%），前端 17 个页面全部实现（100%），**P0 核心验证已完成（学生端+报告生成 API 全链路通过），当前重点为前端联调 + P1 优化 + P2 后端补全**。
 
-### 🔴 P0 — 验证类（3 项）
+### 🔴 P0 — 验证类（2/3 项已完成）
 
-| # | 事项 | 说明 | 涉及模块 |
-|---|------|------|----------|
-| 1 | 创建学生测试账号 | 验证学生端完整流程（画像→推荐→收藏→投递），目前 `sys_student_profile`/`student_behavior`/`push_record` 表均为空 | auth + recommend |
-| 2 | 前端与后端 API 联调 | 确认字段名匹配、分页参数一致，7 个已实现页面需逐一对接验证 | web-ui + 全模块 |
-| 3 | 报告生成端到端验证 | 模板创建 → 触发生成 → 下载 PDF/Word/HTML，目前 `report_template`/`report_record` 表均为空 | report |
+| # | 事项 | 说明 | 状态 |
+|---|------|------|------|
+| 1 | 创建学生测试账号 + 全流程验证 | student01 创建 → 登录 → 画像 → 推荐(20条) → 收藏 → 投递 → 推送 → 统计，全部 API 返回 200 | ✅ 已完成 |
+| 2 | 前端与后端 API 联调 | 后端 59 个端点已验证 29 个（↓见 7.3），前端 17 个页面需逐一对接浏览器验证 | 🔄 后端 API 已验证，前端联调待做 |
+| 3 | 报告生成端到端验证 | 模板创建 → 触发生成(SUCCESS) → HTML 下载内容正确，六步流水线正常 | ✅ 已完成 |
 
 ### 🟡 P1 — 前端占位页面（10 个页面 + 2 项优化）
 
-| # | 页面 | 文件 | 当前大小 | 对应后端 API |
-|---|------|------|----------|-------------|
-| 1 | 管理员用户管理 | `views/admin/UserManage.vue` | 231B | `/api/admin/users` CRUD（5 个端点） |
-| 2 | 管理员报告模板 | `views/admin/ReportTemplate.vue` | 243B | `/api/admin/report/template` CRUD（5 个端点） |
-| 3 | 管理员报告列表 | `views/admin/ReportList.vue` | 278B | `/api/report/records` + `/api/report/download/{id}` |
-| 4 | 学生端报告 | `views/student/Reports.vue` | 238B | `/api/report/records` + `/api/report/download/{id}` |
-| 5 | 教师端首页 | `views/teacher/TeacherHome.vue` | 244B | `/api/teacher/students` + Dashboard 数据 |
-| 6 | 教师端学生管理 | `views/teacher/Students.vue` | 242B | `/api/teacher/students` + stats + behaviors |
-| 7 | 教师端建议 | `views/teacher/Suggestions.vue` | 251B | 暂无专属 API（P6 技能缺口诊断引擎） |
-| 8 | HR 端首页 | `views/hr/HrHome.vue` | 228B | `/api/hr/jobs` + `/api/hr/talents` |
-| 9 | HR 端职位管理 | `views/hr/JobManage.vue` | 209B | `/api/hr/jobs` CRUD（5 个端点） |
-| 10 | HR 端人才库 | `views/hr/Talents.vue` | 218B | `/api/hr/talents` |
+| # | 页面 | 文件 | 当前大小 | 对应后端 API | 状态 |
+|---|------|------|----------|-------------|------|
+| 1 | 管理员用户管理 | `views/admin/UserManage.vue` | 196行 | `/api/admin/users` CRUD（5 个端点） | ✅ 已实现 |
+| 2 | 管理员报告模板 | `views/admin/ReportTemplate.vue` | 158行 | `/api/admin/report/template` CRUD（5 个端点） | ✅ 已实现 |
+| 3 | 管理员报告列表 | `views/admin/ReportList.vue` | 155行 | `/api/report/records` + `/api/report/download/{id}` | ✅ 已实现 |
+| 4 | 学生端报告 | `views/student/Reports.vue` | 75行 | `/api/report/records` + `/api/report/download/{id}` | ✅ 已实现 |
+| 5 | 教师端首页 | `views/teacher/TeacherHome.vue` | 129行 | `/api/teacher/students` + Dashboard 数据 | ✅ 已实现 |
+| 6 | 教师端学生管理 | `views/teacher/Students.vue` | 168行 | `/api/teacher/students` + stats + behaviors | ✅ 已实现 |
+| 7 | 教师端建议 | `views/teacher/Suggestions.vue` | 170行 | 含 ECharts 图表 + 技能缺口分析 | ✅ 已实现 |
+| 8 | HR 端首页 | `views/hr/HrHome.vue` | 151行 | `/api/hr/jobs` + `/api/hr/talents` | ✅ 已实现 |
+| 9 | HR 端职位管理 | `views/hr/JobManage.vue` | 226行 | `/api/hr/jobs` CRUD（5 个端点） | ✅ 已实现 |
+| 10 | HR 端人才库 | `views/hr/Talents.vue` | 139行 | `/api/hr/talents` | ✅ 已实现 |
 
-| # | 优化项 | 说明 |
-|---|--------|------|
-| 11 | 前端 ECharts 图表联调 | Dashboard 页面图表与 `/api/analysis/dashboard` 5 维度数据对接 |
-| 12 | Redis 缓存集成 | Dashboard 查询结果缓存（当前每次实时查库） |
+| # | 优化项 | 说明 | 状态 |
+|---|--------|------|------|
+| 11 | 前端 ECharts 图表联调 | Dashboard 页面图表与 `/api/analysis/dashboard` 5 维度数据对接 | ⏳ 待验证 |
+| 12 | Redis 缓存集成 | Dashboard 查询结果缓存（当前每次实时查库） | ⏳ 待实现 |
 
 ### 🟢 P2 — 后端补全（5 项）
 
@@ -513,11 +564,11 @@ POST /api/auth/login {username, password, tenantName}
 
 | 优先级 | 事项数 | 预估工作量 | 说明 |
 |--------|--------|-----------|------|
-| P0 验证 | 3 | 0.5 天 | 创建账号 + curl 测试 + 报告生成验证 |
-| P1 前端 | 12 | 3-5 天 | 10 个页面开发 + 图表联调 + 缓存集成 |
+| P0 验证 | 3 | 0.25 天（剩余） | 学生端+报告 API 已验证 ✅，前端联调待做 |
+| P1 前端 | 12 | 3-5 天 | 10 个页面已全部实现，图表联调 + 缓存集成待做 |
 | P2 后端 | 5 | 2-3 天 | 采集器 + sys_alert + 爬虫调优 + 技能提取 |
 | P6 AI | 6 | 15-20 天 | 6 大差异化模块，需引入 Neo4j/Python/LLM 等新组件 |
-| **合计** | **26** | **约 21-29 天** | — |
+| **合计** | **26** | **约 20-28 天** | — |
 
 ---
 

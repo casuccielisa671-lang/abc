@@ -57,3 +57,37 @@ export function markRead(id) {
 export function getUnreadCount() {
   return request.get('/push/unread/count')
 }
+
+// ========== 教师端 ==========
+export function getTeacherStudents(params) {
+  return request.get('/teacher/students', { params })
+}
+
+export function getStudentStats(userId) {
+  return request.get(`/teacher/students/${userId}/stats`)
+}
+
+export function getStudentBehaviors(userId, params) {
+  return request.get(`/teacher/students/${userId}/behaviors`, { params })
+}
+
+// ========== HR端 ==========
+export function getHrJobs(params) {
+  return request.get('/hr/jobs', { params })
+}
+
+export function createHrJob(data) {
+  return request.post('/hr/jobs', data)
+}
+
+export function updateHrJob(id, data) {
+  return request.put(`/hr/jobs/${id}`, data)
+}
+
+export function deleteHrJob(id) {
+  return request.delete(`/hr/jobs/${id}`)
+}
+
+export function getTalents(params) {
+  return request.get('/hr/talents', { params })
+}
