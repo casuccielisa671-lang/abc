@@ -15,7 +15,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 数据清洗服务实现
@@ -70,7 +73,7 @@ public class DataCleanServiceImpl implements DataCleanService {
         job.setSalaryMax(normalizeSalary(json.getInteger("salaryMax")));
         job.setEducation(normalizeEducation(json.getString("education")));
         job.setExperience(json.getString("experience"));
-        job.setSkills(extractSkills(json));
+        job.setSkills(extractSkills(json, title));
         job.setDescription(json.getString("description"));
         job.setPublishDate(parseDate(json.getString("publishDate")));
         job.setSource(source);
@@ -134,11 +137,45 @@ public class DataCleanServiceImpl implements DataCleanService {
         return "不限";
     }
 
-    /** 技能提取：优先取 skills 数组；缺失时返回空数组
-     *  TODO(P2): 从 description 中按技能词库（Java/Python/MySQL...）关键词匹配补全 */
-    private String extractSkills(JSONObject json) {
-        JSONArray skills = json.getJSONArray("skills");
-        return skills != null ? skills.toJSONString() : "[]";
+    /**
+     * 技能提取：以原始 skills 数组为准，再用词库从「标题 + 职位描述」中补全遗漏的技能。
+     * <p>
+     * 两者合并而非二选一：采集源给出的 skills 往往不全（只列了主要技术栈），
+     * 而描述文本里常常还提到别的要求。已有技能保持原样，不被词库的标准写法覆盖。
+     */
+    private String extractSkills(JSONObject json, String title) {
+        // 1. 原始 skills 数组（可能缺失）
+        JSONArray raw = json.getJSONArray("skills");
+        Set<String> merged = new LinkedHashSet<>();
+        Set<String> lowered = new HashSet<>();
+        if (raw != null) {
+            for (Object o : raw) {
+                if (o == null) {
+                    continue;
+                }
+                String s = String.valueOf(o).trim();
+                if (!s.isEmpty() && lowered.add(s.toLowerCase())) {
+                    merged.add(s);
+                }
+            }
+        }
+
+        // 2. 从标题 + 描述中补全
+        String text = (title == null ? "" : title) + "\n" + defaultString(json.getString("description"));
+        for (String skill : SkillDictionary.extract(text)) {
+            if (lowered.add(skill.toLowerCase())) {
+                merged.add(skill);
+            }
+        }
+
+        if (merged.isEmpty()) {
+            return "[]";
+        }
+        return JSON.toJSONString(merged);
+    }
+
+    private String defaultString(String s) {
+        return s == null ? "" : s;
     }
 
     /** 发布日期解析：解析失败时取当天 */

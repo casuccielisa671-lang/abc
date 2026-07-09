@@ -13,10 +13,14 @@ import com.occupation.common.result.Result;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 认证控制器 — 登录/登出
@@ -33,6 +37,29 @@ public class AuthController {
     private final TenantService tenantService;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+
+    /**
+     * 学校 / 企业列表 —— 无鉴权，供登录页下拉联想使用
+     * <p>
+     * 只返回启用中的租户，且只暴露 id 与名称，不泄露任何用户或统计信息。
+     * 放在 /api/auth 而不是 /api/open：后者是第三方 OpenAPI 命名空间，
+     * 受 ApiTokenInterceptor + 限流保护，未携带 Token 的请求会被拒绝。
+     */
+    @GetMapping("/tenants")
+    public Result<List<TenantOptionVO>> tenants() {
+        List<TenantOptionVO> list = tenantService.listActive().stream()
+                .map(t -> new TenantOptionVO(t.getId(), t.getName()))
+                .collect(Collectors.toList());
+        return Result.ok(list);
+    }
+
+    /** 租户下拉项（仅 id + 名称） */
+    @lombok.Data
+    @lombok.AllArgsConstructor
+    public static class TenantOptionVO {
+        private Long id;
+        private String name;
+    }
 
     /**
      * 登录接口

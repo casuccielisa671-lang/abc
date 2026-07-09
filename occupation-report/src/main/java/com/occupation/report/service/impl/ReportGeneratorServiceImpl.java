@@ -29,7 +29,6 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -57,9 +56,13 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
     private String storagePath;
 
     /** 内置默认模板（模板 templateContent 为空时使用）。
-     *  注意标签全部闭合（XHTML），保证可直接送 PDF 渲染。 */
+     *  注意标签全部闭合（XHTML），保证可直接送 PDF 渲染。
+     *  font-family 列出多个候选：PdfExporter 注册的是系统上实际存在的那一款中文字体，
+     *  只写 SimSun 的话在没装宋体的机器（如 Linux 容器）上仍会退化成方块。 */
     private static final String DEFAULT_TEMPLATE =
-            "<html><head><meta charset=\"UTF-8\"/><style>body{font-family:SimSun;padding:24px;}"
+            "<html><head><meta charset=\"UTF-8\"/><style>"
+            + "body{font-family:SimSun,\"Microsoft YaHei\",\"WenQuanYi Zen Hei\","
+            + "\"Noto Sans CJK SC\",\"PingFang SC\",sans-serif;padding:24px;}"
             + "h1{border-bottom:2px solid #333;} table{border-collapse:collapse;width:100%;}"
             + "td,th{border:1px solid #999;padding:6px;}</style></head><body>"
             + "<h1>${title}</h1>"
@@ -107,8 +110,8 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
                     ext = "pdf";
                     break;
                 case "WORD":
-                    // 基础实现：摘要文本导出；结构化表格导出见 WordExporter TODO
-                    fileBytes = wordExporter.export(template.getName(), Arrays.asList(aiSummary));
+                    // 结构化导出：标题层级 + 各维度数据表格，与 PDF 走同一份分析数据
+                    fileBytes = wordExporter.export(template.getName(), aiSummary, dashboard);
                     ext = "docx";
                     break;
                 default:
@@ -123,6 +126,7 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
             FileUtil.writeBytes(fileBytes, file);
 
             record.setFileUrl(file.getPath());
+            record.setAiSummary(aiSummary);
             record.setStatus("SUCCESS");
             recordMapper.updateById(record);
             log.info("报告生成成功: template={}, file={}", template.getName(), file.getPath());
@@ -142,6 +146,20 @@ public class ReportGeneratorServiceImpl implements ReportGeneratorService {
         LambdaQueryWrapper<ReportRecord> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByDesc(ReportRecord::getCreateTime);
         return recordMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+    }
+
+    @Override
+    public ReportRecord latestSuccess() {
+        LambdaQueryWrapper<ReportRecord> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ReportRecord::getStatus, "SUCCESS")
+               .orderByDesc(ReportRecord::getCreateTime)
+               .last("LIMIT 1");
+        return recordMapper.selectOne(wrapper);
+    }
+
+    @Override
+    public ReportRecord getRecord(Long recordId) {
+        return recordMapper.selectById(recordId);
     }
 
     @Override

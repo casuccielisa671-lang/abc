@@ -1,2 +1,0 @@
-[ERROR] Error executing Maven.
-[ERROR] Invalid threads value: 'ail'. Supported are int values.

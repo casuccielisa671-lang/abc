@@ -2,6 +2,7 @@ package com.occupation.recommend.service;
 
 import com.occupation.recommend.entity.StudentBehavior;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -29,4 +30,21 @@ public interface BehaviorService {
 
     /** 指定学生的行为明细（教师端） */
     List<StudentBehavior> listByUser(Long userId, int limit);
+
+    /**
+     * 指定职位集合上的某类行为记录（HR 端「收到的投递」）。
+     * jobIds 为空时返回空列表，不会退化成全表扫描。
+     */
+    List<StudentBehavior> listByJobIdsAndAction(Collection<Long> jobIds, String action);
+
+    /**
+     * 当前租户内各行为类型的总数（教师端概览：总浏览数 / 总投递数）。
+     */
+    Map<String, Long> countByActionForTenant();
+
+    /**
+     * 按用户分组的行为计数：userId → (action → count)。
+     * 一次查询取回，避免逐个学生查库的 N+1。userIds 为空时返回空 Map。
+     */
+    Map<Long, Map<String, Long>> countByActionGroupedByUser(Collection<Long> userIds);
 }

@@ -1,41 +1,49 @@
 <template>
   <div class="student-reports">
-    <h2>我的报告</h2>
-    <p class="subtitle">查看和下载已生成的个人就业分析报告</p>
+    <div class="page-head">
+      <h2 class="page-title">我的报告</h2>
+      <p class="page-sub">查看和下载本校已生成的就业分析报告</p>
+    </div>
 
     <el-card>
       <el-table :data="records" v-loading="loading" stripe>
         <el-table-column prop="id" label="ID" width="70" />
-        <el-table-column prop="templateName" label="报告名称" min-width="180" />
+        <el-table-column prop="templateName" label="报告名称" min-width="200">
+          <template #default="{ row }">{{ row.templateName || '模板已删除' }}</template>
+        </el-table-column>
+        <el-table-column label="类型" width="120">
+          <template #default="{ row }"><span class="chip">{{ typeLabel(row.type) }}</span></template>
+        </el-table-column>
         <el-table-column label="格式" width="90">
+          <template #default="{ row }"><span class="chip">{{ row.fileType || '—' }}</span></template>
+        </el-table-column>
+        <el-table-column label="状态" width="110">
           <template #default="{ row }">
-            <el-tag size="small" effect="plain">{{ row.format?.toUpperCase() || 'PDF' }}</el-tag>
+            <el-tag :type="statusTag(row.status)" size="small">{{ statusLabel(row.status) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 'COMPLETED' ? 'success' : 'warning'" size="small">
-              {{ row.status === 'COMPLETED' ? '已完成' : '生成中' }}
-            </el-tag>
-          </template>
+        <el-table-column label="生成时间" width="150">
+          <template #default="{ row }">{{ formatTime(row.createTime) }}</template>
         </el-table-column>
-        <el-table-column prop="createTime" label="生成时间" width="170" />
-        <el-table-column label="操作" width="120">
+        <el-table-column label="操作" width="110">
           <template #default="{ row }">
-            <el-button v-if="row.status === 'COMPLETED'" size="small" type="success" @click="handleDownload(row.id)">
-              下载报告
-            </el-button>
+            <el-button
+              v-if="row.status === 'SUCCESS'" text type="primary" size="small"
+              @click="handleDownload(row)"
+            >下载报告</el-button>
+            <span v-else class="muted">—</span>
           </template>
         </el-table-column>
       </el-table>
 
-      <el-pagination
-        v-model:current-page="page" v-model:page-size="size"
-        :total="total" layout="total, prev, pager, next"
-        @current-change="loadRecords" style="margin-top:16px; justify-content:flex-end"
-      />
+      <el-empty v-if="!loading && !records.length" description="暂无报告，请联系管理员生成" />
 
-      <el-empty v-if="!loading && records.length === 0" description="暂无报告，请联系管理员生成" style="margin-top:40px" />
+      <el-pagination
+        v-if="total > size"
+        v-model:current-page="page" :page-size="size"
+        :total="total" layout="total, prev, pager, next"
+        @current-change="loadRecords"
+      />
     </el-card>
   </div>
 </template>
@@ -43,6 +51,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getReportRecords, downloadReport } from '@/api/admin'
+import { toList, toTotal } from '@/utils/list'
+import { formatTime } from '@/utils/format'
+import { saveBlob } from '@/utils/download'
 
 const records = ref([])
 const loading = ref(false)
@@ -53,22 +64,35 @@ const total = ref(0)
 async function loadRecords() {
   loading.value = true
   try {
-    const data = await getReportRecords({ page: page.value, size: size.value })
-    records.value = data.records || data.list || []
-    total.value = data.total || 0
+    const data = await getReportRecords({ pageNum: page.value, pageSize: size.value })
+    records.value = toList(data)
+    total.value = toTotal(data, records.value)
   } finally {
     loading.value = false
   }
 }
 
-function handleDownload(id) {
-  window.open(downloadReport(id), '_blank')
+async function handleDownload(row) {
+  const ext = { PDF: 'pdf', WORD: 'docx', HTML: 'html' }[row.fileType] || 'bin'
+  try {
+    await saveBlob(downloadReport(row.id), `report-${row.id}.${ext}`)
+  } catch { /* 拦截器已提示 */ }
 }
 
-onMounted(() => loadRecords())
+// 后端状态是 SUCCESS，不是 COMPLETED —— 原来写错导致下载按钮永不出现
+function statusTag(status) {
+  return { SUCCESS: 'success', FAILED: 'danger', GENERATING: 'warning', PENDING: 'info' }[status] || 'info'
+}
+function statusLabel(status) {
+  return { SUCCESS: '已完成', FAILED: '失败', GENERATING: '生成中', PENDING: '排队中' }[status] || status
+}
+function typeLabel(type) {
+  return { MONTHLY: '月度报告', QUARTERLY: '季度报告', YEARLY: '年度报告' }[type] || type || '—'
+}
+
+onMounted(loadRecords)
 </script>
 
 <style scoped>
-.student-reports h2 { margin-bottom: 4px; }
-.subtitle { color: #909399; margin-bottom: 16px; }
+.muted { color: var(--app-ink-3); }
 </style>

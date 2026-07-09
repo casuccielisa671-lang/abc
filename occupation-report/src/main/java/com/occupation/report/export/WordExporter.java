@@ -1,20 +1,27 @@
 package com.occupation.report.export;
 
+import com.occupation.analysis.vo.DashboardVO;
 import com.occupation.common.exception.BizException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.apache.poi.xwpf.usermodel.XWPFTable;
+import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.function.Function;
 
 /**
  * Word 导出器 — Apache POI 生成 .docx
  * <p>
- * 当前为基础实现：将报告的纯文本内容逐段写入 Word。
- * TODO(P3-B组): 结构化导出——解析报告章节，生成带标题层级、
- * 数据表格（XWPFTable）和图表截图的完整 Word 文档。
+ * 结构化导出：标题 → 生成时间 → 智能摘要 → 各维度数据表格（XWPFTable）。
+ * 表格数据直接取自 {@link DashboardVO}，与 PDF/HTML 走的是同一份分析结果，口径一致。
  *
  * @author occupation-team
  */
@@ -22,28 +29,42 @@ import java.io.ByteArrayOutputStream;
 @Component
 public class WordExporter {
 
+    private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+    /** Word 里显式指定中文字体，避免默认西文字体渲染中文时字形缺失 */
+    private static final String CJK_FONT = "SimSun";
+
     /**
-     * 将报告文本内容导出为 Word 字节流
+     * 结构化导出报告
      *
-     * @param title      报告标题
-     * @param paragraphs 正文段落（已去除 HTML 标签的纯文本）
+     * @param title     报告标题
+     * @param aiSummary 智能摘要正文
+     * @param dashboard 分析数据（各维度排行）
      */
-    public byte[] export(String title, java.util.List<String> paragraphs) {
+    public byte[] export(String title, String aiSummary, DashboardVO dashboard) {
         try (XWPFDocument doc = new XWPFDocument();
              ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 
-            // 标题
-            XWPFParagraph titlePara = doc.createParagraph();
-            XWPFRun titleRun = titlePara.createRun();
-            titleRun.setText(title);
-            titleRun.setBold(true);
-            titleRun.setFontSize(18);
+            writeTitle(doc, title);
+            writeMeta(doc, "生成时间：" + LocalDateTime.now().format(TIME_FMT));
 
-            // 正文
-            for (String text : paragraphs) {
-                XWPFParagraph para = doc.createParagraph();
-                para.createRun().setText(text);
-            }
+            writeHeading(doc, "一、智能摘要");
+            writeBody(doc, aiSummary == null || aiSummary.isEmpty() ? "（无摘要）" : aiSummary);
+
+            writeHeading(doc, "二、行业岗位需求 Top10");
+            writeDimensionTable(doc, "行业", "岗位数", dashboard.getIndustryTop());
+
+            writeHeading(doc, "三、热门技能 Top20");
+            writeDimensionTable(doc, "技能", "热度", dashboard.getSkillHot());
+
+            writeHeading(doc, "四、城市分布");
+            writeDimensionTable(doc, "城市", "岗位数", dashboard.getCityDist());
+
+            writeHeading(doc, "五、学历分布");
+            writeDimensionTable(doc, "学历", "岗位数", dashboard.getEducationDist());
+
+            writeHeading(doc, "六、趋势（按月）");
+            writeTrendTable(doc, dashboard.getTrend());
 
             doc.write(baos);
             return baos.toByteArray();
@@ -51,5 +72,97 @@ public class WordExporter {
             log.error("Word 导出失败", e);
             throw new BizException("Word 导出失败: " + e.getMessage());
         }
+    }
+
+    private void writeTitle(XWPFDocument doc, String title) {
+        XWPFParagraph p = doc.createParagraph();
+        p.setAlignment(ParagraphAlignment.CENTER);
+        XWPFRun r = newRun(p);
+        r.setText(title);
+        r.setBold(true);
+        r.setFontSize(18);
+    }
+
+    private void writeMeta(XWPFDocument doc, String text) {
+        XWPFParagraph p = doc.createParagraph();
+        p.setAlignment(ParagraphAlignment.CENTER);
+        XWPFRun r = newRun(p);
+        r.setText(text);
+        r.setFontSize(10);
+        r.setColor("808080");
+    }
+
+    private void writeHeading(XWPFDocument doc, String text) {
+        XWPFParagraph p = doc.createParagraph();
+        XWPFRun r = newRun(p);
+        r.setText(text);
+        r.setBold(true);
+        r.setFontSize(14);
+    }
+
+    private void writeBody(XWPFDocument doc, String text) {
+        XWPFParagraph p = doc.createParagraph();
+        XWPFRun r = newRun(p);
+        r.setText(text);
+        r.setFontSize(11);
+    }
+
+    /** 两列表格：维度值 + 指标 */
+    private void writeDimensionTable(XWPFDocument doc, String nameHeader, String valueHeader,
+                                     List<DashboardVO.DimensionItem> items) {
+        if (items == null || items.isEmpty()) {
+            writeBody(doc, "（暂无数据）");
+            return;
+        }
+        writeTable(doc, new String[]{nameHeader, valueHeader}, items,
+                DashboardVO.DimensionItem::getName,
+                i -> i.getValue() == null ? "" : i.getValue().stripTrailingZeros().toPlainString());
+    }
+
+    /** 三列表格：周期 + 岗位数 + 平均薪资 */
+    private void writeTrendTable(XWPFDocument doc, List<DashboardVO.TrendItem> items) {
+        if (items == null || items.isEmpty()) {
+            writeBody(doc, "（暂无数据）");
+            return;
+        }
+        XWPFTable table = doc.createTable(items.size() + 1, 3);
+        fillRow(table.getRow(0), true, "周期", "岗位数", "平均薪资(元)");
+        for (int i = 0; i < items.size(); i++) {
+            DashboardVO.TrendItem t = items.get(i);
+            fillRow(table.getRow(i + 1), false,
+                    t.getPeriod(),
+                    String.valueOf(t.getJobCount()),
+                    t.getAvgSalary() == null ? "" : t.getAvgSalary().stripTrailingZeros().toPlainString());
+        }
+    }
+
+    private <T> void writeTable(XWPFDocument doc, String[] headers, List<T> items,
+                                Function<T, String> col1, Function<T, String> col2) {
+        XWPFTable table = doc.createTable(items.size() + 1, headers.length);
+        fillRow(table.getRow(0), true, headers);
+        for (int i = 0; i < items.size(); i++) {
+            T item = items.get(i);
+            fillRow(table.getRow(i + 1), false, col1.apply(item), col2.apply(item));
+        }
+    }
+
+    /**
+     * 填一行。POI 新建表格时每个单元格已自带一个空段落，
+     * 直接 setText 会追加出第二段，所以复用 getParagraphArray(0)。
+     */
+    private void fillRow(XWPFTableRow row, boolean bold, String... values) {
+        for (int i = 0; i < values.length; i++) {
+            XWPFParagraph p = row.getCell(i).getParagraphArray(0);
+            XWPFRun r = newRun(p);
+            r.setText(values[i] == null ? "" : values[i]);
+            r.setBold(bold);
+            r.setFontSize(10);
+        }
+    }
+
+    private XWPFRun newRun(XWPFParagraph p) {
+        XWPFRun r = p.createRun();
+        r.setFontFamily(CJK_FONT);
+        return r;
     }
 }

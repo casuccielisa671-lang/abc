@@ -29,6 +29,17 @@ public interface ReportGeneratorService {
     Page<ReportRecord> pageRecords(int pageNum, int pageSize);
 
     /**
+     * 当前租户下最新一份生成成功的报告；没有则返回 null。
+     * <p>
+     * 供开放 API 的报告摘要接口使用。租户范围由多租户插件按
+     * {@code TenantContextHolder} 注入，调用前必须已设置租户上下文。
+     */
+    ReportRecord latestSuccess();
+
+    /** 按 ID 取报告记录（下载接口用它拼出带扩展名的文件名）；不存在返回 null */
+    ReportRecord getRecord(Long recordId);
+
+    /**
      * 读取报告文件内容（供下载接口返回）
      *
      * @return 文件字节流

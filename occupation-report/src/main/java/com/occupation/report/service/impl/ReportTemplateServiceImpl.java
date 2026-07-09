@@ -42,6 +42,11 @@ public class ReportTemplateServiceImpl implements ReportTemplateService {
     }
 
     @Override
+    public ReportTemplate findById(Long id) {
+        return id == null ? null : templateMapper.selectById(id);
+    }
+
+    @Override
     public void saveTemplate(TemplateSaveDTO dto) {
         ReportTemplate template;
         if (dto.getId() != null) {

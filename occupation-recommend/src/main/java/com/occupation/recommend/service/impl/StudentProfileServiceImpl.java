@@ -1,6 +1,8 @@
 package com.occupation.recommend.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.occupation.recommend.dto.ProfileSaveDTO;
 import com.occupation.recommend.entity.SysStudentProfile;
 import com.occupation.recommend.mapper.SysStudentProfileMapper;
@@ -56,5 +58,19 @@ public class StudentProfileServiceImpl implements StudentProfileService {
     @Override
     public List<SysStudentProfile> listAll() {
         return profileMapper.selectList(null);
+    }
+
+    @Override
+    public Page<SysStudentProfile> pageProfiles(String keyword, String educationLevel,
+                                                int pageNum, int pageSize) {
+        LambdaQueryWrapper<SysStudentProfile> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(StrUtil.isNotBlank(educationLevel), SysStudentProfile::getEducationLevel, educationLevel);
+        if (StrUtil.isNotBlank(keyword)) {
+            wrapper.and(w -> w.like(SysStudentProfile::getMajor, keyword)
+                              .or()
+                              .like(SysStudentProfile::getSkills, keyword));
+        }
+        wrapper.orderByAsc(SysStudentProfile::getUserId);
+        return profileMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
 }

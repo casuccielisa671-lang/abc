@@ -1,5 +1,6 @@
 package com.occupation.recommend.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.occupation.recommend.dto.ProfileSaveDTO;
 import com.occupation.recommend.entity.SysStudentProfile;
 
@@ -26,4 +27,12 @@ public interface StudentProfileService {
      * 当前租户内全部学生画像（教师端统计 / 每日推送任务使用）
      */
     List<SysStudentProfile> listAll();
+
+    /**
+     * 分页查询当前租户内的学生画像（教师端学生列表 / HR 端人才浏览）
+     *
+     * @param keyword        专业或技能模糊匹配，空表示不筛选
+     * @param educationLevel 学历筛选，空表示不筛选
+     */
+    Page<SysStudentProfile> pageProfiles(String keyword, String educationLevel, int pageNum, int pageSize);
 }

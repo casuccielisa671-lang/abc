@@ -17,7 +17,11 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -67,6 +71,9 @@ public class JobDetailServiceImpl implements JobDetailService {
                               .or()
                               .like("company", query.getKeyword()));
         }
+        if (query.getPublisherId() != null) {
+            wrapper.eq("publisher_id", query.getPublisherId());
+        }
 
         // 按发布日期降序
         wrapper.orderByDesc("publish_date");
@@ -94,7 +101,22 @@ public class JobDetailServiceImpl implements JobDetailService {
     }
 
     @Override
-    public Long saveJob(JobSaveDTO dto) {
+    public List<JobDetailVO> listByIds(Collection<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Map<Long, JobDetail> byId = jobDetailMapper.selectBatchIds(ids).stream()
+                .collect(Collectors.toMap(JobDetail::getId, j -> j));
+        // 按传入顺序输出（收藏列表依赖「最近收藏在前」的顺序）
+        return ids.stream()
+                .map(byId::get)
+                .filter(Objects::nonNull)
+                .map(this::toVO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Long saveJob(JobSaveDTO dto, Long operatorId) {
         JobDetail job;
         if (dto.getId() != null) {
             job = jobDetailMapper.selectById(dto.getId());
@@ -104,12 +126,14 @@ public class JobDetailServiceImpl implements JobDetailService {
             if (!"HR_PUBLISH".equals(job.getSource())) {
                 throw new BizException("仅允许编辑 HR 发布的职位，采集数据不可修改");
             }
+            requireOwnership(job, operatorId);
         } else {
             job = new JobDetail();
             job.setSource("HR_PUBLISH");
             // HR 发布的职位无外部 URL，用内部标识占位保证去重逻辑不冲突
             job.setSourceUrl("hr://job/" + System.nanoTime());
             job.setPublishDate(LocalDate.now());
+            job.setPublisherId(operatorId);
             job.setCreateTime(LocalDateTime.now());
         }
         job.setTitle(dto.getTitle());
@@ -133,7 +157,7 @@ public class JobDetailServiceImpl implements JobDetailService {
     }
 
     @Override
-    public void removeJob(Long id) {
+    public void removeJob(Long id, Long operatorId) {
         JobDetail job = jobDetailMapper.selectById(id);
         if (job == null) {
             return;
@@ -141,7 +165,23 @@ public class JobDetailServiceImpl implements JobDetailService {
         if (!"HR_PUBLISH".equals(job.getSource())) {
             throw new BizException("仅允许下架 HR 发布的职位");
         }
+        requireOwnership(job, operatorId);
         jobDetailMapper.deleteById(id);
+    }
+
+    /**
+     * 校验职位归属：只有发布者本人可以改动自己的职位。
+     * <p>
+     * publisher_id 为空的历史数据（v1.0 之前发布、无归属信息）一律拒绝改动，
+     * 而不是让第一个碰它的 HR「认领」——那会让越权改动变成合法操作。
+     */
+    private void requireOwnership(JobDetail job, Long operatorId) {
+        if (operatorId == null || job.getPublisherId() == null
+                || !job.getPublisherId().equals(operatorId)) {
+            log.warn("拒绝越权改动职位: jobId={}, publisherId={}, operatorId={}",
+                    job.getId(), job.getPublisherId(), operatorId);
+            throw new BizException(403, "无权操作该职位，仅发布者本人可编辑或下架");
+        }
     }
 
     /**
@@ -163,6 +203,7 @@ public class JobDetailServiceImpl implements JobDetailService {
         vo.setPublishDate(entity.getPublishDate());
         vo.setSource(entity.getSource());
         vo.setSourceUrl(entity.getSourceUrl());
+        vo.setPublisherId(entity.getPublisherId());
         vo.setCreateTime(entity.getCreateTime());
         return vo;
     }

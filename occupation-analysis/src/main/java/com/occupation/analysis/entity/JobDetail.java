@@ -62,6 +62,9 @@ public class JobDetail implements Serializable {
     /** 来源 URL */
     private String sourceUrl;
 
+    /** 发布者用户 ID（仅 source=HR_PUBLISH 有值；采集数据为 null） */
+    private Long publisherId;
+
     /** 创建时间 */
     private LocalDateTime createTime;
 

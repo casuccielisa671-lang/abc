@@ -3,6 +3,14 @@
 *.iml
 .vscode/
 .codebuddy/
+.mybatis/
+
+# 运行时生成物（报告服务输出）
+# 不加前导斜杠：报告落盘位置取决于进程工作目录 ——
+# `mvn spring-boot:run -pl occupation-web` 会写到 occupation-web/data/reports/，
+# 只写 `data/reports/` 时那个路径不会被忽略，二进制报告会被误提交
+data/reports/
+**/data/reports/
 
 # Maven
 target/

@@ -9,6 +9,7 @@ import com.occupation.crawler.mapper.CrawlerLogMapper;
 import com.occupation.crawler.mapper.CrawlerTaskMapper;
 import com.occupation.crawler.processor.BossJobPageProcessor;
 import com.occupation.crawler.processor.MockJobPageProcessor;
+import com.occupation.crawler.processor.ZhaopinJobPageProcessor;
 import com.occupation.crawler.service.CrawlerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -80,6 +81,12 @@ public class CrawlerServiceImpl implements CrawlerService {
                 String keyword = params.getOrDefault("query", "Java");
                 String city = params.getOrDefault("city", "101010100");
                 spider.addRequest(BossJobPageProcessor.seedRequest(keyword, city));
+            } else if (processor instanceof ZhaopinJobPageProcessor) {
+                // urlPattern 存的是参数串而非 URL，必须走 seedRequest 拼出真实列表页地址
+                Map<String, String> params = parseUrlParams(task.getUrlPattern());
+                String keyword = params.getOrDefault("kw", params.getOrDefault("query", "Java"));
+                String city = params.getOrDefault("jl", params.getOrDefault("city", "530"));
+                spider.addRequest(ZhaopinJobPageProcessor.seedRequest(keyword, city));
             } else {
                 spider.addUrl(task.getUrlPattern());
             }
@@ -182,15 +189,22 @@ public class CrawlerServiceImpl implements CrawlerService {
                 // 使用 InputStream 方式读取，兼容 JAR 包内运行
                 String resourcePath = "mock/" + task.getUrlPattern();
                 return new MockJobPageProcessor(resourcePath, true);
-            case "BOSS_ZHIPIN":
+            case "BOSS_ZHIPIN": {
                 // 真实采集：从 urlPattern 解析 keyword 和 city
                 Map<String, String> params = parseUrlParams(task.getUrlPattern());
                 String keyword = params.getOrDefault("query", "Java");
                 String cityCode = params.getOrDefault("city", "101010100");
                 int maxPages = Integer.parseInt(params.getOrDefault("maxPages", "3"));
                 return new BossJobPageProcessor(keyword, cityCode, maxPages);
-            case "ZHAOPIN":
-                throw new UnsupportedOperationException("智联招聘采集器将在后续版本实现");
+            }
+            case "ZHAOPIN": {
+                // 真实采集：智联的城市参数是 jl（如 530=杭州），与 BOSS 的 city 编码不同
+                Map<String, String> params = parseUrlParams(task.getUrlPattern());
+                String keyword = params.getOrDefault("kw", params.getOrDefault("query", "Java"));
+                String cityCode = params.getOrDefault("jl", params.getOrDefault("city", "530"));
+                int maxPages = Integer.parseInt(params.getOrDefault("maxPages", "3"));
+                return new ZhaopinJobPageProcessor(keyword, cityCode, maxPages);
+            }
             default:
                 throw new IllegalArgumentException("不支持的采集源类型: " + task.getSourceType());
         }

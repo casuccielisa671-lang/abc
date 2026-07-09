@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-// 根组件 — 仅作路由容器
+// 根组件 — 仅作路由容器（主题样式见 styles/theme.css）
 </script>
 
 <style>
@@ -14,6 +14,5 @@
 }
 html, body, #app {
   height: 100%;
-  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', Arial, sans-serif;
 }
 </style>

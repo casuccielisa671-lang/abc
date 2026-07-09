@@ -20,7 +20,9 @@ spring:
   # ========== MySQL 数据源 ==========
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${DB_URL:jdbc:mysql://localhost:3306/occupation?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+    # 用 127.0.0.1 而非 localhost：Windows 上 localhost 可能解析为 IPv6 ::1，
+    # 会连到 WSL/本机残留的 MySQL 而不是 Docker 映射的 3306
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/occupation?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:root}
     type: com.alibaba.druid.pool.DruidDataSource
@@ -72,9 +74,16 @@ app:
   scheduler:
     # 内置定时任务总开关（分析汇总 / 每日推荐推送 / 定时报告）
     enabled: true
+  user:
+    # Excel 批量导入时，未在表格里填写密码的账号使用的初始密码
+    default-password: ${USER_DEFAULT_PASSWORD:Occupation@123}
   report:
     # 生成的报告文件落盘目录
     storage-path: ${REPORT_STORAGE_PATH:./data/reports}
+    pdf:
+      # 导出 PDF 用的中文字体。留空时按「类路径 fonts/ → 系统字体目录」自动探测，
+      # 都找不到会打告警且中文显示为方块（字体文件受授权限制，不随仓库分发）
+      font-path: ${REPORT_PDF_FONT_PATH:}
   ai:
     # LLM 智能报告摘要（差异化亮点）。关闭时报告引擎自动降级为模板化文字
     enabled: false

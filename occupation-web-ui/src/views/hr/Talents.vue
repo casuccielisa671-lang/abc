@@ -1,44 +1,45 @@
 <template>
   <div class="hr-talents">
-    <h2>人才浏览</h2>
-    <p class="subtitle">浏览本校学生画像（脱敏展示，不含真实姓名等隐私信息）</p>
+    <div class="page-head">
+      <h2 class="page-title">人才浏览</h2>
+      <p class="page-sub">浏览本校学生画像（脱敏展示，不含姓名与联系方式）</p>
+    </div>
 
     <el-card>
       <div class="search-bar">
-        <el-input v-model="searchKeyword" placeholder="搜索专业/技能" clearable style="width:240px"
-          @keyup.enter="loadTalents" />
-        <el-select v-model="searchEducation" placeholder="学历筛选" clearable style="width:140px; margin-left:12px"
-          @change="loadTalents">
-          <el-option label="大专" value="大专" />
+        <el-input
+          v-model="searchKeyword" placeholder="搜索专业 / 技能" clearable
+          style="width:240px" @keyup.enter="search" @clear="search"
+        />
+        <el-select v-model="searchEducation" placeholder="学历筛选" clearable style="width:140px" @change="search">
+          <el-option label="专科" value="专科" />
           <el-option label="本科" value="本科" />
           <el-option label="硕士" value="硕士" />
           <el-option label="博士" value="博士" />
         </el-select>
-        <el-button type="primary" @click="loadTalents" style="margin-left:12px">查询</el-button>
+        <el-button type="primary" @click="search">查询</el-button>
       </div>
 
       <el-table :data="talents" v-loading="loading" stripe>
         <el-table-column type="index" label="#" width="50" />
         <el-table-column label="学历" width="90">
-          <template #default="{ row }">
-            <el-tag size="small">{{ row.education || '-' }}</el-tag>
-          </template>
+          <template #default="{ row }"><span class="chip">{{ row.educationLevel || '—' }}</span></template>
         </el-table-column>
-        <el-table-column prop="major" label="专业" min-width="130" />
+        <el-table-column prop="major" label="专业" min-width="140" />
         <el-table-column label="技能" min-width="220">
           <template #default="{ row }">
-            <el-tag v-for="sk in parseSkills(row.skills)" :key="sk" size="small" style="margin:2px">{{ sk }}</el-tag>
+            <div class="chip-row">
+              <span v-for="sk in parseSkills(row.skills)" :key="sk" class="chip">{{ sk }}</span>
+              <span v-if="!parseSkills(row.skills).length">—</span>
+            </div>
           </template>
         </el-table-column>
         <el-table-column label="期望城市" width="110">
-          <template #default="{ row }">{{ row.intendedCity || '-' }}</template>
+          <template #default="{ row }">{{ row.expectedCity || '—' }}</template>
         </el-table-column>
         <el-table-column label="期望薪资" width="140">
           <template #default="{ row }">
-            <template v-if="row.expectedSalaryMin">
-              {{ (row.expectedSalaryMin / 1000).toFixed(0) }}k - {{ (row.expectedSalaryMax / 1000).toFixed(0) }}k
-            </template>
-            <span v-else>-</span>
+            <span class="salary-text">{{ salaryRange(row.expectedSalaryMin, row.expectedSalaryMax, '未填写') }}</span>
           </template>
         </el-table-column>
         <el-table-column label="求职状态" width="100">
@@ -48,38 +49,43 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="100">
+        <el-table-column label="操作" width="90">
           <template #default="{ row }">
-            <el-button size="small" type="primary" @click="showDetail(row)">详情</el-button>
+            <el-button text type="primary" size="small" @click="showDetail(row)">详情</el-button>
           </template>
         </el-table-column>
       </el-table>
 
+      <el-empty v-if="!loading && !talents.length" description="没有符合条件的人才" />
+
       <el-pagination
-        v-model:current-page="page" v-model:page-size="size"
+        v-if="total > size"
+        v-model:current-page="page" :page-size="size"
         :total="total" layout="total, prev, pager, next"
-        @current-change="loadTalents" style="margin-top:16px; justify-content:flex-end"
+        @current-change="loadTalents"
       />
     </el-card>
 
     <!-- 人才详情对话框 -->
-    <el-dialog v-model="detailVisible" title="人才详情（脱敏）" width="500px">
+    <el-dialog v-model="detailVisible" title="人才详情（脱敏）" width="520px">
       <el-descriptions v-if="currentTalent" :column="2" border>
-        <el-descriptions-item label="学历">{{ currentTalent.education || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="专业">{{ currentTalent.major || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="期望城市">{{ currentTalent.intendedCity || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="期望薪资">
-          <template v-if="currentTalent.expectedSalaryMin">
-            {{ (currentTalent.expectedSalaryMin / 1000).toFixed(0) }}k - {{ (currentTalent.expectedSalaryMax / 1000).toFixed(0) }}k
-          </template>
-          <span v-else>-</span>
+        <el-descriptions-item label="学历">{{ currentTalent.educationLevel || '—' }}</el-descriptions-item>
+        <el-descriptions-item label="专业">{{ currentTalent.major || '—' }}</el-descriptions-item>
+        <el-descriptions-item label="期望城市">{{ currentTalent.expectedCity || '—' }}</el-descriptions-item>
+        <el-descriptions-item label="期望行业">{{ currentTalent.expectedIndustry || '—' }}</el-descriptions-item>
+        <el-descriptions-item label="期望薪资" :span="2">
+          <span class="salary-text">
+            {{ salaryRange(currentTalent.expectedSalaryMin, currentTalent.expectedSalaryMax, '未填写') }}
+          </span>
         </el-descriptions-item>
         <el-descriptions-item label="技能" :span="2">
-          <el-tag v-for="sk in parseSkills(currentTalent.skills)" :key="sk" size="small" style="margin:2px">{{ sk }}</el-tag>
-          <span v-if="!currentTalent.skills">-</span>
+          <div class="chip-row">
+            <span v-for="sk in parseSkills(currentTalent.skills)" :key="sk" class="chip">{{ sk }}</span>
+            <span v-if="!parseSkills(currentTalent.skills).length">—</span>
+          </div>
         </el-descriptions-item>
-        <el-descriptions-item label="浏览职位数">{{ currentTalent.viewCount || 0 }}</el-descriptions-item>
-        <el-descriptions-item label="投递次数">{{ currentTalent.applyCount || 0 }}</el-descriptions-item>
+        <el-descriptions-item label="浏览职位数">{{ currentTalent.viewCount }}</el-descriptions-item>
+        <el-descriptions-item label="投递次数">{{ currentTalent.applyCount }}</el-descriptions-item>
       </el-descriptions>
       <template #footer>
         <el-button @click="detailVisible = false">关闭</el-button>
@@ -91,6 +97,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getTalents } from '@/api/student'
+import { toList, toTotal } from '@/utils/list'
+import { parseSkills } from '@/utils/skills'
+import { salaryRange } from '@/utils/format'
 
 const talents = ref([])
 const loading = ref(false)
@@ -103,12 +112,6 @@ const searchEducation = ref('')
 const detailVisible = ref(false)
 const currentTalent = ref(null)
 
-function parseSkills(skills) {
-  if (!skills) return []
-  if (Array.isArray(skills)) return skills
-  try { return JSON.parse(skills) } catch { return skills.split(',').map(s => s.trim()).filter(Boolean) }
-}
-
 async function loadTalents() {
   loading.value = true
   try {
@@ -116,11 +119,17 @@ async function loadTalents() {
     if (searchKeyword.value) params.keyword = searchKeyword.value
     if (searchEducation.value) params.education = searchEducation.value
     const data = await getTalents(params)
-    talents.value = data.records || data.list || []
-    total.value = data.total || 0
+    talents.value = toList(data)
+    total.value = toTotal(data, talents.value)
   } finally {
     loading.value = false
   }
+}
+
+/** 改变筛选条件后回到第一页，否则会停在一个可能已不存在的页码上 */
+function search() {
+  page.value = 1
+  loadTalents()
 }
 
 function showDetail(row) {
@@ -128,11 +137,10 @@ function showDetail(row) {
   detailVisible.value = true
 }
 
-onMounted(() => loadTalents())
+onMounted(loadTalents)
 </script>
 
 <style scoped>
-.hr-talents h2 { margin-bottom: 4px; }
-.subtitle { color: #909399; margin-bottom: 16px; }
-.search-bar { display: flex; align-items: center; margin-bottom: 16px; }
+.search-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 4px; }
 </style>

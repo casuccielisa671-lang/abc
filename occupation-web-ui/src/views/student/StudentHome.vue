@@ -1,37 +1,50 @@
 <template>
   <div class="student-home">
-    <h2>职位推荐</h2>
-    <p class="subtitle">根据你的画像智能匹配，得分越高越适合你</p>
+    <div class="page-head">
+      <h2 class="page-title">职位推荐</h2>
+      <p class="page-sub">根据你的画像智能匹配，得分越高越适合你</p>
+    </div>
 
     <div v-loading="loading">
       <el-empty v-if="!loading && list.length === 0" description="暂无推荐职位，请先完善个人画像" />
 
       <div class="job-grid">
-        <el-card
+        <div
           v-for="item in list" :key="item.job?.id"
-          class="job-card" shadow="hover"
+          class="job-card"
           @click="goDetail(item.job?.id)"
         >
-          <div class="card-header">
-            <h3>{{ item.job?.title }}</h3>
-            <el-tag type="warning" size="small">匹配 {{ item.score }} 分</el-tag>
+          <div class="job-head">
+            <div>
+              <h3 class="job-title">{{ item.job?.title }}</h3>
+              <p class="job-company">{{ item.job?.company }}</p>
+            </div>
+            <div class="job-score">
+              <div class="num">{{ item.score }}</div>
+              <div class="cap">匹配分</div>
+            </div>
           </div>
-          <p class="company">{{ item.job?.company }}</p>
-          <div class="tags">
-            <el-tag size="small">{{ item.job?.city }}</el-tag>
-            <el-tag size="small" type="success">{{ item.job?.salaryMin / 1000 }}k-{{ item.job?.salaryMax / 1000 }}k</el-tag>
-            <el-tag size="small" type="info">{{ item.job?.education }}</el-tag>
+
+          <div class="job-salary">{{ salaryRange(item.job?.salaryMin, item.job?.salaryMax) }}</div>
+
+          <div class="job-chips">
+            <span class="chip">{{ item.job?.city }}</span>
+            <span class="chip">{{ item.job?.education || '学历不限' }}</span>
+            <span v-if="item.job?.industry" class="chip">{{ item.job.industry }}</span>
           </div>
-          <p class="reason" v-if="item.matchReason">{{ item.matchReason }}</p>
-          <div class="missing" v-if="item.missingSkills?.length">
-            <span class="missing-label">建议学习：</span>
-            <el-tag v-for="sk in item.missingSkills" :key="sk" size="small" type="danger" effect="plain">{{ sk }}</el-tag>
+
+          <p class="job-reason" v-if="item.matchReason">{{ item.matchReason }}</p>
+
+          <div class="job-learn" v-if="item.missingSkills?.length">
+            建议学习
+            <span v-for="sk in item.missingSkills" :key="sk" class="chip learn">{{ sk }}</span>
           </div>
-          <div class="card-footer">
+
+          <div class="job-foot">
             <span class="date">{{ item.job?.publishDate }}</span>
-            <el-button type="primary" size="small" @click.stop="goDetail(item.job?.id)">查看详情</el-button>
+            <el-button type="primary" text size="small" @click.stop="goDetail(item.job?.id)">查看详情 →</el-button>
           </div>
-        </el-card>
+        </div>
       </div>
     </div>
   </div>
@@ -41,6 +54,8 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getRecommend } from '@/api/student'
+import { toList } from '@/utils/list'
+import { salaryRange } from '@/utils/format'
 
 const router = useRouter()
 const list = ref([])
@@ -53,26 +68,12 @@ function goDetail(id) {
 onMounted(async () => {
   loading.value = true
   try {
-    list.value = await getRecommend(20)
+    // 未填画像时后端抛业务异常，拦截器已提示，这里保持空列表并展示引导文案
+    list.value = toList(await getRecommend(20))
+  } catch {
+    list.value = []
   } finally {
     loading.value = false
   }
 })
 </script>
-
-<style scoped>
-.student-home h2 { margin-bottom: 4px; }
-.subtitle { color: #909399; margin-bottom: 16px; }
-.job-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 16px; }
-.job-card { cursor: pointer; transition: transform 0.2s; }
-.job-card:hover { transform: translateY(-2px); }
-.card-header { display: flex; justify-content: space-between; align-items: center; }
-.card-header h3 { margin: 0; font-size: 16px; }
-.company { color: #606266; margin: 8px 0; }
-.tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-.reason { color: #67C23A; font-size: 13px; margin: 6px 0; }
-.missing { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin: 6px 0; }
-.missing-label { font-size: 12px; color: #F56C6C; }
-.card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
-.date { color: #c0c4cc; font-size: 12px; }
-</style>

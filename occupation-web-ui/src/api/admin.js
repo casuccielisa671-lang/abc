@@ -69,6 +69,20 @@ export function updateUserStatus(id, status) {
   return request.put(`/admin/users/${id}/status`, null, { params: { status } })
 }
 
+/** Excel 批量导入用户（全量校验通过才写库，返回逐行错误报告） */
+export function batchImportUsers(file) {
+  const form = new FormData()
+  form.append('file', file)
+  return request.post('/admin/users/batch-import', form, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}
+
+/** 下载导入模板 */
+export function downloadImportTemplate() {
+  return request.get('/admin/users/import-template', { responseType: 'blob' })
+}
+
 // ========== 报告模板 ==========
 export function getReportTemplates(params) {
   return request.get('/admin/report/template', { params })
@@ -99,8 +113,13 @@ export function deleteReportRecord(id) {
   return request.delete(`/report/records/${id}`)
 }
 
+/**
+ * 下载报告文件。
+ * 过去返回一个 URL 交给 window.open —— 那样不带 Authorization 头，后端 401，
+ * 表现为「点了没反应」。改为走 axios 取 Blob。
+ */
 export function downloadReport(id) {
-  return `/api/report/download/${id}`
+  return request.get(`/report/download/${id}`, { responseType: 'blob' })
 }
 
 export function generateReport(data) {

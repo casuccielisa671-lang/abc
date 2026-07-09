@@ -40,10 +40,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     /** 白名单路径（无需认证）
+     *  注意：这是独立于 SecurityConfig.permitAll() 的第二道白名单 ——
+     *  本过滤器跑在 Spring Security 授权之前，只在 SecurityConfig 里放行是不够的，
+     *  请求会先被这里拦下返回 401。新增无鉴权接口时两处都要加。
      *  /api/open/** 由 occupation-api 模块的 ApiTokenInterceptor 独立鉴权（apiKey → Token），
      *  /doc.html、/v3/api-docs、/webjars 为 Knife4j 接口文档静态资源。 */
     private static final String[] WHITE_LIST = {
             "/api/auth/login",
+            "/api/auth/tenants",
             "/api/health",
             "/api/health/error",
             "/api/open/",

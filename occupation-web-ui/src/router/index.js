@@ -57,6 +57,7 @@ const routes = [
     children: [
       { path: '', name: 'HrHome', component: () => import('@/views/hr/HrHome.vue') },
       { path: 'jobs', name: 'JobManage', component: () => import('@/views/hr/JobManage.vue') },
+      { path: 'applications', name: 'HrApplications', component: () => import('@/views/hr/Applications.vue') },
       { path: 'talents', name: 'Talents', component: () => import('@/views/hr/Talents.vue') }
     ]
   },

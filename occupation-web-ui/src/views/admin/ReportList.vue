@@ -1,46 +1,59 @@
 <template>
   <div class="report-list">
-    <div class="page-header">
-      <h2>报告生成管理</h2>
-      <el-button type="primary" @click="openGenerateDialog">生成新报告</el-button>
+    <div class="page-head with-actions">
+      <div>
+        <h2 class="page-title">报告生成管理</h2>
+        <p class="page-sub">按模板生成就业分析报告并下载</p>
+      </div>
+      <div class="page-actions">
+        <el-button type="primary" @click="openGenerateDialog">生成新报告</el-button>
+      </div>
     </div>
 
     <el-card>
       <el-table :data="records" v-loading="loading" stripe>
         <el-table-column prop="id" label="ID" width="70" />
-        <el-table-column prop="templateName" label="模板名称" min-width="150" />
+        <el-table-column prop="templateName" label="模板名称" min-width="180">
+          <template #default="{ row }">{{ row.templateName || '模板已删除' }}</template>
+        </el-table-column>
         <el-table-column label="报告类型" width="120">
+          <template #default="{ row }"><span class="chip">{{ typeLabel(row.type) }}</span></template>
+        </el-table-column>
+        <el-table-column label="格式" width="90">
+          <template #default="{ row }"><span class="chip">{{ row.fileType || '—' }}</span></template>
+        </el-table-column>
+        <el-table-column label="状态" width="110">
           <template #default="{ row }">
-            <el-tag :type="typeTag(row.type)" size="small">{{ typeLabel(row.type) }}</el-tag>
+            <el-tag :type="statusTag(row.status)" size="small">{{ statusLabel(row.status) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="format" label="格式" width="90">
+        <el-table-column label="生成时间" width="150">
+          <template #default="{ row }">{{ formatTime(row.createTime) }}</template>
+        </el-table-column>
+        <el-table-column label="失败原因" min-width="180">
           <template #default="{ row }">
-            <el-tag size="small" effect="plain">{{ row.format?.toUpperCase() || 'PDF' }}</el-tag>
+            <span v-if="row.status === 'FAILED'" class="err" :title="row.errorMsg">{{ row.errorMsg }}</span>
+            <span v-else>—</span>
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="100">
+        <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
-            <el-tag :type="row.status === 'COMPLETED' ? 'success' : 'warning'" size="small">
-              {{ row.status === 'COMPLETED' ? '已完成' : '生成中' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="createTime" label="生成时间" width="170" />
-        <el-table-column label="操作" width="200" fixed="right">
-          <template #default="{ row }">
-            <el-button v-if="row.status === 'COMPLETED'" size="small" type="success" @click="handleDownload(row.id)">
-              下载
-            </el-button>
-            <el-button size="small" type="danger" @click="handleDelete(row.id)">删除</el-button>
+            <el-button
+              v-if="row.status === 'SUCCESS'" text type="primary" size="small"
+              @click="handleDownload(row)"
+            >下载</el-button>
+            <el-button text type="danger" size="small" @click="handleDelete(row.id)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
 
+      <el-empty v-if="!loading && !records.length" description="暂无报告，点击右上角生成一份" />
+
       <el-pagination
-        v-model:current-page="page" v-model:page-size="size"
+        v-if="total > size"
+        v-model:current-page="page" :page-size="size"
         :total="total" layout="total, prev, pager, next"
-        @current-change="loadRecords" style="margin-top:16px; justify-content:flex-end"
+        @current-change="loadRecords"
       />
     </el-card>
 
@@ -52,8 +65,8 @@
             <el-option v-for="t in templates" :key="t.id" :label="t.name" :value="t.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="导出格式" prop="format">
-          <el-select v-model="genForm.format" style="width:100%">
+        <el-form-item label="导出格式" prop="fileType">
+          <el-select v-model="genForm.fileType" style="width:100%">
             <el-option label="PDF" value="PDF" />
             <el-option label="Word" value="WORD" />
             <el-option label="HTML" value="HTML" />
@@ -71,6 +84,9 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { getReportRecords, deleteReportRecord, downloadReport, generateReport, getReportTemplates } from '@/api/admin'
+import { toList, toTotal } from '@/utils/list'
+import { formatTime } from '@/utils/format'
+import { saveBlob } from '@/utils/download'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const records = ref([])
@@ -82,46 +98,55 @@ const total = ref(0)
 async function loadRecords() {
   loading.value = true
   try {
-    const data = await getReportRecords({ page: page.value, size: size.value })
-    records.value = data.records || data.list || []
-    total.value = data.total || 0
+    // 后端读的是 pageNum/pageSize
+    const data = await getReportRecords({ pageNum: page.value, pageSize: size.value })
+    records.value = toList(data)
+    total.value = toTotal(data, records.value)
   } finally {
     loading.value = false
   }
 }
 
 async function handleDelete(id) {
-  await ElMessageBox.confirm('确定删除该报告记录吗？', '确认', { type: 'warning' })
+  try {
+    await ElMessageBox.confirm('确定删除该报告记录及其文件吗？', '确认', { type: 'warning' })
+  } catch {
+    return
+  }
   try {
     await deleteReportRecord(id)
     ElMessage.success('已删除')
     loadRecords()
-  } catch { /* handled */ }
+  } catch { /* 拦截器已提示 */ }
 }
 
-function handleDownload(id) {
-  window.open(downloadReport(id), '_blank')
+async function handleDownload(row) {
+  const ext = { PDF: 'pdf', WORD: 'docx', HTML: 'html' }[row.fileType] || 'bin'
+  try {
+    await saveBlob(downloadReport(row.id), `report-${row.id}.${ext}`)
+  } catch { /* 拦截器已提示 */ }
 }
 
-// 生成报告
+// ---- 生成报告 ----
 const generateVisible = ref(false)
 const generating = ref(false)
 const templates = ref([])
 const genFormRef = ref(null)
-const genForm = reactive({ templateId: null, format: 'PDF' })
+// 字段名必须是 fileType：后端 GenerateReportDTO 读的是它，传 format 会被忽略并默认导出 HTML
+const genForm = reactive({ templateId: null, fileType: 'PDF' })
 const genRules = {
   templateId: [{ required: true, message: '请选择模板', trigger: 'change' }],
-  format: [{ required: true, message: '请选择导出格式', trigger: 'change' }]
+  fileType: [{ required: true, message: '请选择导出格式', trigger: 'change' }]
 }
 
 async function openGenerateDialog() {
   try {
-    const data = await getReportTemplates({ page: 1, size: 100 })
-    templates.value = data.records || data.list || []
+    const data = await getReportTemplates({ pageNum: 1, pageSize: 100 })
+    templates.value = toList(data)
     genForm.templateId = null
-    genForm.format = 'PDF'
+    genForm.fileType = 'PDF'
     generateVisible.value = true
-  } catch { /* handled */ }
+  } catch { /* 拦截器已提示 */ }
 }
 
 async function handleGenerate() {
@@ -130,25 +155,37 @@ async function handleGenerate() {
   generating.value = true
   try {
     await generateReport({ ...genForm })
-    ElMessage.success('报告生成任务已触发，请稍后刷新查看')
+    ElMessage.success('报告已生成')
     generateVisible.value = false
+    loadRecords()
+  } catch {
+    // 生成是同步的，失败原因已由拦截器提示，同时会落一条 FAILED 记录
     loadRecords()
   } finally {
     generating.value = false
   }
 }
 
-function typeTag(type) {
-  return { STUDENT: 'success', CLASS: 'warning', INDUSTRY: 'info', SCHOOL: 'danger' }[type] || ''
+function statusTag(status) {
+  return { SUCCESS: 'success', FAILED: 'danger', GENERATING: 'warning', PENDING: 'info' }[status] || 'info'
+}
+function statusLabel(status) {
+  return { SUCCESS: '已完成', FAILED: '失败', GENERATING: '生成中', PENDING: '排队中' }[status] || status
 }
 function typeLabel(type) {
-  return { STUDENT: '学生个人报告', CLASS: '班级汇总报告', INDUSTRY: '行业分析报告', SCHOOL: '学校年度报告' }[type] || type
+  return { MONTHLY: '月度报告', QUARTERLY: '季度报告', YEARLY: '年度报告' }[type] || type || '—'
 }
 
-onMounted(() => loadRecords())
+onMounted(loadRecords)
 </script>
 
 <style scoped>
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.page-header h2 { margin: 0; }
+.err {
+  color: var(--app-danger);
+  font-size: 12px;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 </style>

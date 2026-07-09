@@ -1,7 +1,9 @@
 <template>
   <div class="profile-page">
-    <h2>个人画像</h2>
-    <p class="subtitle">完善画像后，系统将为你精准匹配职位</p>
+    <div class="page-head">
+      <h2 class="page-title">个人画像</h2>
+      <p class="page-sub">完善画像后，系统将为你精准匹配职位</p>
+    </div>
 
     <el-card v-loading="loading">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="110px" style="max-width:600px">
@@ -9,8 +11,11 @@
           <el-input v-model="form.major" placeholder="如：计算机科学与技术" />
         </el-form-item>
         <el-form-item label="技能" prop="skills">
-          <el-input v-model="skillsText" placeholder="多个技能用逗号分隔，如：Java,Spring,Vue" />
-          <span class="form-tip">输入后按回车或逗号添加标签</span>
+          <el-input v-model="skillsText" placeholder="多个技能用逗号分隔，如：Java,Spring Boot,MySQL" />
+          <div class="skill-preview">
+            <span v-for="sk in skillPreview" :key="sk" class="chip">{{ sk }}</span>
+            <span v-if="!skillPreview.length" class="form-tip">技能会参与职位匹配打分，填得越准推荐越贴合</span>
+          </div>
         </el-form-item>
         <el-form-item label="意向城市">
           <el-input v-model="form.expectedCity" placeholder="如：深圳" />
@@ -28,8 +33,10 @@
           </el-col>
         </el-form-item>
         <el-form-item label="学历">
+          <!-- 必须与后端 JobMatchServiceImpl.EDU_LEVEL 的键一致（是「专科」不是「大专」），
+               否则学历维度拿不到分，匹配分会莫名偏低 -->
           <el-select v-model="form.educationLevel" style="width:100%">
-            <el-option label="大专" value="大专" />
+            <el-option label="专科" value="专科" />
             <el-option label="本科" value="本科" />
             <el-option label="硕士" value="硕士" />
             <el-option label="博士" value="博士" />
@@ -44,17 +51,20 @@
     <!-- 个人统计 -->
     <el-card style="margin-top:16px" v-if="stats">
       <template #header>求职统计</template>
-      <el-row :gutter="20">
-        <el-col :span="8">
-          <el-statistic title="浏览职位" :value="stats.VIEW || 0" />
-        </el-col>
-        <el-col :span="8">
-          <el-statistic title="收藏职位" :value="stats.FAVORITE || 0" />
-        </el-col>
-        <el-col :span="8">
-          <el-statistic title="投递次数" :value="stats.APPLY || 0" />
-        </el-col>
-      </el-row>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">浏览职位</div>
+          <div class="stat-value">{{ stats.VIEW || 0 }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">收藏职位</div>
+          <div class="stat-value">{{ stats.FAVORITE || 0 }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">投递次数</div>
+          <div class="stat-value">{{ stats.APPLY || 0 }}</div>
+        </div>
+      </div>
     </el-card>
   </div>
 </template>
@@ -62,6 +72,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { getProfile, saveProfile, getProfileStats } from '@/api/student'
+import { parseSkills } from '@/utils/skills'
 import { ElMessage } from 'element-plus'
 
 const loading = ref(false)
@@ -81,24 +92,15 @@ const form = reactive({
 
 const skillsText = ref('')
 
+/** 实时预览会被解析成哪些技能标签，避免用户以为分号、空格也能分隔 */
+const skillPreview = computed(() => parseSkills(skillsText.value))
+
 const rules = {
   major: [{ required: true, message: '请输入专业', trigger: 'blur' }]
 }
 
-// 技能文本 ↔ JSON 数组转换
-function skillsToText(skillsJson) {
-  if (!skillsJson) return ''
-  try {
-    return JSON.parse(skillsJson).join(',')
-  } catch {
-    return skillsJson
-  }
-}
-
 function textToSkills(text) {
-  if (!text) return '[]'
-  const arr = text.split(/[,，]/).map(s => s.trim()).filter(Boolean)
-  return JSON.stringify(arr)
+  return JSON.stringify(parseSkills(text))
 }
 
 async function loadProfile() {
@@ -112,7 +114,7 @@ async function loadProfile() {
       form.expectedSalaryMin = data.expectedSalaryMin
       form.expectedSalaryMax = data.expectedSalaryMax
       form.educationLevel = data.educationLevel || ''
-      skillsText.value = skillsToText(data.skills)
+      skillsText.value = parseSkills(data.skills).join(',')
       form.skills = data.skills || '[]'
     }
     stats.value = await getProfileStats()
@@ -139,6 +141,6 @@ onMounted(() => loadProfile())
 </script>
 
 <style scoped>
-.subtitle { color: #909399; margin-bottom: 20px; }
-.form-tip { color: #C0C4CC; font-size: 12px; }
+.form-tip { color: var(--app-ink-3); font-size: 12px; }
+.skill-preview { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 </style>

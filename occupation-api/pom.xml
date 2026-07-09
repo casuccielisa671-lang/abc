@@ -27,6 +27,12 @@
             <artifactId>occupation-analysis</artifactId>
         </dependency>
 
+        <!-- 跨模块：调用 ReportGeneratorService 提供最新报告摘要 -->
+        <dependency>
+            <groupId>com.occupation</groupId>
+            <artifactId>occupation-report</artifactId>
+        </dependency>
+
         <!-- Knife4j -->
         <dependency>
             <groupId>com.github.xiaoymin</groupId>

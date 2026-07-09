@@ -26,6 +26,18 @@
             <groupId>com.occupation</groupId>
             <artifactId>occupation-analysis</artifactId>
         </dependency>
+
+        <!-- 跨模块：教师端补充学生真实姓名、HR 端解析投递人（UserService） -->
+        <dependency>
+            <groupId>com.occupation</groupId>
+            <artifactId>occupation-auth</artifactId>
+        </dependency>
+
+        <!-- 教师端导出学生就业数据 Excel（Hutool ExcelWriter 依赖 POI 运行时） -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

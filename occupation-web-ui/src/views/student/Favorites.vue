@@ -1,30 +1,35 @@
 <template>
   <div class="favorites-page">
-    <h2>我的收藏</h2>
+    <div class="page-head">
+      <h2 class="page-title">我的收藏</h2>
+      <p class="page-sub">收藏的职位会保留在这里，方便随时回顾对比</p>
+    </div>
 
     <div v-loading="loading">
       <el-empty v-if="!loading && list.length === 0" description="暂无收藏，去推荐页看看吧" />
 
       <div class="job-grid">
-        <el-card v-for="job in list" :key="job.id" class="job-card" shadow="hover"
+        <div v-for="job in list" :key="job.id" class="job-card"
           @click="$router.push(`/student/job/${job.id}`)">
-          <div class="card-header">
-            <h3>{{ job.title }}</h3>
-            <span class="salary">{{ (job.salaryMin / 1000).toFixed(0) }}k-{{ (job.salaryMax / 1000).toFixed(0) }}k</span>
+          <div class="job-head">
+            <div>
+              <h3 class="job-title">{{ job.title }}</h3>
+              <p class="job-company">{{ job.company }}</p>
+            </div>
+            <div class="job-salary">{{ salaryRange(job.salaryMin, job.salaryMax) }}</div>
           </div>
-          <p class="company">{{ job.company }}</p>
-          <div class="tags">
-            <el-tag size="small">{{ job.city }}</el-tag>
-            <el-tag size="small" type="success">{{ job.education }}</el-tag>
-            <el-tag size="small" type="info">{{ job.industry }}</el-tag>
+          <div class="job-chips">
+            <span class="chip">{{ job.city }}</span>
+            <span class="chip">{{ job.education || '学历不限' }}</span>
+            <span v-if="job.industry" class="chip">{{ job.industry }}</span>
           </div>
-          <div class="footer-actions">
+          <div class="job-foot">
             <span class="date">{{ job.publishDate }}</span>
             <el-button size="small" type="danger" text @click.stop="handleUnfavorite(job.id)">
               取消收藏
             </el-button>
           </div>
-        </el-card>
+        </div>
       </div>
     </div>
   </div>
@@ -33,6 +38,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getFavorites, unfavoriteJob } from '@/api/student'
+import { toList } from '@/utils/list'
+import { salaryRange } from '@/utils/format'
 import { ElMessage } from 'element-plus'
 
 const list = ref([])
@@ -41,7 +48,7 @@ const loading = ref(false)
 async function loadFavorites() {
   loading.value = true
   try {
-    list.value = await getFavorites()
+    list.value = toList(await getFavorites())
   } finally {
     loading.value = false
   }
@@ -57,16 +64,3 @@ async function handleUnfavorite(id) {
 
 onMounted(() => loadFavorites())
 </script>
-
-<style scoped>
-.job-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; }
-.job-card { cursor: pointer; transition: transform 0.2s; }
-.job-card:hover { transform: translateY(-2px); }
-.card-header { display: flex; justify-content: space-between; align-items: center; }
-.card-header h3 { margin: 0; font-size: 16px; }
-.salary { color: #E6A23C; font-weight: bold; }
-.company { color: #606266; margin: 8px 0; }
-.tags { display: flex; gap: 6px; margin: 8px 0; }
-.footer-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
-.date { color: #C0C4CC; font-size: 12px; }
-</style>

@@ -27,6 +27,9 @@ public class ReportRecord extends BaseEntity {
     /** 文件类型：PDF / WORD / HTML */
     private String fileType;
 
+    /** 生成时产出的智能摘要（开放 API 直接读取，不必重新调用大模型） */
+    private String aiSummary;
+
     /** 状态：PENDING / GENERATING / SUCCESS / FAILED */
     private String status;
 

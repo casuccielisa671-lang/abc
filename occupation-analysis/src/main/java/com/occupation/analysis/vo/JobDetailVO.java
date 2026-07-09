@@ -30,5 +30,7 @@ public class JobDetailVO implements Serializable {
     private LocalDate publishDate;
     private String source;
     private String sourceUrl;
+    /** 发布者用户 ID（仅 HR_PUBLISH 职位有值） */
+    private Long publisherId;
     private LocalDateTime createTime;
 }

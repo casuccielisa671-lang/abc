@@ -35,7 +35,9 @@ export const useUserStore = defineStore('user', () => {
     role.value = ''
     realName.value = ''
     tenantName.value = ''
+    const theme = localStorage.getItem('theme')
     localStorage.clear()
+    if (theme) localStorage.setItem('theme', theme)
     window.location.href = '/login'
   }
 

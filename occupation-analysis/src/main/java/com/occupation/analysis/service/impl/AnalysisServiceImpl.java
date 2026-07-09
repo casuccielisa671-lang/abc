@@ -61,6 +61,11 @@ public class AnalysisServiceImpl implements AnalysisService {
         return vo;
     }
 
+    @Override
+    public List<DashboardVO.DimensionItem> topSkills(int limit) {
+        return queryDimension("skill", limit, new DashboardQueryDTO());
+    }
+
     /**
      * 通用维度查询：查某个维度下 job_count 指标，按 metric_value 降序
      */

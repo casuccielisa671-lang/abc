@@ -12,14 +12,16 @@
         <el-descriptions-item label="学历要求">{{ job.education }}</el-descriptions-item>
         <el-descriptions-item label="经验要求">{{ job.experience || '不限' }}</el-descriptions-item>
         <el-descriptions-item label="薪资范围">
-          <span class="salary">{{ (job.salaryMin / 1000).toFixed(0) }}k - {{ (job.salaryMax / 1000).toFixed(0) }}k</span>
+          <span class="salary-text">{{ salaryRange(job.salaryMin, job.salaryMax) }}</span>
         </el-descriptions-item>
         <el-descriptions-item label="发布日期">{{ job.publishDate }}</el-descriptions-item>
       </el-descriptions>
 
       <div class="skills" v-if="skillList.length">
         <h4>技能要求</h4>
-        <el-tag v-for="sk in skillList" :key="sk" style="margin-right:8px;margin-bottom:4px">{{ sk }}</el-tag>
+        <div class="skill-chips">
+          <span v-for="sk in skillList" :key="sk" class="chip">{{ sk }}</span>
+        </div>
       </div>
 
       <div class="desc" v-if="job.description">
@@ -45,6 +47,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getJobDetail, favoriteJob, unfavoriteJob, applyJob, getFavorites } from '@/api/student'
+import { toList } from '@/utils/list'
+import { parseSkills } from '@/utils/skills'
+import { salaryRange } from '@/utils/format'
 import { ElMessage } from 'element-plus'
 
 const route = useRoute()
@@ -54,14 +59,7 @@ const favorited = ref(false)
 const favLoading = ref(false)
 const applyLoading = ref(false)
 
-const skillList = computed(() => {
-  if (!job.value.skills) return []
-  try {
-    return JSON.parse(job.value.skills)
-  } catch {
-    return job.value.skills.split(',').map(s => s.trim()).filter(Boolean)
-  }
-})
+const skillList = computed(() => parseSkills(job.value.skills))
 
 async function loadDetail() {
   loading.value = true
@@ -69,9 +67,9 @@ async function loadDetail() {
     const id = route.params.id
     job.value = await getJobDetail(id)
     try {
-      const favs = await getFavorites()
+      const favs = toList(await getFavorites())
       favorited.value = favs.some(f => f.id === job.value.id)
-    } catch { /* ignore */ }
+    } catch { /* 收藏状态取不到不影响详情展示 */ }
   } finally {
     loading.value = false
   }
@@ -107,9 +105,10 @@ onMounted(() => loadDetail())
 </script>
 
 <style scoped>
-.company-name { color: #606266; font-size: 15px; margin-bottom: 0; }
-.salary { color: #E6A23C; font-weight: bold; font-size: 16px; }
-.skills h4, .desc h4 { margin: 16px 0 8px; color: #303133; }
-.desc p { color: #606266; line-height: 1.8; }
-.actions { margin-top: 24px; display: flex; gap: 12px; }
+h2 { font-size: 23px; letter-spacing: -0.019em; font-weight: 600; color: var(--app-ink); margin: 0; }
+.company-name { color: var(--app-ink-3); font-size: 14px; margin: 4px 0 0; }
+.skills h4, .desc h4 { margin: 20px 0 10px; color: var(--app-ink); font-size: 15px; font-weight: 600; }
+.skill-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.desc p { color: var(--app-ink-2); line-height: 1.8; white-space: pre-line; }
+.actions { margin-top: 28px; display: flex; gap: 12px; }
 </style>

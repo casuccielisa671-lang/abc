@@ -40,7 +40,8 @@ public class SecurityConfig {
             .and()
             // 权限配置
             .authorizeRequests()
-            .antMatchers("/api/auth/login", "/api/health/**").permitAll()
+            // 登录入口 + 登录页的学校/企业下拉（只暴露启用中的租户名称）
+            .antMatchers("/api/auth/login", "/api/auth/tenants", "/api/health/**").permitAll()
             // 对外开放 API：由 occupation-api 模块的 ApiTokenInterceptor 独立鉴权（apiKey 换 Token）
             .antMatchers("/api/open/**").permitAll()
             // Knife4j / OpenAPI 接口文档

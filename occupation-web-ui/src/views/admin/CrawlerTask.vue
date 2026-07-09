@@ -1,9 +1,12 @@
 <template>
   <div class="crawler-page">
-    <div class="page-header">
-      <h2>采集任务管理</h2>
-      <div class="actions">
-        <el-button type="success" @click="handleMockCrawl">Mock 模拟采集</el-button>
+    <div class="page-head with-actions">
+      <div>
+        <h2 class="page-title">采集任务管理</h2>
+        <p class="page-sub">管理职位数据采集任务与执行日志</p>
+      </div>
+      <div class="page-actions">
+        <el-button @click="handleMockCrawl">Mock 模拟采集</el-button>
         <el-button type="primary" @click="openDialog()">新增任务</el-button>
       </div>
     </div>
@@ -13,40 +16,37 @@
       <el-table :data="tasks" v-loading="loading" stripe>
         <el-table-column prop="id" label="ID" width="70" />
         <el-table-column prop="sourceName" label="任务名称" min-width="160" />
-        <el-table-column prop="sourceType" label="采集源" width="130">
-          <template #default="{ row }">
-            <el-tag :type="sourceTag(row.sourceType)" size="small">{{ row.sourceType }}</el-tag>
-          </template>
+        <el-table-column label="采集源" width="120">
+          <template #default="{ row }"><span class="chip">{{ sourceLabel(row.sourceType) }}</span></template>
         </el-table-column>
         <el-table-column prop="cronExpr" label="Cron 表达式" width="150" />
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'info'">{{ row.statusText }}</el-tag>
+            <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small">{{ row.statusText }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="170" />
-        <el-table-column label="操作" width="280" fixed="right">
+        <el-table-column label="创建时间" width="150">
+          <template #default="{ row }">{{ formatTime(row.createTime) }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button
-              v-if="row.status !== 1"
-              size="small" type="success"
-              @click="handleStart(row.id)"
-            >启动</el-button>
-            <el-button
-              v-else
-              size="small" type="warning"
-              @click="handleStop(row.id)"
-            >停止</el-button>
-            <el-button size="small" @click="openDialog(row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(row.id)">删除</el-button>
+            <el-button v-if="row.status !== 1" text type="primary" size="small" @click="handleStart(row.id)">
+              启动
+            </el-button>
+            <el-button v-else text type="warning" size="small" @click="handleStop(row.id)">停止</el-button>
+            <el-button text type="primary" size="small" @click="openDialog(row)">编辑</el-button>
+            <el-button text type="danger" size="small" @click="handleDelete(row.id)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
 
+      <el-empty v-if="!loading && !tasks.length" description="暂无采集任务" />
+
       <el-pagination
-        v-model:current-page="page" v-model:page-size="size"
+        v-if="total > size"
+        v-model:current-page="page" :page-size="size"
         :total="total" layout="total, prev, pager, next"
-        @current-change="loadTasks" style="margin-top:16px; justify-content:flex-end"
+        @current-change="loadTasks"
       />
     </el-card>
 
@@ -56,21 +56,29 @@
       <el-table :data="logs" v-loading="logLoading" stripe size="small">
         <el-table-column prop="id" label="ID" width="60" />
         <el-table-column prop="taskId" label="任务ID" width="80" />
-        <el-table-column prop="startTime" label="开始时间" width="170" />
-        <el-table-column prop="endTime" label="结束时间" width="170" />
+        <el-table-column label="开始时间" width="150">
+          <template #default="{ row }">{{ formatTime(row.startTime) }}</template>
+        </el-table-column>
+        <el-table-column label="结束时间" width="150">
+          <template #default="{ row }">{{ formatTime(row.endTime) }}</template>
+        </el-table-column>
         <el-table-column prop="recordCount" label="采集条数" width="90" />
-        <el-table-column prop="duration" label="耗时" width="80" />
-        <el-table-column label="状态" width="90">
+        <el-table-column prop="duration" label="耗时" width="90" />
+        <el-table-column label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.status === 'SUCCESS' ? 'success' : 'danger'" size="small">{{ row.status }}</el-tag>
+            <el-tag :type="logStatusTag(row.status)" size="small">{{ row.status }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="errorMsg" label="错误信息" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="errorMsg" label="错误信息" min-width="180" show-overflow-tooltip />
       </el-table>
+
+      <el-empty v-if="!logLoading && !logs.length" description="暂无采集日志" />
+
       <el-pagination
-        v-model:current-page="logPage" v-model:page-size="logSize"
+        v-if="logTotal > logSize"
+        v-model:current-page="logPage" :page-size="logSize"
         :total="logTotal" layout="total, prev, pager, next"
-        @current-change="loadLogs" style="margin-top:12px; justify-content:flex-end"
+        @current-change="loadLogs"
       />
     </el-card>
 
@@ -79,16 +87,24 @@
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="采集源类型" prop="sourceType">
           <el-select v-model="form.sourceType" style="width:100%">
-            <el-option label="MOCK（模拟数据）" value="MOCK" />
-            <el-option label="BOSS直聘" value="BOSS_ZHIPIN" />
-            <el-option label="前程无忧" value="ZHAOPIN" />
+            <el-option label="MOCK（模拟数据，推荐）" value="MOCK" />
+            <el-option label="BOSS 直聘" value="BOSS_ZHIPIN" />
+            <el-option label="智联招聘" value="ZHAOPIN" />
           </el-select>
         </el-form-item>
+        <el-alert
+          v-if="form.sourceType !== 'MOCK'" type="warning" :closable="false" show-icon
+          style="margin:0 0 18px 100px; width:calc(100% - 100px)"
+        >
+          真实站点采集依赖目标网站的页面结构，改版后会失效，且高频抓取可能违反其服务条款。
+          日常开发与演示请使用 MOCK 数据源。
+        </el-alert>
         <el-form-item label="任务名称" prop="sourceName">
           <el-input v-model="form.sourceName" placeholder="如：BOSS直聘-Java开发" />
         </el-form-item>
         <el-form-item label="URL/数据文件" prop="urlPattern">
-          <el-input v-model="form.urlPattern" placeholder="MOCK 填 mock-jobs.json，真实采集填 URL" />
+          <el-input v-model="form.urlPattern" :placeholder="urlPatternHint" />
+          <span class="form-tip">{{ urlPatternHint }}</span>
         </el-form-item>
         <el-form-item label="Cron 表达式" prop="cronExpr">
           <el-input v-model="form.cronExpr" placeholder="如：0 0 6 * * ?（每天6点）" />
@@ -103,12 +119,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import {
   getCrawlerTasks, getCrawlerTask, createCrawlerTask, updateCrawlerTask,
   deleteCrawlerTask, startCrawlerTask, stopCrawlerTask, mockCrawl,
   getCrawlerLogs
 } from '@/api/admin'
+import { toList, toTotal } from '@/utils/list'
+import { formatTime } from '@/utils/format'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 // ========== 任务列表 ==========
@@ -118,12 +136,13 @@ const page = ref(1)
 const size = ref(10)
 const total = ref(0)
 
+// 采集接口用的是 page/size（与其他控制器的 pageNum/pageSize 不同，勿改）
 async function loadTasks() {
   loading.value = true
   try {
     const data = await getCrawlerTasks({ page: page.value, size: size.value })
-    tasks.value = data.records || data.list || []
-    total.value = data.total || 0
+    tasks.value = toList(data)
+    total.value = toTotal(data, tasks.value)
   } finally {
     loading.value = false
   }
@@ -140,8 +159,8 @@ async function loadLogs() {
   logLoading.value = true
   try {
     const data = await getCrawlerLogs({ page: logPage.value, size: logSize.value })
-    logs.value = data.records || data.list || []
-    logTotal.value = data.total || 0
+    logs.value = toList(data)
+    logTotal.value = toTotal(data, logs.value)
   } finally {
     logLoading.value = false
   }
@@ -238,8 +257,19 @@ async function handleSave() {
   }
 }
 
-function sourceTag(type) {
-  return type === 'MOCK' ? 'info' : type === 'BOSS_ZHIPIN' ? 'warning' : ''
+const urlPatternHint = computed(() => ({
+  MOCK: '填 mock 数据文件名，如 mock-jobs.json',
+  BOSS_ZHIPIN: '填参数串，如 query=Java&city=101010100&maxPages=3',
+  ZHAOPIN: '填参数串，如 kw=Java&jl=530&maxPages=3（jl 是智联的城市编码）'
+}[form.sourceType] || ''))
+
+function sourceLabel(type) {
+  return { MOCK: 'MOCK', BOSS_ZHIPIN: 'BOSS 直聘', ZHAOPIN: '智联招聘' }[type] || type
+}
+
+// RUNNING 是进行中，不是失败
+function logStatusTag(status) {
+  return { SUCCESS: 'success', FAILED: 'danger', RUNNING: 'warning' }[status] || 'info'
 }
 
 onMounted(() => {
@@ -249,7 +279,5 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.page-header h2 { margin: 0; }
-.actions { display: flex; gap: 8px; }
+.form-tip { color: var(--app-ink-3); font-size: 12px; }
 </style>

@@ -1,6 +1,7 @@
 package com.occupation.api.config;
 
 import com.occupation.api.service.OpenAuthService;
+import com.occupation.common.config.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -48,6 +49,25 @@ public class ApiTokenInterceptor implements HandlerInterceptor {
         }
 
         request.setAttribute(ATTR_API_KEY, apiKey);
+
+        // 建立租户上下文：开放 API 没有 JWT，不设置的话多租户插件不会注入 tenant_id 条件，
+        // 涉及租户表的查询（如报告摘要）会把别的学校的数据也返回给调用方。
+        Long tenantId = openAuthService.tenantIdOf(apiKey);
+        if (tenantId == null) {
+            log.warn("开放 API 拒绝访问（apiKey 无对应客户端）: {}", apiKey);
+            response.setStatus(401);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"code\":401,\"message\":\"客户端不存在\",\"data\":null}");
+            return false;
+        }
+        TenantContextHolder.setTenantId(tenantId);
         return true;
+    }
+
+    /** 请求结束务必清理，否则 Tomcat 线程复用会把租户串到下一个请求上 */
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
+                                Object handler, Exception ex) {
+        TenantContextHolder.clear();
     }
 }

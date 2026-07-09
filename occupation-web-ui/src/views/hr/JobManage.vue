@@ -1,42 +1,48 @@
 <template>
   <div class="hr-job-manage">
-    <div class="page-header">
-      <h2>职位管理</h2>
-      <el-button type="primary" @click="openDialog()">发布新职位</el-button>
+    <div class="page-head with-actions">
+      <div>
+        <h2 class="page-title">职位管理</h2>
+        <p class="page-sub">只显示由你发布的职位；采集来的职位不可编辑</p>
+      </div>
+      <div class="page-actions">
+        <el-button type="primary" @click="openDialog()">发布新职位</el-button>
+      </div>
     </div>
 
     <el-card>
       <el-table :data="jobs" v-loading="loading" stripe>
         <el-table-column prop="id" label="ID" width="70" />
-        <el-table-column prop="title" label="职位名称" min-width="160" />
-        <el-table-column prop="city" label="城市" width="100" />
+        <el-table-column prop="title" label="职位名称" min-width="180" />
+        <el-table-column prop="company" label="公司" min-width="160" />
+        <el-table-column prop="city" label="城市" width="90" />
         <el-table-column label="薪资范围" width="150">
           <template #default="{ row }">
-            {{ (row.salaryMin / 1000).toFixed(0) }}k - {{ (row.salaryMax / 1000).toFixed(0) }}k
+            <span class="salary-text">{{ salaryRange(row.salaryMin, row.salaryMax) }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="education" label="学历要求" width="100" />
-        <el-table-column prop="experience" label="经验要求" width="100" />
-        <el-table-column label="状态" width="90">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small">
-              {{ row.status === 1 ? '在招' : '已下架' }}
-            </el-tag>
-          </template>
+        <el-table-column label="学历要求" width="100">
+          <template #default="{ row }"><span class="chip">{{ row.education || '不限' }}</span></template>
         </el-table-column>
-        <el-table-column prop="createTime" label="发布时间" width="170" />
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="经验要求" width="100">
+          <template #default="{ row }"><span class="chip">{{ row.experience || '不限' }}</span></template>
+        </el-table-column>
+        <el-table-column prop="publishDate" label="发布日期" width="120" />
+        <el-table-column label="操作" width="140" fixed="right">
           <template #default="{ row }">
-            <el-button size="small" @click="openDialog(row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(row.id)">下架</el-button>
+            <el-button text type="primary" size="small" @click="openDialog(row)">编辑</el-button>
+            <el-button text type="danger" size="small" @click="handleDelete(row)">下架</el-button>
           </template>
         </el-table-column>
       </el-table>
 
+      <el-empty v-if="!loading && !jobs.length" description="你还没有发布过职位" />
+
       <el-pagination
-        v-model:current-page="page" v-model:page-size="size"
+        v-if="total > size"
+        v-model:current-page="page" :page-size="size"
         :total="total" layout="total, prev, pager, next"
-        @current-change="loadJobs" style="margin-top:16px; justify-content:flex-end"
+        @current-change="loadJobs"
       />
     </el-card>
 
@@ -44,7 +50,7 @@
     <el-dialog v-model="dialogVisible" :title="editingId ? '编辑职位' : '发布新职位'" width="600px">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="职位名称" prop="title">
-          <el-input v-model="form.title" placeholder="如：高级Java开发工程师" />
+          <el-input v-model="form.title" placeholder="如：高级 Java 开发工程师" />
         </el-form-item>
         <el-form-item label="公司名称" prop="company">
           <el-input v-model="form.company" placeholder="公司名称" />
@@ -64,21 +70,22 @@
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="最低薪资" prop="salaryMin">
-              <el-input-number v-model="form.salaryMin" :min="0" :step="1000" style="width:100%" placeholder="月薪下限" />
+              <el-input-number v-model="form.salaryMin" :min="0" :step="1000" style="width:100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="最高薪资" prop="salaryMax">
-              <el-input-number v-model="form.salaryMax" :min="0" :step="1000" style="width:100%" placeholder="月薪上限" />
+              <el-input-number v-model="form.salaryMax" :min="0" :step="1000" style="width:100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="学历要求" prop="education">
+              <!-- 与后端 normalizeEducation 的五档保持一致（是「专科」不是「大专」） -->
               <el-select v-model="form.education" style="width:100%">
                 <el-option label="不限" value="不限" />
-                <el-option label="大专" value="大专" />
+                <el-option label="专科" value="专科" />
                 <el-option label="本科" value="本科" />
                 <el-option label="硕士" value="硕士" />
                 <el-option label="博士" value="博士" />
@@ -116,6 +123,9 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { getHrJobs, createHrJob, updateHrJob, deleteHrJob } from '@/api/student'
+import { toList, toTotal } from '@/utils/list'
+import { parseSkills } from '@/utils/skills'
+import { salaryRange } from '@/utils/format'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const jobs = ref([])
@@ -127,69 +137,72 @@ const total = ref(0)
 async function loadJobs() {
   loading.value = true
   try {
-    const data = await getHrJobs({ page: page.value, size: size.value })
-    jobs.value = data.records || data.list || []
-    total.value = data.total || 0
+    // 后端 JobQueryDTO 读的是 pageNum/pageSize；publisherId 由服务端强制注入
+    const data = await getHrJobs({ pageNum: page.value, pageSize: size.value })
+    jobs.value = toList(data)
+    total.value = toTotal(data, jobs.value)
   } finally {
     loading.value = false
   }
 }
 
-async function handleDelete(id) {
-  await ElMessageBox.confirm('确定下架该职位吗？', '确认', { type: 'warning' })
+async function handleDelete(row) {
   try {
-    await deleteHrJob(id)
+    await ElMessageBox.confirm(`确定下架职位「${row.title}」吗？该操作不可恢复。`, '确认', { type: 'warning' })
+  } catch {
+    return
+  }
+  try {
+    await deleteHrJob(row.id)
     ElMessage.success('已下架')
     loadJobs()
-  } catch { /* handled */ }
+  } catch { /* 拦截器已提示 */ }
 }
 
 const dialogVisible = ref(false)
 const editingId = ref(null)
 const saving = ref(false)
 const formRef = ref(null)
-const form = reactive({
+const EMPTY = {
   title: '', company: '', city: '', industry: '',
   salaryMin: 10000, salaryMax: 20000,
   education: '本科', experience: '1-3年',
   skills: '', description: ''
-})
+}
+const form = reactive({ ...EMPTY })
 
 const rules = {
   title: [{ required: true, message: '请输入职位名称', trigger: 'blur' }],
   company: [{ required: true, message: '请输入公司名称', trigger: 'blur' }],
   city: [{ required: true, message: '请输入城市', trigger: 'blur' }],
-  industry: [{ required: true, message: '请输入行业', trigger: 'blur' }],
   salaryMin: [{ required: true, message: '请输入最低薪资', trigger: 'blur' }],
-  salaryMax: [{ required: true, message: '请输入最高薪资', trigger: 'blur' }],
-  education: [{ required: true, message: '请选择学历要求', trigger: 'change' }],
-  experience: [{ required: true, message: '请选择经验要求', trigger: 'change' }],
+  salaryMax: [
+    { required: true, message: '请输入最高薪资', trigger: 'blur' },
+    {
+      validator: (_rule, value, callback) =>
+        value < form.salaryMin ? callback(new Error('最高薪资不能低于最低薪资')) : callback(),
+      trigger: 'blur'
+    }
+  ],
   description: [{ required: true, message: '请输入职位描述', trigger: 'blur' }]
 }
 
 function openDialog(row) {
   editingId.value = row ? row.id : null
-  if (row) {
-    Object.assign(form, {
-      title: row.title || '',
-      company: row.company || '',
-      city: row.city || '',
-      industry: row.industry || '',
-      salaryMin: row.salaryMin || 10000,
-      salaryMax: row.salaryMax || 20000,
-      education: row.education || '本科',
-      experience: row.experience || '1-3年',
-      skills: Array.isArray(row.skills) ? row.skills.join(',') : (row.skills || ''),
-      description: row.description || ''
-    })
-  } else {
-    Object.assign(form, {
-      title: '', company: '', city: '', industry: '',
-      salaryMin: 10000, salaryMax: 20000,
-      education: '本科', experience: '1-3年',
-      skills: '', description: ''
-    })
-  }
+  Object.assign(form, row
+    ? {
+        title: row.title || '',
+        company: row.company || '',
+        city: row.city || '',
+        industry: row.industry || '',
+        salaryMin: row.salaryMin ?? 10000,
+        salaryMax: row.salaryMax ?? 20000,
+        education: row.education || '本科',
+        experience: row.experience || '1-3年',
+        skills: parseSkills(row.skills).join(','),
+        description: row.description || ''
+      }
+    : { ...EMPTY })
   dialogVisible.value = true
 }
 
@@ -198,10 +211,10 @@ async function handleSave() {
   if (!valid) return
   saving.value = true
   try {
-    const payload = {
-      ...form,
-      skills: form.skills ? form.skills.split(',').map(s => s.trim()).filter(Boolean) : []
-    }
+    // JobSaveDTO.skills 是 String（JSON 数组字符串），直接传数组会绑定失败
+    const skills = form.skills.split(',').map(s => s.trim()).filter(Boolean)
+    const payload = { ...form, skills: JSON.stringify(skills) }
+
     if (editingId.value) {
       await updateHrJob(editingId.value, payload)
       ElMessage.success('更新成功')
@@ -211,15 +224,12 @@ async function handleSave() {
     }
     dialogVisible.value = false
     loadJobs()
+  } catch {
+    // 拦截器已提示（例如越权编辑他人职位会返回 403）
   } finally {
     saving.value = false
   }
 }
 
-onMounted(() => loadJobs())
+onMounted(loadJobs)
 </script>
-
-<style scoped>
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.page-header h2 { margin: 0; }
-</style>

@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,5 +85,40 @@ public class BehaviorServiceImpl implements BehaviorService {
                 .eq(StudentBehavior::getUserId, userId)
                 .orderByDesc(StudentBehavior::getCreateTime)
                 .last("LIMIT " + Math.max(1, limit)));
+    }
+
+    @Override
+    public List<StudentBehavior> listByJobIdsAndAction(Collection<Long> jobIds, String action) {
+        if (jobIds == null || jobIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return behaviorMapper.selectList(new LambdaQueryWrapper<StudentBehavior>()
+                .in(StudentBehavior::getJobId, jobIds)
+                .eq(StudentBehavior::getAction, action)
+                .orderByDesc(StudentBehavior::getCreateTime));
+    }
+
+    @Override
+    public Map<String, Long> countByActionForTenant() {
+        Map<String, Long> counts = new HashMap<>();
+        for (StudentBehavior b : behaviorMapper.selectList(null)) {
+            counts.merge(b.getAction(), 1L, Long::sum);
+        }
+        return counts;
+    }
+
+    @Override
+    public Map<Long, Map<String, Long>> countByActionGroupedByUser(Collection<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<Long, Map<String, Long>> grouped = new HashMap<>();
+        List<StudentBehavior> all = behaviorMapper.selectList(
+                new LambdaQueryWrapper<StudentBehavior>().in(StudentBehavior::getUserId, userIds));
+        for (StudentBehavior b : all) {
+            grouped.computeIfAbsent(b.getUserId(), k -> new HashMap<>())
+                    .merge(b.getAction(), 1L, Long::sum);
+        }
+        return grouped;
     }
 }

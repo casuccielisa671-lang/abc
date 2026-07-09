@@ -40,4 +40,10 @@ public class JobQueryDTO implements Serializable {
 
     /** 关键词搜索 */
     private String keyword;
+
+    /**
+     * 发布者用户 ID —— 仅供服务端内部设置（HR 端「只看我发布的」）。
+     * 前端传入会被 HrController 覆盖，不可用于越权查询他人职位。
+     */
+    private Long publisherId;
 }

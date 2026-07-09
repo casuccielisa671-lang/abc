@@ -14,7 +14,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 推荐与求职行为接口（学生端）
@@ -65,15 +64,11 @@ public class RecommendController {
         return Result.ok();
     }
 
-    /** 收藏列表 */
+    /** 收藏列表（最近收藏在前） */
     @GetMapping("/favorites")
     public Result<List<JobDetailVO>> favorites() {
         List<Long> jobIds = behaviorService.listJobIdsByAction(UserContextHolder.getUserId(), "FAVORITE");
-        List<JobDetailVO> jobs = jobIds.stream()
-                .map(jobDetailService::getJobById)
-                .filter(java.util.Objects::nonNull)
-                .collect(Collectors.toList());
-        return Result.ok(jobs);
+        return Result.ok(jobDetailService.listByIds(jobIds));
     }
 
     /** 投递职位（记录 APPLY 行为 + 生成投递成功推送） */

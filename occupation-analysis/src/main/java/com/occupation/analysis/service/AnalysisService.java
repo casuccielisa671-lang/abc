@@ -3,8 +3,10 @@ package com.occupation.analysis.service;
 import com.occupation.analysis.dto.DashboardQueryDTO;
 import com.occupation.analysis.vo.DashboardVO;
 
+import java.util.List;
+
 /**
- * 分析服务接口 — 供 report 模块调用
+ * 分析服务接口 — 供 report / recommend 模块调用
  * <p>
  * 负责 Dashboard 数据查询、分析结果缓存刷新等。
  *
@@ -19,4 +21,13 @@ public interface AnalysisService {
      * @return Dashboard 视图数据（各维度 Top 数据 + 趋势）
      */
     DashboardVO getDashboard(DashboardQueryDTO query);
+
+    /**
+     * 市场热门技能排行（dimension=skill，metric=job_count，按岗位数降序）
+     * <p>
+     * 供教师端「技能缺口诊断」对比学生掌握率使用。数据范围受多租户插件限制在当前租户。
+     *
+     * @param limit 取前 N 条
+     */
+    List<DashboardVO.DimensionItem> topSkills(int limit);
 }

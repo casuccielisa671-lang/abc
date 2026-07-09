@@ -30,4 +30,13 @@ public interface OpenAuthService {
      * @return 令牌对应的 apiKey；无效返回 null
      */
     String validateToken(String accessToken);
+
+    /**
+     * 查询 apiKey 所属的租户 ID；apiKey 不存在时返回 null。
+     * <p>
+     * 开放 API 无 JWT，多租户插件拿不到租户上下文就<b>不会</b>注入 tenant_id 条件，
+     * 涉及租户表（如 report_record）的查询会跨租户返回数据。
+     * 因此鉴权通过后必须用它把租户上下文设起来。
+     */
+    Long tenantIdOf(String apiKey);
 }

@@ -7,6 +7,8 @@ import com.occupation.common.mapper.SysTenantMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * 租户服务实现
  *
@@ -17,6 +19,13 @@ import org.springframework.stereotype.Service;
 public class TenantServiceImpl implements TenantService {
 
     private final SysTenantMapper sysTenantMapper;
+
+    @Override
+    public List<SysTenant> listActive() {
+        return sysTenantMapper.selectList(new LambdaQueryWrapper<SysTenant>()
+                .eq(SysTenant::getStatus, 1)
+                .orderByAsc(SysTenant::getName));
+    }
 
     @Override
     public SysTenant getById(Long tenantId) {
