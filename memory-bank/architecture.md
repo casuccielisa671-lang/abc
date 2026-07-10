@@ -95,10 +95,10 @@ com.occupation.<模块名>
 ## 四、数据库 Schema（当前版本）
 
 > 脚本位置：`occupation-common/src/main/resources/sql/init.sql`
-> 执行后可创建全部 15 张表 + 初始化种子数据。
-> 已有数据的库要补新表，用 `sql/upgrade-2026-07-10-student-resume.sql`（`CREATE TABLE IF NOT EXISTS` + `INSERT IGNORE`，可重复执行、不破坏数据）。
+> 执行后可创建全部 16 张表 + 初始化种子数据。
+> **2026-07-10 之后种子数据大改（职位/行为/投递全部重算），必须 `docker-compose down -v && docker-compose up -d`，增量脚本兜不住。**
 
-### 已实现表（15 张，全部在 init.sql 中定义）
+### 已实现表（16 张，全部在 init.sql 中定义）
 
 | 表名                   | 所属模块        | 说明                 | tenant_id |
 | ---------------------- | --------------- | -------------------- | --------- |
@@ -114,9 +114,25 @@ com.occupation.<模块名>
 | report_template        | report          | 报告模板表           | ✅ |
 | report_record          | report          | 报告记录表           | ✅ |
 | push_record            | recommend       | 推送记录表           | ✅ |
-| student_behavior       | recommend       | 学生行为记录表       | ✅ |
+| student_behavior       | recommend       | 学生行为记录表（埋点）| ✅ |
+| **job_application**    | recommend       | **投递记录表（业务实体）** | ✅ |
 | sys_alert              | web/common      | 系统告警表           | ✅ |
 | api_client             | api             | API 客户端鉴权表     | ✅ |
+
+**`student_behavior` 与 `job_application` 的分工**（两张表都记录「投递」，语义完全不同）：
+
+- `student_behavior` = **行为埋点**。`VIEW / FAVORITE / APPLY / IGNORE / CONTACT` 一视同仁，只记「谁在什么时候对哪个职位做了什么」。喂给推荐算法做行为加权，只增不改。
+- `job_application` = **业务实体**。有状态机（`SUBMITTED → VIEWED → INTERVIEW → OFFER`，或任意非终态直接 `REJECTED`）、HR 备注、状态变更时间。
+
+投递时后端**双写**：`RecommendController.apply()` 同时写两张表。这样推荐算法、行为统计、教师端明细全都零改动。
+
+**职位归属决定行为合法性**（两条硬约束，种子生成器里有自检，违反直接抛异常）：
+
+| 行为 | 只能落在 | 服务端守卫 |
+|---|---|---|
+| `APPLY` | 站内职位（`publisher_id` 非空） | `apply()` 拒绝无主职位 |
+| `CONTACT` | 采集职位（`publisher_id` 为空） | `contact()` 拒绝站内职位 |
+| `VIEW / FAVORITE / IGNORE` | 两类都可以 | 无 |
 
 **画像与简历的分工**（两张表都挂在 recommend 模块，别搞混）：
 
@@ -130,7 +146,10 @@ com.occupation.<模块名>
 |---|---|
 | sys_tenant | id=1, name="测试学院" |
 | sys_user | id=1, username="admin", password="admin123"（BCrypt），role=ADMIN |
-| student_resume | 8 份（userId 2/5/6/7/8/9/11/13）。投递过 HR 职位的 5/6/7/11/13 都有简历；userId=14 投了但没简历，用于测 HR 端空态 |
+| student_resume | 12 份，覆盖租户1全部有画像的学生（userId 2、5~15） |
+| job_application | 73 条，五种状态铺开（SUBMITTED 24 / VIEWED 18 / INTERVIEW 19 / OFFER 3 / REJECTED 9），与 student_behavior 的 73 条 APPLY 一一对应 |
+| job_detail | 114 个职位：90 个采集（publisher_id 为空）+ 24 个站内（6 个 HR 各 4 个，分属 3 家公司） |
+| 边界用例 | `student12`(userId 16) 有账号、无画像、无简历，却投递了一个站内职位 —— 一次覆盖三个空态 |
 
 ---
 
@@ -170,6 +189,40 @@ com.occupation.<模块名>
 
 `/api/hr/applications` 返回值**新增**（未删除任何字段）：`userId` / `realName` / `hasResume`。
 联系方式刻意不在列表里 —— 列表页不该批量泄露联系方式，要看得单独调 `/api/hr/applicants/{userId}`。
+
+### 2026-07-10 第二轮：幽灵职位 + 投递状态机 + 就业分析 + 爬虫合规
+
+| 接口 | 方法 | 说明 | 状态 |
+|---|---|---|---|
+| /api/student/job/{id}/contact | POST | 自主联系（对采集职位表达求职意向）。返回 `{sourceUrl, company}`，MOCK 数据的 `sourceUrl` 为 null | ✅ |
+| /api/student/applications | GET | 我的投递 + HR 处理进度。**不含 `hrNote`**（HR 内部备注） | ✅ |
+| /api/hr/applications/{id}/status | PUT | HR 变更投递状态。带归属校验 + 状态流转合法性校验 | ✅ |
+| /api/analysis/employment | GET | 就业分析：投递漏斗 / 供需错配 / 自主求职流向。**限 ADMIN + TEACHER** | ✅ |
+
+`JobDetailVO` 新增派生字段 **`applicable`**（= `publisherId != null`）。它不落库 —— 归属关系的唯一真相是 `publisher_id`，多存一列就多一处可能不同步的地方。前端据此决定显示「投递简历」还是「自主联系」。
+
+`/api/hr/applications` 改读 `job_application`（业务实体），响应**只加字段**：`applicationId` / `status` / `statusLabel` / `terminal` / `hrNote` / `statusChangedAt`。
+
+`/api/teacher/overview` 新增 `totalContacts`；`BehaviorStatsVO` / `StudentVO` / `TalentVO` 新增 `contactCount`。
+
+**基线保证**：改造前后用脚本对 19 个接口做了响应结构快照比对，结果是**只有新增字段，零字段缺失**。
+
+### analysis_result 的新维度（就业分析）
+
+`analysis_result` 表结构 `(dimension, dimension_value, metric_name, metric_value, period)` 足够通用，新增维度直接往里写，**不建新表**：
+
+| dimension | dimension_value | metric_name |
+|---|---|---|
+| `apply_funnel` | SUBMITTED / VIEWED / INTERVIEW / OFFER / REJECTED / TOTAL | `application_count` |
+| `apply_response` | responded / unresponded / median_hours | `application_count` / `hours` |
+| `student_city` / `student_industry` / `student_salary` | 城市 / 行业 / 薪资桶 | `student_count` |
+| `gap_city` | 城市 | `student_ratio` / `job_ratio` / `gap_ratio` |
+| `gap_salary` | overall | `student_median` / `market_median` / `deviation_percent` |
+| `contact_city` / `contact_industry` | 城市 / 行业 | `contact_count` |
+
+**架构约束**：这些维度依赖学生画像、行为、投递三张表，它们都在 `recommend` 模块里，而 `recommend` 依赖 `analysis` —— 反过来依赖会成环。解法是 SPI：`analysis` 定义 `AnalysisContributor` 扩展点，`recommend` 的 `EmploymentAnalysisContributor` 实现它，`AnalysisJobService.runAll()` 用 `List<AnalysisContributor>` 注入并在内置维度之后调用（供需错配要读刚写进去的 city 岗位分布）。
+
+**漏斗只统计 `job_application`**，不碰 `student_behavior` 的 `APPLY`。后者可能含历史上投在无主职位的「幽灵投递」，它们连被查看的可能都没有，混进转化率只会让数字难看，而这个难看不反映任何真实问题。
 
 **AI 能力的统一约定**：所有 AI 接口在大模型不可用时都降级为规则化输出，并在响应里带
 `aiGenerated: false` 让前端如实告知用户。唯一例外是 `ai-polish` —— 润色没有合理的规则降级

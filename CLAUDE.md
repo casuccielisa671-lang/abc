@@ -30,12 +30,13 @@ cd occupation-web-ui && npm run dev       # 前端 5173
   另注意 `mvn clean compile` **治不了这个病** —— 它只编到各模块的 `target/classes`，不往 `~/.m2` 装 jar
 - **后端跑着的时候，内置定时任务会持续改库**（`app.scheduler.enabled: true`）：`AnalysisScheduler` 会把 `raw_job_data` 里待清洗的数据洗进 `job_detail`，所以 `job_detail` 的行数会从种子的 96 慢慢往上涨。这是设计如此，不是 bug，但排查数据问题时别把它当成异常
 - 登录账号（租户 `测试学院`，密码均 `admin123`）：`admin`（管理员）、`student`（学生）、`teacher`（教师）、`hr`（HR）——init.sql 预置
-- init.sql 含全量测试数据（由 `scripts/gen-seed-data.js` 确定性生成）：96 个职位、13 份学生画像（租户1 占 12、租户2 占 1）、242 条行为、分析结果已预算好，**开箱即可看到看板/推荐/收藏/投递数据**
-- **种子账号的边界用例**（写统计逻辑时留意）：`student12` 有账号无画像（测「请先完善画像」）；`student98` 状态禁用（`status=0`，**仍计入** `countByRole`）；`student99` 逻辑删除（`deleted=1`，**不计入**）。所以教师端「学生总数 14 / 已填画像 12」是对的，别当成 bug。另有 `student01`~`student11`、`teacher01/02`、`hr01/02`；第二租户 `示范大学`（admin/student/teacher）测多租户隔离；`停用学院` 测租户禁用
-- **HR 职位归属**：6 个 `HR_PUBLISH` 职位按 `publisher_id` 分给 hr(2 个) / hr01(1 个) / hr02(3 个)，三个账号登录后「职位管理」看到的列表各不相同 —— 这是验证「只看我发布的」是否生效的最快方式。种子里有 11 条投递落在这些职位上，HR 端「收到的投递」开箱有数据
+- init.sql 含全量测试数据（由 `scripts/gen-seed-data.js` 确定性生成）：**114 个职位**（90 采集 + 24 站内）、13 份学生画像（租户1 占 12、租户2 占 1）、12 份简历、**391 条行为**（VIEW 212 / APPLY 73 / FAVORITE 63 / CONTACT 32 / IGNORE 11）、**73 条投递**（五种状态铺开）、分析结果已预算好，**开箱即可看到看板/推荐/投递漏斗/供需错配**
+- **种子账号的边界用例**（写统计逻辑时留意）：`student12` 有账号、无画像、无简历，却投递了一个站内职位 —— 一次覆盖三个空态（学生端「请先完善画像」+ HR 端「未完善画像 / 未填写简历」）；`student98` 状态禁用（`status=0`，**仍计入** `countByRole`）；`student99` 逻辑删除（`deleted=1`，**不计入**）。所以教师端「学生总数 14 / 已填画像 12」是对的，别当成 bug。另有 `student01`~`student11`、`teacher01/02`、`hr01`~`hr05`；第二租户 `示范大学`（admin/student/teacher）测多租户隔离；`停用学院` 测租户禁用
+- **HR 职位归属**：24 个 `HR_PUBLISH` 职位平均分给 6 个 HR（`hr`/`hr01`~`hr05`，各 4 个），分属 3 家公司。六个账号登录后「职位管理」看到的列表各不相同 —— 这是验证「只看我发布的」是否生效的最快方式。每个 HR 都收到 10~13 条投递，且五种处理状态都有样本，HR 端与「就业分析」的漏斗开箱就有形状
 - 登录页有角色选择标签，但仅作入口提示；实际进入哪个端由**账号自身的 role** 决定（选错会提示并按实际角色进入）
 - MySQL：root/root，库名 `occupation`
 - **职位数据靠「采集管理 → 选中任务 → 启动」生成**（走 Kafka 清洗链路，Kafka 没起就静默失败）；看板数据靠「手动重算分析数据」——种子数据已含两者结果，重跑只会增量/覆盖
+- **种子数据（2026-07-10 版）**：114 个职位（90 采集 + 24 站内）、6 个 HR、13 份画像、12 份简历、391 条行为（含 32 条 CONTACT）、73 条投递（五种状态铺开）。`mock-jobs.json` 有 60 条，点一次「启动」全部入库，再点因 `source_url` 去重不会增加
 - **原来那个「Mock 模拟采集」按钮已删**（2026-07-10）。它与「对一条 `source_type=MOCK` 的任务点启动」完全等价，却每点一次就用 `System.currentTimeMillis()` 当主键新插一条一次性 `crawler_task`、跑完不清理——实测点五次就留下五条垃圾任务。现在唯一入口是 `PUT /api/admin/crawler/task/{id}/start`
 - **MOCK 采集不访问外网**：`MockJobPageProcessor` 读的是 classpath 下的 `occupation-crawler/src/main/resources/mock/mock-jobs.json`（20 条），`source_url` 是 `https://mock.local/job/001` 这类不存在的地址。它不走 WebMagic 的 `Spider`，直接同步循环读文件；只有 BOSS/智联走真正的爬虫框架
 - **`mock-jobs.json` 那 20 条已全部入库**：清洗按 `source_url` 去重，再点多少次「启动」`job_detail` 都不会涨（`raw_job_data` 会涨，那是原始归档，不去重）。想采到新职位得先把这个 JSON 加厚
@@ -43,7 +44,7 @@ cd occupation-web-ui && npm run dev       # 前端 5173
 
 ## 数据库协作流程（以 init.sql 为唯一事实来源）
 
-- 脚本位置：`occupation-common/src/main/resources/sql/init.sql`（DROP+CREATE 15 张表 + 种子数据，可重复执行）
+- 脚本位置：`occupation-common/src/main/resources/sql/init.sql`（DROP+CREATE 16 张表 + 种子数据，可重复执行）
 - MySQL 容器**首次启动（数据卷为空）时自动执行**它
 - **不想 `down -v` 丢数据时**，用同目录的增量脚本给现有库补表：
   ```bash
@@ -135,7 +136,8 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 ## 采集链路的几个隐坑（2026-07-10 修）
 
 - **MOCK 任务的 `url_pattern` 必须是 `mock/` 目录下的真实文件名**：`CrawlerServiceImpl` 拼的是 `"mock/" + url_pattern`。种子里原来是 `NULL`，会拼出 `mock/null` 静默采到 0 条——因为大家一直点的是 Mock 按钮（它硬编码了文件名），这个坑藏了很久。现在有默认值兜底，种子也已填好
-- **不支持的采集源不再返回 500**：`COMPANY_OFFICIAL` 只有表结构没有实现，原先 `createProcessor` 抛 `IllegalArgumentException` 被兜底处理器吞成「系统内部错误」。现在抛 `BizException`，提示「暂不支持的采集源类型」
+- **不支持的采集源不再返回 500**：`COMPANY_OFFICIAL` 只有表结构没有实现，原先 `createProcessor` 抛 `IllegalArgumentException` 被兜底处理器吞成「系统内部错误」。现在抛 `BizException`，提示「暂不支持的采集源类型」。`BOSS_ZHIPIN` 同样保留分支，但直接告知「robots.txt 明确禁止」
+- **种子里的采集任务**：1=MOCK（本地样例）、2/3=ZHAOPIN（真实采集，`url_pattern` 是参数串）、4=COMPANY_OFFICIAL（未实现，用来演示错误提示）、5=MOCK（租户2）
 - **用错 HTTP 方法不再返回 500**：`GlobalExceptionHandler` 补了 `HttpRequestMethodNotSupportedException`(405) 与 `MethodArgumentTypeMismatchException`(400)。原先对 `/task/{id}` 发 POST 会得到一句毫无信息量的「系统内部错误」
 - **种子里的 `crawler_task.status` 一律为 0**：原来任务 1/4 写成 `1`（运行中），但根本没在跑，页面显示「运行中」而点「停止」会报「任务未在运行」
 
@@ -152,7 +154,7 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 - **画像 ≠ 简历**：`sys_student_profile` 是喂给推荐算法的结构化匹配依据（扁平、可索引）；`student_resume` 是给 HR 和大模型读的自我陈述（教育/项目/实习三段经历存 JSON 数组）
 - **HTTP 层收发结构化数组**，序列化只在 `ResumeServiceImpl` 里发生一次。前端 **不要** `JSON.stringify`（画像的 `skills` 就是那么踩的坑）
 - 未填写时 `GET /api/student/resume` 返回 `{exists:false, educations:[], …}` 空壳而不是 `null`，前端不必判空
-- 种子里 8 份简历；`userId=14` 投递过 HR 职位但没简历，用来测 HR 端「未填写简历」空态
+- 种子里 12 份简历，覆盖租户1全部有画像的学生。「未填写简历」的空态由 `student12`（userId 16）覆盖 —— 他没画像、没简历，却投了一个站内职位
 
 ### HR 可见性边界（改动了原来的「全脱敏」设计）
 
@@ -184,6 +186,61 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 4. **要结构化就用 JSON 模式**，别让模型输出 Markdown 再正则去抠
 5. 换 `deepseek-reasoner`（R1）会更强但慢 3~5 倍且更贵，本项目默认 `deepseek-chat`（V3）
 6. **模型偶尔会串维度**（比如把「杭州岗位数」和「互联网行业岗位数」混着说）。要更准就把每个维度的数字标注得更明确，或减少一次喂进去的维度数
+
+## 2026-07-10 第二轮：职位归属 / 投递状态机 / 就业分析 / 爬虫合规
+
+### 职位分两类，这是理解整个系统的关键
+
+| | 站内职位（24 个） | 采集职位（90 个） |
+|---|---|---|
+| `source` | `HR_PUBLISH` | `MOCK` / `ZHAOPIN` |
+| `publisher_id` | 指向某个 HR | **NULL** |
+| 学生能做什么 | **投递简历**（HR 端能看到、能处理） | **自主联系**（跳出平台，只记录意向） |
+| 用途 | 真实招聘关系 | 市场标尺：看板、技能热度、教师端诊断、推荐候选池、AI 顾问引用的数字 |
+
+`JobDetailVO.applicable`（= `publisherId != null`）是**唯一的可投递判据**，派生字段不落库。
+
+**为什么采集职位不能投递**：真正的招聘方不知道这个平台存在。放行只会制造「幽灵投递」——学生以为投出去了，HR 端一条也看不到。改造前种子里 30 条投递有 19 条是幽灵。
+
+### student_behavior vs job_application
+
+两张表都记录「投递」，但语义完全不同：
+
+- **`student_behavior`** = 行为埋点。`VIEW/FAVORITE/APPLY/IGNORE/CONTACT`，只增不改，喂推荐算法
+- **`job_application`** = 业务实体。五状态机 + HR 备注 + 状态变更时间
+
+`apply()` **双写**两张表。所以推荐算法的行为加权、投递计数、教师端行为明细**一行都没改**。
+
+**行为与归属的硬约束**（生成器里有自检，违反直接抛异常）：`APPLY` 只能落站内职位，`CONTACT` 只能落采集职位。服务端两处守卫互为镜像。
+
+**状态流转**：只能向前推进或直接 `REJECTED`，终态（`OFFER`/`REJECTED`）不可再改。HR 打开投递人详情会自动把 `SUBMITTED` 推进到 `VIEWED`。学生看得到状态，**看不到 `hrNote`**。
+
+### 就业分析：复用 analysis_result，用 SPI 解循环依赖
+
+`analysis` 模块只看得到 `job_detail`（市场供给侧）。学生画像/行为/投递在 `recommend` 里，而 `recommend` 依赖 `analysis`——反过来依赖会成环。
+
+解法：`analysis` 定义 `AnalysisContributor` 扩展点，`recommend` 的 `EmploymentAnalysisContributor` 实现它。`runAll()` 用 `List<AnalysisContributor>` 注入，**在内置维度之后**调用（供需错配要读刚写进去的 city 岗位分布）。新增维度直接写进 `analysis_result`，**不建新表**。
+
+- 漏斗**只统计 `job_application`**，幽灵投递不混入
+- `gap_ratio` = 学生意向占比 ÷ 岗位供给占比。>1 学生扎堆，999 是「该城市几乎没岗位」的哨兵值
+- **种子里预置了这些维度**（否则新库打开是空图表）。JS（`gen-seed-data.js`）和 Java（`EmploymentAnalysisContributor`）两份实现，取整口径必须一致——**已用脚本逐条比对过 68 条指标，完全一致**。改任何一边都要重新验
+
+### 爬虫：Boss 已删，改抓智联
+
+- **`BossJobPageProcessor` 已删除**。它拼的 `?query=...&city=...` 踩在 `www.zhipin.com/robots.txt` 的 `Disallow: /*?query=*` 上。这不是技术问题，是人家写在门口的。何况页面已是 JS 渲染 + 行为验证
+- **`ZhaopinJobPageProcessor` 重写**：解析列表页里服务端注入的 `window.__INITIAL_STATE__.positionList`，不再写死 XPath。字段齐全（`industryName` / `publishTime` / `jobSkillTags` / `salaryReal`），页面换皮不影响解析
+- **必须先解 301**：`sou.zhaopin.com/?kw=X&jl=Y` → `www.zhaopin.com/sou/jl653/kwXXXX`。目标域的 robots 有 `Disallow: /*?*`（禁一切带查询串的 URL），而跳转后的路径式地址不带查询串，才是被允许的那个
+- **新增 `RobotsRules`**：抓取前校验 robots.txt。WebMagic 不会自动遵守，本项目原先完全没有这道关。实现保守——只解析 `User-agent: *` 段的 `Disallow`，拉不到 robots.txt 视为无限制，解析异常按禁止处理。`?` 在 robots 里是**普通字符**不是正则元字符（有单测守着）
+- **只抓列表页，不进详情页**：详情页可能带出 HR 手机号，抓下来就进了 `raw_job_data.raw_content`
+- 真实采集改为**单线程 + 5~10 秒随机间隔**（原来是 `thread(3)`）
+- `crawler_task.url_pattern` 对 ZHAOPIN 存的是**参数串**而非 URL：`kw=Java&jl=653&maxPages=2`（`jl` 是智联城市编码，653=杭州）
+- robots 校验不通过时**不抛异常**，而是把日志标成 FAILED 后返回。`startCrawl` 带 `@Transactional(rollbackFor = Exception.class)`，抛 `BizException`（RuntimeException）会把刚写的 FAILED 日志一起回滚
+
+### 学生首页分两栏
+
+「可投递岗位」和「市场参考」两栏。**没有改推荐打分**——只是展示层按 `applicable` 分组。改打分的话，匹配分的语义就变了，教师端和 AI 顾问引用的数字也跟着变。
+
+`CONTACT` 行为的推荐权重是 +2（与 `APPLY` 同级），已联系过的职位不再出现在推荐里。**现有数据里一条 `CONTACT` 都没有，所以加它对既有推荐结果零影响**——改造前后 20 条推荐的职位 ID 与分数完全一致，有脚本验过。
 
 ## 上一轮新增/改动的接口
 
@@ -228,6 +285,21 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 
 ## 验证状态（2026-07-10）
 
+### 第二轮（职位归属 / 投递状态机 / 就业分析 / 爬虫）
+
+- `mvn test`（**25 个单测**：原 18 + `RobotsRulesTest` 7 个）与 `npm run build` 均通过
+- **零破坏保证**：改造前后对 19 个接口做响应结构快照比对，三次都是「**只有新增字段，零字段缺失**」
+- **推荐算法未受影响**：加 `CONTACT` 前后，同一学生的 20 条推荐职位 ID 与分数**逐条完全一致**
+- **口径一致性**：种子预置的 68 条就业分析指标（JS 算的）与后端「重算分析数据」（Java 算的）**逐条完全一致**
+- 幽灵职位：无主职位投递被拒；种子里 19 条幽灵投递已清零（改成 VIEW/FAVORITE/CONTACT）
+- 投递状态机：五状态流转、终态不可回退、`hr01` 改 `hr` 的投递被 403、HR 打开详情自动 `SUBMITTED→VIEWED`、学生看不到 `hrNote`
+- 就业分析：漏斗总数 = `job_application` 行数（幽灵投递未混入）、错配比 = 学生占比÷岗位占比、薪资分桶按金额而非人数排序、`/employment` 限 ADMIN+TEACHER（学生与 HR 均 403）
+- 种子数据自洽性：在**临时库** `occupation_verify` 里跑（`init.sql` 开头有 `USE occupation;`，直接导会打到真库并 DROP 表，必须先 `sed` 掉那两行）——规模、行为归属硬约束、`APPLY↔job_application` 一一对应、每个 HR 都有职位且都收到投递、边界用例仍在
+- 采集链路：真实调用「启动任务」验证 `raw_job_data +20 / job_detail +0（去重生效）/ crawler_log +1 / crawler_task 不增`
+- **未做**：真实抓取智联的端到端验证（只验证了 robots 规则、URL 解析、`__INITIAL_STATE__` 的结构，没有真的跑一次 Spider）
+
+### 第一轮（简历 / HR 解密 / DeepSeek）
+
 - `mvn test`（18 个单测）与 `npm run build` 均通过
 - **AI 开启时**已用真实 HTTP + 真实 DeepSeek 调用验证：简历 CRUD 与校验 / AI 诊断（score+4 条建议）/ AI 润色 / 顾问对话（引用了真实岗位数）/ 匹配理由解读 / 教学建议解读 / **prompt 注入被丢弃**
 - **AI 关闭时**（队友的默认状态）验证全部降级路径：诊断退规则、顾问给兜底文案、匹配理由退规则、教学建议退规则、润色明确报错；`aiGenerated` 均为 `false`
@@ -235,3 +307,9 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 - 早前已验证：租户下拉 / 五个角色登录 / 教师看板统计 / 技能缺口诊断非随机 / HR「只看我发布的」(2/1/3) / Excel 导出 / PDF 内嵌中文字体 / Word 结构化表格 / 开放 API BCrypt 校验
 - **报告下载已重新验证无误**：用真实数据库拉取，PDF/Word 下载字节与磁盘文件 sha256 完全一致；PDF 为 3 页、内嵌 SimSun 子集、51 个文字块。此前「下载打不开」的报告应为旧 jar 所致（见启动流程那节）
 - **未做**：浏览器里的人工点验（深色模式配色、图表重绘、简历表单与顾问对话的交互手感）；`error_analysis.md` 里提的 XXL-Job 分布式调度未跑通
+
+## 下次接手前必读的三条
+
+1. **改了非 web 模块，先 `mvn install -DskipTests`**。`spring-boot:run -pl occupation-web` 从 `.m2` 取旧 jar。真实咬过人：曾有两个「bug」（学历不同步、报告下载打不开）在同一份代码上复现不出来，根因就是这个。`mvn clean compile` 治不了——它不往 `.m2` 装 jar
+2. **写针对数据库的验证脚本时，清理逻辑必须适配当前种子**。本轮有个脚本的清理语句是 `UPDATE job_application SET status='SUBMITTED' WHERE status='VIEWED'`——它是照着旧种子（全部 SUBMITTED）写的，在新种子上跑了一次，把 18 条 VIEWED 全改坏了。`init.sql` 没受影响（程序从不回写它），`down -v` 重建即可，但排查时会一头雾水
+3. **验证种子数据别在真库上做**。`init.sql` 第 8–12 行有 `CREATE DATABASE occupation;` + `USE occupation;`，`mysql -uroot -p 别的库名 < init.sql` 里指定的库名**会被脚本自己的 `USE` 覆盖**，DROP TABLE 直接打在 `occupation` 上。先 `sed` 掉那两行再导进临时库
