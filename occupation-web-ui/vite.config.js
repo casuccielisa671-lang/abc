@@ -15,6 +15,11 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true
+      },
+      '/amap-tile': {
+        target: 'https://webst01.is.autonavi.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/amap-tile/, '')
       }
     }
   }

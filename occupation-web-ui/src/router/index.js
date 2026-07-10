@@ -1,7 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
+const HomeIndex = () => import('@/views/Home/HomeIndex.vue')
+
 const routes = [
-  // ========== 通用 ==========
   {
     path: '/login',
     name: 'Login',
@@ -9,13 +10,13 @@ const routes = [
     meta: { guest: true }
   },
 
-  // ========== 管理后台 ==========
   {
     path: '/admin',
-    component: () => import('@/components/AppLayout.vue'),
+    component: () => import('@/components/MainLayout.vue'),
     meta: { role: 'ADMIN' },
     children: [
-      { path: '', name: 'Dashboard', component: () => import('@/views/admin/Dashboard.vue') },
+      { path: '', name: 'AdminHome', component: HomeIndex, meta: { layout: 'full' } },
+      { path: 'dashboard', name: 'Dashboard', component: () => import('@/views/admin/Dashboard.vue') },
       { path: 'employment', name: 'Employment', component: () => import('@/views/admin/Employment.vue') },
       { path: 'crawler', name: 'CrawlerTask', component: () => import('@/views/admin/CrawlerTask.vue') },
       { path: 'report-template', name: 'ReportTemplate', component: () => import('@/views/admin/ReportTemplate.vue') },
@@ -24,13 +25,13 @@ const routes = [
     ]
   },
 
-  // ========== 学生端 ==========
   {
     path: '/student',
-    component: () => import('@/components/AppLayout.vue'),
+    component: () => import('@/components/MainLayout.vue'),
     meta: { role: 'STUDENT' },
     children: [
-      { path: '', name: 'StudentHome', component: () => import('@/views/student/StudentHome.vue') },
+      { path: '', name: 'StudentHome', component: HomeIndex, meta: { layout: 'full' } },
+      { path: 'jobs', name: 'StudentJobs', component: () => import('@/views/student/StudentHome.vue') },
       { path: 'job/:id', name: 'JobDetail', component: () => import('@/views/student/JobDetail.vue') },
       { path: 'profile', name: 'Profile', component: () => import('@/views/student/Profile.vue') },
       { path: 'resume', name: 'Resume', component: () => import('@/views/student/Resume.vue') },
@@ -41,32 +42,29 @@ const routes = [
     ]
   },
 
-  // ========== 教师端 ==========
   {
     path: '/teacher',
-    component: () => import('@/components/AppLayout.vue'),
+    component: () => import('@/components/MainLayout.vue'),
     meta: { role: 'TEACHER' },
     children: [
-      { path: '', name: 'TeacherHome', component: () => import('@/views/teacher/TeacherHome.vue') },
+      { path: '', name: 'TeacherHome', component: HomeIndex, meta: { layout: 'full' } },
       { path: 'students', name: 'Students', component: () => import('@/views/teacher/Students.vue') },
       { path: 'suggestions', name: 'Suggestions', component: () => import('@/views/teacher/Suggestions.vue') }
     ]
   },
 
-  // ========== 企业 HR 端 ==========
   {
     path: '/hr',
-    component: () => import('@/components/AppLayout.vue'),
+    component: () => import('@/components/MainLayout.vue'),
     meta: { role: 'HR' },
     children: [
-      { path: '', name: 'HrHome', component: () => import('@/views/hr/HrHome.vue') },
+      { path: '', name: 'HrHome', component: HomeIndex, meta: { layout: 'full' } },
       { path: 'jobs', name: 'JobManage', component: () => import('@/views/hr/JobManage.vue') },
       { path: 'applications', name: 'HrApplications', component: () => import('@/views/hr/Applications.vue') },
       { path: 'talents', name: 'Talents', component: () => import('@/views/hr/Talents.vue') }
     ]
   },
 
-  // ========== 默认重定向 ==========
   { path: '/', redirect: '/login' },
   { path: '/:pathMatch(.*)*', redirect: '/login' }
 ]
@@ -76,14 +74,11 @@ const router = createRouter({
   routes
 })
 
-// 路由守卫 — 校验 JWT Token + 角色权限
 router.beforeEach((to, _from, next) => {
   const token = localStorage.getItem('token')
 
-  // 登录页：已登录则跳转首页
   if (to.meta.guest) {
     if (token) {
-      // 从 localStorage 读角色判断跳转
       const role = localStorage.getItem('role')
       const ROLE_HOME = { ADMIN: '/admin', STUDENT: '/student', TEACHER: '/teacher', HR: '/hr' }
       next(ROLE_HOME[role] || '/admin')
@@ -93,20 +88,22 @@ router.beforeEach((to, _from, next) => {
     return
   }
 
-  // 非登录页：无 token → 跳登录
   if (!token) {
     next('/login')
     return
   }
 
-  // 角色校验
   const requiredRole = to.meta.role
   if (requiredRole) {
     const userRole = localStorage.getItem('role')
     if (userRole !== requiredRole && userRole !== 'ADMIN') {
-      // 非 ADMIN 用户访问不匹配角色页面 → 跳回自己的首页
       const ROLE_HOME = { ADMIN: '/admin', STUDENT: '/student', TEACHER: '/teacher', HR: '/hr' }
       next(ROLE_HOME[userRole] || '/login')
+      return
+    }
+    // 就业分析仅管理员可访问
+    if (to.path === '/admin/employment' && userRole !== 'ADMIN') {
+      next('/admin')
       return
     }
   }

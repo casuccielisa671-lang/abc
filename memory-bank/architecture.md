@@ -154,6 +154,9 @@ com.occupation.<模块名>
 | POST /api/admin/crawler/task/mock | POST | 启动模拟爬虫（便捷测试） | Step 1.7 | ✅ |
 | GET /api/analysis/dashboard | GET | Dashboard 分析数据（行业/城市/技能/学历/趋势） | P2 | ✅ |
 | GET /api/analysis/jobs | GET | 职位分页查询（城市/行业/薪资/学历/经验/关键词） | P2 | ✅ |
+| GET /api/map/recommendJobs | GET | 首页推荐职业列表 | P3 | ✅ |
+| GET /api/map/getJobCityHeat | GET | 职业城市聚集度热力（gatherValue） | P3 | ✅ |
+| POST /api/map/rebuildJobGather | POST | 管理员重算职业聚集度（Spark 流水线） | P3 | ✅ |
 
 ### 2026-07-10 新增：简历 + HR 解密 + AI 能力
 
