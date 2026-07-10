@@ -7,6 +7,7 @@ import com.occupation.analysis.entity.AnalysisResult;
 import com.occupation.analysis.mapper.AnalysisResultMapper;
 import com.occupation.analysis.service.AnalysisService;
 import com.occupation.analysis.vo.DashboardVO;
+import com.occupation.analysis.vo.EmploymentVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -64,6 +65,126 @@ public class AnalysisServiceImpl implements AnalysisService {
     @Override
     public List<DashboardVO.DimensionItem> topSkills(int limit) {
         return queryDimension("skill", limit, new DashboardQueryDTO());
+    }
+
+    @Override
+    public EmploymentVO getEmployment() {
+        EmploymentVO vo = new EmploymentVO();
+        vo.setFunnel(buildFunnel());
+        vo.setStudentCity(readDimension("student_city", "student_count", null));
+        vo.setStudentIndustry(readDimension("student_industry", "student_count", null));
+        // 薪资分桶要按桶的顺序展示，不能按数量降序 —— 否则 X 轴是乱的
+        vo.setStudentSalary(sortBySalaryBucket(readDimension("student_salary", "student_count", null)));
+        vo.setCityGap(buildCityGap());
+        vo.setSalaryGap(buildSalaryGap());
+        vo.setContactCity(readDimension("contact_city", "contact_count", null));
+        vo.setContactIndustry(readDimension("contact_industry", "contact_count", null));
+        return vo;
+    }
+
+    // ==================== 就业分析：从 analysis_result 组装 ====================
+
+    private EmploymentVO.Funnel buildFunnel() {
+        Map<String, BigDecimal> counts = readAsMap("apply_funnel", "application_count");
+        Map<String, BigDecimal> resp = readAsMap("apply_response", "application_count");
+
+        EmploymentVO.Funnel f = new EmploymentVO.Funnel();
+        f.setTotal(longOf(counts.get("TOTAL")));
+        f.setSubmitted(longOf(counts.get("SUBMITTED")));
+        f.setViewed(longOf(counts.get("VIEWED")));
+        f.setInterview(longOf(counts.get("INTERVIEW")));
+        f.setOffer(longOf(counts.get("OFFER")));
+        f.setRejected(longOf(counts.get("REJECTED")));
+        f.setResponded(longOf(resp.get("responded")));
+        f.setUnresponded(longOf(resp.get("unresponded")));
+        f.setMedianResponseHours(readSingle("apply_response", "median_hours", "hours"));
+
+        long total = f.getTotal();
+        f.setViewRate(percent(f.getResponded(), total));
+        f.setInterviewRate(percent(f.getInterview() + f.getOffer(), total));
+        f.setOfferRate(percent(f.getOffer(), total));
+        return f;
+    }
+
+    private List<EmploymentVO.CityGap> buildCityGap() {
+        Map<String, BigDecimal> studentRatio = readAsMap("gap_city", "student_ratio");
+        Map<String, BigDecimal> jobRatio = readAsMap("gap_city", "job_ratio");
+        Map<String, BigDecimal> gapRatio = readAsMap("gap_city", "gap_ratio");
+
+        return studentRatio.entrySet().stream()
+                .map(e -> {
+                    EmploymentVO.CityGap g = new EmploymentVO.CityGap();
+                    g.setCity(e.getKey());
+                    g.setStudentRatio(e.getValue());
+                    g.setJobRatio(jobRatio.getOrDefault(e.getKey(), BigDecimal.ZERO));
+                    g.setGapRatio(gapRatio.getOrDefault(e.getKey(), BigDecimal.ZERO));
+                    return g;
+                })
+                .sorted((a, b) -> b.getStudentRatio().compareTo(a.getStudentRatio()))
+                .collect(Collectors.toList());
+    }
+
+    private EmploymentVO.SalaryGap buildSalaryGap() {
+        EmploymentVO.SalaryGap g = new EmploymentVO.SalaryGap();
+        g.setStudentMedian(readSingle("gap_salary", "overall", "student_median"));
+        g.setMarketMedian(readSingle("gap_salary", "overall", "market_median"));
+        g.setDeviationPercent(readSingle("gap_salary", "overall", "deviation_percent"));
+        return g;
+    }
+
+    /** 通用读：某维度下指定指标的全部记录，按值降序 */
+    private List<DashboardVO.DimensionItem> readDimension(String dimension, String metric, Integer limit) {
+        QueryWrapper<AnalysisResult> wrapper = new QueryWrapper<>();
+        wrapper.eq("dimension", dimension).eq("metric_name", metric).orderByDesc("metric_value");
+        if (limit != null && limit > 0) {
+            wrapper.last("LIMIT " + limit);
+        }
+        return analysisResultMapper.selectList(wrapper).stream().map(r -> {
+            DashboardVO.DimensionItem item = new DashboardVO.DimensionItem();
+            item.setName(r.getDimensionValue());
+            item.setValue(r.getMetricValue());
+            item.setCount(r.getMetricValue() == null ? 0L : r.getMetricValue().longValue());
+            return item;
+        }).collect(Collectors.toList());
+    }
+
+    private Map<String, BigDecimal> readAsMap(String dimension, String metric) {
+        QueryWrapper<AnalysisResult> wrapper = new QueryWrapper<>();
+        wrapper.eq("dimension", dimension).eq("metric_name", metric);
+        Map<String, BigDecimal> map = new LinkedHashMap<>();
+        for (AnalysisResult r : analysisResultMapper.selectList(wrapper)) {
+            map.put(r.getDimensionValue(), r.getMetricValue());
+        }
+        return map;
+    }
+
+    private BigDecimal readSingle(String dimension, String dimensionValue, String metric) {
+        QueryWrapper<AnalysisResult> wrapper = new QueryWrapper<>();
+        wrapper.eq("dimension", dimension)
+               .eq("dimension_value", dimensionValue)
+               .eq("metric_name", metric)
+               .last("LIMIT 1");
+        List<AnalysisResult> list = analysisResultMapper.selectList(wrapper);
+        return list.isEmpty() ? BigDecimal.ZERO : list.get(0).getMetricValue();
+    }
+
+    /** 薪资分桶按金额从低到高排，而不是按人数 */
+    private List<DashboardVO.DimensionItem> sortBySalaryBucket(List<DashboardVO.DimensionItem> items) {
+        List<String> order = java.util.Arrays.asList(
+                "6000以下", "6000-8000", "8000-10000", "10000-15000", "15000以上");
+        items.sort(java.util.Comparator.comparingInt(i -> order.indexOf(i.getName())));
+        return items;
+    }
+
+    private long longOf(BigDecimal v) {
+        return v == null ? 0L : v.longValue();
+    }
+
+    private BigDecimal percent(long part, long total) {
+        return total == 0
+                ? BigDecimal.ZERO
+                : BigDecimal.valueOf(part).multiply(BigDecimal.valueOf(100))
+                        .divide(BigDecimal.valueOf(total), 1, RoundingMode.HALF_UP);
     }
 
     /**

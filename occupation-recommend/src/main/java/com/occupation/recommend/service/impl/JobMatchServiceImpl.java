@@ -5,6 +5,7 @@ import com.occupation.analysis.service.JobDetailService;
 import com.occupation.analysis.vo.JobDetailVO;
 import com.occupation.common.exception.BizException;
 import com.occupation.common.utils.SkillUtils;
+import com.occupation.recommend.entity.BehaviorAction;
 import com.occupation.recommend.entity.StudentBehavior;
 import com.occupation.recommend.entity.SysStudentProfile;
 import com.occupation.recommend.service.BehaviorService;
@@ -51,6 +52,8 @@ public class JobMatchServiceImpl implements JobMatchService {
 
     /** 行为对技能偏好的贡献权重 */
     private static final int W_APPLY = 2;
+    /** 自主联系与投递同级：学生愿意跳出平台去联系，意愿强度不弱于站内投递 */
+    private static final int W_CONTACT = 2;
     private static final int W_FAVORITE = 1;
     private static final int W_IGNORE = -2;
 
@@ -79,8 +82,11 @@ public class JobMatchServiceImpl implements JobMatchService {
         // 2. 行为反馈：技能偏好 + 需要排除的职位
         List<StudentBehavior> behaviors = behaviorService.listByUser(userId, BEHAVIOR_WINDOW);
         Map<String, Integer> skillAffinity = buildSkillAffinity(behaviors);
+        // 已经处理过的职位不再推荐：投过、忽略过、或已经自主联系过
         Set<Long> excluded = behaviors.stream()
-                .filter(b -> "APPLY".equals(b.getAction()) || "IGNORE".equals(b.getAction()))
+                .filter(b -> BehaviorAction.APPLY.equals(b.getAction())
+                        || BehaviorAction.IGNORE.equals(b.getAction())
+                        || BehaviorAction.CONTACT.equals(b.getAction()))
                 .map(StudentBehavior::getJobId)
                 .collect(Collectors.toSet());
 
@@ -107,6 +113,21 @@ public class JobMatchServiceImpl implements JobMatchService {
                 .sorted(Comparator.comparingInt(MatchJobVO::getScore).reversed())
                 .limit(topN)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public MatchJobVO scoreOne(Long userId, Long jobId) {
+        SysStudentProfile profile = profileService.getByUserId(userId);
+        if (profile == null) {
+            throw new BizException("请先完善个人画像（专业、技能、意向城市等）");
+        }
+        JobDetailVO job = jobDetailService.getJobById(jobId);
+        if (job == null) {
+            throw new BizException("职位不存在或已下架");
+        }
+        Map<String, Integer> skillAffinity =
+                buildSkillAffinity(behaviorService.listByUser(userId, BEHAVIOR_WINDOW));
+        return score(profile, SkillUtils.parse(profile.getSkills()), job, skillAffinity);
     }
 
     /**
@@ -145,13 +166,16 @@ public class JobMatchServiceImpl implements JobMatchService {
     }
 
     private int weightOf(String action) {
-        if ("APPLY".equals(action)) {
+        if (BehaviorAction.APPLY.equals(action)) {
             return W_APPLY;
         }
-        if ("FAVORITE".equals(action)) {
+        if (BehaviorAction.CONTACT.equals(action)) {
+            return W_CONTACT;
+        }
+        if (BehaviorAction.FAVORITE.equals(action)) {
             return W_FAVORITE;
         }
-        if ("IGNORE".equals(action)) {
+        if (BehaviorAction.IGNORE.equals(action)) {
             return W_IGNORE;
         }
         return 0;

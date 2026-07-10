@@ -2,6 +2,7 @@ package com.occupation.analysis.service;
 
 import com.occupation.analysis.dto.DashboardQueryDTO;
 import com.occupation.analysis.vo.DashboardVO;
+import com.occupation.analysis.vo.EmploymentVO;
 
 import java.util.List;
 
@@ -30,4 +31,12 @@ public interface AnalysisService {
      * @param limit 取前 N 条
      */
     List<DashboardVO.DimensionItem> topSkills(int limit);
+
+    /**
+     * 就业分析：投递漏斗 / 供需错配 / 自主求职流向。
+     * <p>
+     * 数据由 recommend 模块的 {@link AnalysisContributor} 在 {@code runAll()} 时写入
+     * {@code analysis_result}。若从未重算过，各字段为空集合而非 null。
+     */
+    EmploymentVO getEmployment();
 }

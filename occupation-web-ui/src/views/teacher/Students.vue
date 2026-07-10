@@ -177,10 +177,10 @@ async function selectStudent(row) {
 }
 
 function actionTag(action) {
-  return { VIEW: 'info', FAVORITE: 'warning', APPLY: 'success', IGNORE: 'info' }[action] || 'info'
+  return { VIEW: 'info', FAVORITE: 'warning', APPLY: 'success', IGNORE: 'info', CONTACT: 'primary' }[action] || 'info'
 }
 function actionLabel(action) {
-  return { VIEW: '浏览', FAVORITE: '收藏', APPLY: '投递', IGNORE: '忽略' }[action] || action
+  return { VIEW: '浏览', FAVORITE: '收藏', APPLY: '投递', IGNORE: '忽略', CONTACT: '自主联系' }[action] || action
 }
 
 onMounted(async () => {

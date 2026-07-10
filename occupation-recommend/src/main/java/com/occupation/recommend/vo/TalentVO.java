@@ -1,5 +1,6 @@
 package com.occupation.recommend.vo;
 
+import com.occupation.recommend.entity.BehaviorAction;
 import com.occupation.recommend.entity.SysStudentProfile;
 import lombok.Data;
 
@@ -30,6 +31,9 @@ public class TalentVO implements Serializable {
     /** 浏览职位次数 */
     private long viewCount;
 
+    /** 自主联系次数 —— 反映求职主动性，仍不暴露具体是哪些职位 */
+    private long contactCount;
+
     /** 投递次数 */
     private long applyCount;
 
@@ -45,8 +49,9 @@ public class TalentVO implements Serializable {
         vo.educationLevel = p.getEducationLevel();
         vo.expectedSalaryMin = p.getExpectedSalaryMin();
         vo.expectedSalaryMax = p.getExpectedSalaryMax();
-        vo.viewCount = behaviorCounts.getOrDefault("VIEW", 0L);
-        vo.applyCount = behaviorCounts.getOrDefault("APPLY", 0L);
+        vo.viewCount = behaviorCounts.getOrDefault(BehaviorAction.VIEW, 0L);
+        vo.applyCount = behaviorCounts.getOrDefault(BehaviorAction.APPLY, 0L);
+        vo.contactCount = behaviorCounts.getOrDefault(BehaviorAction.CONTACT, 0L);
         return vo;
     }
 }

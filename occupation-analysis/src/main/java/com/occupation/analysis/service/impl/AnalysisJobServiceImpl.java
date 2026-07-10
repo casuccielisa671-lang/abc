@@ -7,6 +7,7 @@ import com.occupation.analysis.entity.AnalysisResult;
 import com.occupation.analysis.entity.JobDetail;
 import com.occupation.analysis.mapper.AnalysisResultMapper;
 import com.occupation.analysis.mapper.JobDetailMapper;
+import com.occupation.analysis.service.AnalysisContributor;
 import com.occupation.analysis.service.AnalysisJobService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,12 @@ public class AnalysisJobServiceImpl implements AnalysisJobService {
     private final JobDetailMapper jobDetailMapper;
     private final AnalysisResultMapper analysisResultMapper;
 
+    /**
+     * 分析扩展点。用 List 注入而不是具名依赖：analysis 模块不认识 recommend，
+     * 没有任何实现类时这里是空集合，内置维度照常工作。
+     */
+    private final List<AnalysisContributor> contributors;
+
     /** 本期周期值：按月统计（如 "2026-07"） */
     private static final DateTimeFormatter MONTH_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
 
@@ -51,6 +58,17 @@ public class AnalysisJobServiceImpl implements AnalysisJobService {
         total += analyzeEducation();
         total += analyzeSkill();
         total += analyzeTrend();
+
+        // 扩展点：学生侧维度（投递漏斗 / 供需错配 / 自主求职流向）由 recommend 模块贡献。
+        // 必须放在内置维度之后 —— 供需错配要读上面刚写进去的 city/industry 岗位分布。
+        // 单个扩展点失败不影响内置维度已写入的结果（本方法带事务，会一起回滚，
+        // 所以这里不吞异常，宁可整体重算失败也不要留下半套数据）。
+        for (AnalysisContributor contributor : contributors) {
+            int n = contributor.contribute();
+            total += n;
+            log.info("分析扩展点 [{}] 写入 {} 条", contributor.name(), n);
+        }
+
         log.info("统计分析全量重算完成，共写入 {} 条结果", total);
         return total;
     }

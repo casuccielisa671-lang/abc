@@ -16,6 +16,7 @@ const routes = [
     meta: { role: 'ADMIN' },
     children: [
       { path: '', name: 'Dashboard', component: () => import('@/views/admin/Dashboard.vue') },
+      { path: 'employment', name: 'Employment', component: () => import('@/views/admin/Employment.vue') },
       { path: 'crawler', name: 'CrawlerTask', component: () => import('@/views/admin/CrawlerTask.vue') },
       { path: 'report-template', name: 'ReportTemplate', component: () => import('@/views/admin/ReportTemplate.vue') },
       { path: 'report-list', name: 'ReportList', component: () => import('@/views/admin/ReportList.vue') },
@@ -32,6 +33,9 @@ const routes = [
       { path: '', name: 'StudentHome', component: () => import('@/views/student/StudentHome.vue') },
       { path: 'job/:id', name: 'JobDetail', component: () => import('@/views/student/JobDetail.vue') },
       { path: 'profile', name: 'Profile', component: () => import('@/views/student/Profile.vue') },
+      { path: 'resume', name: 'Resume', component: () => import('@/views/student/Resume.vue') },
+      { path: 'applications', name: 'MyApplications', component: () => import('@/views/student/Applications.vue') },
+      { path: 'advisor', name: 'Advisor', component: () => import('@/views/student/Advisor.vue') },
       { path: 'favorites', name: 'Favorites', component: () => import('@/views/student/Favorites.vue') },
       { path: 'reports', name: 'StudentReports', component: () => import('@/views/student/Reports.vue') }
     ]

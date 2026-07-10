@@ -1,6 +1,7 @@
 package com.occupation.recommend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.occupation.recommend.entity.BehaviorAction;
 import com.occupation.recommend.entity.StudentBehavior;
 import com.occupation.recommend.mapper.StudentBehaviorMapper;
 import com.occupation.recommend.service.BehaviorService;
@@ -31,7 +32,7 @@ public class BehaviorServiceImpl implements BehaviorService {
     @Override
     public void record(Long userId, Long jobId, String action) {
         // VIEW 允许重复记录（反映活跃度）；其他行为幂等
-        if (!"VIEW".equals(action)) {
+        if (!BehaviorAction.VIEW.equals(action)) {
             Long exists = behaviorMapper.selectCount(new LambdaQueryWrapper<StudentBehavior>()
                     .eq(StudentBehavior::getUserId, userId)
                     .eq(StudentBehavior::getJobId, jobId)
@@ -53,7 +54,7 @@ public class BehaviorServiceImpl implements BehaviorService {
         behaviorMapper.delete(new LambdaQueryWrapper<StudentBehavior>()
                 .eq(StudentBehavior::getUserId, userId)
                 .eq(StudentBehavior::getJobId, jobId)
-                .eq(StudentBehavior::getAction, "FAVORITE"));
+                .eq(StudentBehavior::getAction, BehaviorAction.FAVORITE));
     }
 
     @Override

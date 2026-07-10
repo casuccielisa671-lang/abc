@@ -29,6 +29,12 @@
       <div class="stat-card">
         <div class="stat-label">总投递数</div>
         <div class="stat-value">{{ stats.totalApplies }}</div>
+        <div class="stat-hint">投给平台内企业</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">自主求职</div>
+        <div class="stat-value">{{ stats.totalContacts }}</div>
+        <div class="stat-hint">学生自行联系的外部岗位</div>
       </div>
     </div>
 
@@ -100,7 +106,8 @@ const stats = reactive({
   totalStudents: 0,
   withProfile: 0,
   totalViews: 0,
-  totalApplies: 0
+  totalApplies: 0,
+  totalContacts: 0
 })
 
 const pendingProfile = computed(() => Math.max(0, stats.totalStudents - stats.withProfile))

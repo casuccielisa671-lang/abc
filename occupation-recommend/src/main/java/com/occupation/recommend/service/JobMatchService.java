@@ -28,4 +28,12 @@ public interface JobMatchService {
      * @return 按匹配分降序的职位列表（含得分、理由、缺失技能）
      */
     List<MatchJobVO> match(Long userId, int topN);
+
+    /**
+     * 对单个职位打分（与 {@link #match} 同一套规则，不受「已投递则排除」的过滤影响）。
+     * <p>
+     * 供「AI 解读这条推荐」按需调用 —— 推荐列表一次 20 条，逐条调大模型既慢又贵，
+     * 所以列表只给规则分，用户点开某一条时才生成自然语言解读。
+     */
+    MatchJobVO scoreOne(Long userId, Long jobId);
 }

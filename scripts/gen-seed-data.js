@@ -239,14 +239,45 @@ const mockJobCount = jobs.length;
 // HR 发布职位（两家企业，对应 hr / hr01 / hr02 的公司）
 // pub = 发布者 user_id，写入 job_detail.publisher_id，供 HR 端「只看我发布的」过滤：
 //   hr(4)=2 个、hr01(19)=1 个、hr02(20)=3 个，三个账号登录后看到的列表各不相同
-const HR_COMPANIES = ['云聘互联科技有限公司', '智汇未来教育科技有限公司'];
+// 站内发布的职位 —— 这些才是学生能真正投递的岗位。
+// 采集来的职位在平台上没有主人，学生投了没人处理（见 RecommendController.apply 的守卫）。
+// 所以站内职位不能太少，否则学生首页的「可投递岗位」栏几乎是空的。
+//   3 家公司 × 6 个 HR，共 24 个职位，每个 HR 3~5 个。
+const HR_COMPANIES = [
+  '云聘互联科技有限公司',       // 0 → hr(4), hr03(26)
+  '智汇未来教育科技有限公司',   // 1 → hr02(20), hr04(27)
+  '恒信数据技术有限公司',       // 2 → hr01(19), hr05(28)
+];
 const HR_JOB_SPECS = [
+  // ---- 云聘互联（互联网/大数据）：hr=4, hr03=26 ----
   { t: 'Java开发工程师（校招）', ind: '互联网/IT', sk: ['Java', 'Spring Boot', 'MySQL'], base: 9000, c: 0, pub: 4, city: '杭州', exp: '应届生', edu: '本科' },
-  { t: '前端开发实习生', ind: '互联网/IT', sk: ['JavaScript', 'Vue', 'CSS'], base: 5000, c: 0, pub: 19, city: '杭州', exp: '应届生', edu: '不限' },
   { t: '大数据平台研发工程师', ind: '大数据', sk: ['Java', 'Spark', 'Kafka', 'Hive'], base: 14000, c: 0, pub: 4, city: '上海', exp: '3-5年', edu: '本科' },
+  { t: '后端开发工程师（微服务方向）', ind: '互联网/IT', sk: ['Java', '微服务', 'Redis', 'Docker'], base: 12000, c: 0, pub: 4, city: '杭州', exp: '1-3年', edu: '本科' },
+  { t: '测试开发工程师', ind: '互联网/IT', sk: ['Python', 'Selenium', 'Linux'], base: 9000, c: 0, pub: 4, city: '杭州', exp: '1-3年', edu: '本科' },
+  { t: '云平台运维工程师', ind: '互联网/IT', sk: ['Linux', 'Docker', 'Kubernetes'], base: 11000, c: 0, pub: 26, city: '深圳', exp: '1-3年', edu: '本科' },
+  { t: '数据仓库开发（校招）', ind: '大数据', sk: ['SQL', 'Hive', 'Spark'], base: 10000, c: 0, pub: 26, city: '上海', exp: '应届生', edu: '本科' },
+  { t: '实时计算工程师', ind: '大数据', sk: ['Java', 'Kafka', '分布式'], base: 15000, c: 0, pub: 26, city: '北京', exp: '3-5年', edu: '硕士' },
+  { t: '前端开发实习生', ind: '互联网/IT', sk: ['JavaScript', 'Vue', 'CSS'], base: 5000, c: 0, pub: 26, city: '杭州', exp: '应届生', edu: '不限' },
+
+  // ---- 智汇未来教育（教育/人工智能）：hr02=20, hr04=27 ----
   { t: '在线课程产品经理', ind: '教育', sk: ['产品设计', '数据分析', '项目管理'], base: 10000, c: 1, pub: 20, city: '北京', exp: '1-3年', edu: '本科' },
   { t: '教学数据分析师（校招）', ind: '教育', sk: ['SQL', 'Python', '数据分析'], base: 8000, c: 1, pub: 20, city: '北京', exp: '应届生', edu: '本科' },
   { t: 'AI课程算法工程师', ind: '人工智能', sk: ['Python', '机器学习', 'NLP'], base: 15000, c: 1, pub: 20, city: '北京', exp: '1-3年', edu: '硕士' },
+  { t: '课程研发工程师（Java方向）', ind: '教育', sk: ['Java', 'Spring Boot', 'MySQL'], base: 11000, c: 1, pub: 20, city: '广州', exp: '1-3年', edu: '本科' },
+  { t: '智能推荐算法实习生', ind: '人工智能', sk: ['Python', '机器学习', '深度学习'], base: 6000, c: 1, pub: 27, city: '北京', exp: '应届生', edu: '硕士' },
+  { t: '教育数据挖掘工程师', ind: '人工智能', sk: ['Python', '数据分析', '机器学习'], base: 13000, c: 1, pub: 27, city: '上海', exp: '1-3年', edu: '硕士' },
+  { t: '前端工程师（教学平台）', ind: '教育', sk: ['JavaScript', 'Vue', 'CSS', 'Git'], base: 9000, c: 1, pub: 27, city: '成都', exp: '1-3年', edu: '专科' },
+  { t: '用户运营专员（校招）', ind: '教育', sk: ['用户运营', '数据分析', 'Excel'], base: 6500, c: 1, pub: 27, city: '杭州', exp: '应届生', edu: '本科' },
+
+  // ---- 恒信数据（金融/安全/智能制造）：hr01=19, hr05=28 ----
+  { t: '金融数据分析师（校招）', ind: '金融', sk: ['SQL', 'Python', '数理统计', '数据分析'], base: 11000, c: 2, pub: 19, city: '上海', exp: '应届生', edu: '硕士' },
+  { t: '风控建模工程师', ind: '金融', sk: ['Python', '机器学习', 'SQL'], base: 16000, c: 2, pub: 19, city: '上海', exp: '3-5年', edu: '硕士' },
+  { t: '信息安全工程师', ind: '互联网/IT', sk: ['Linux', 'Python', '网络安全'], base: 13000, c: 2, pub: 19, city: '深圳', exp: '1-3年', edu: '本科' },
+  { t: '安全运营实习生', ind: '互联网/IT', sk: ['Linux', '网络安全', 'Docker'], base: 5500, c: 2, pub: 19, city: '深圳', exp: '应届生', edu: '本科' },
+  { t: '嵌入式软件工程师', ind: '智能制造', sk: ['C++', '单片机', 'Linux'], base: 10000, c: 2, pub: 28, city: '苏州', exp: '1-3年', edu: '本科' },
+  { t: '物联网平台开发', ind: '智能制造', sk: ['C++', 'Linux', 'Python'], base: 12000, c: 2, pub: 28, city: '苏州', exp: '1-3年', edu: '本科' },
+  { t: '量化研究员（校招）', ind: '金融', sk: ['Python', '数理统计', '数据分析'], base: 18000, c: 2, pub: 28, city: '北京', exp: '应届生', edu: '硕士' },
+  { t: '前端开发工程师（数据可视化）', ind: '金融', sk: ['JavaScript', 'Vue', 'CSS'], base: 12000, c: 2, pub: 28, city: '南京', exp: '1-3年', edu: '本科' },
 ];
 for (const s of HR_JOB_SPECS) {
   jobId++;
@@ -282,9 +313,18 @@ const STUDENT_DEFS = [
 ];
 
 // ---------- 生成行为（画像驱动，逻辑自洽）----------
+//
+// 【行为与职位归属的硬约束，必须遵守，否则会造出后端拒绝的非法数据】
+//   APPLY   只能落在 HR_PUBLISH 职位上（有 publisher_id）。采集职位在平台上没有主人，
+//           后端的 RecommendController.apply() 会直接拒绝。
+//   CONTACT 只能落在采集职位上。站内职位应该走投递，后端同样会拒绝。
+//   VIEW / FAVORITE / IGNORE 两类职位都可以。
+//
 const behaviors = []; // {tenantId,userId,jobId,action,time}
+const isPlatformJob = (j) => j.source === 'HR_PUBLISH';
+
 function genBehaviorsFor(userId, tenantId, def) {
-  const [, , , , mySkills, myCity] = [null, null, null, null, def[4], def[5]];
+  const mySkills = def[4], myCity = def[5];
   // 打分选出该学生“感兴趣”的职位
   const scored = jobs.map(j => {
     let s = 0;
@@ -292,8 +332,9 @@ function genBehaviorsFor(userId, tenantId, def) {
     s += j.skills.filter(k => mySkills.includes(k)).length;
     return { j, s: s + rnd() * 2 };
   }).sort((a, b) => b.s - a.s);
-  const viewCount = ri(8, 14);
+  const viewCount = ri(10, 16);
   const viewed = scored.slice(0, viewCount).map(x => x.j);
+
   for (const job of viewed) {
     // 行为时间必须在职位入库之后
     const minTime = Math.max(job.createTime.getTime(), mk(2026, 6, 21).getTime());
@@ -301,16 +342,21 @@ function genBehaviorsFor(userId, tenantId, def) {
     if (span <= 0) continue;
     const viewT = new Date(minTime + rnd() * span * 0.6);
     behaviors.push({ tenantId, userId, jobId: job.id, action: 'VIEW', time: viewT });
+
     const r = rnd();
-    if (r < 0.35) { // 收藏
+    if (r < 0.35) {
+      // 收藏 → 有一定概率转化
       const favT = new Date(viewT.getTime() + ri(60, 86400) * 1000);
       behaviors.push({ tenantId, userId, jobId: job.id, action: 'FAVORITE', time: favT });
-      if (rnd() < 0.45) { // 收藏后投递
-        behaviors.push({ tenantId, userId, jobId: job.id, action: 'APPLY', time: new Date(favT.getTime() + ri(3600, 172800) * 1000) });
+      if (rnd() < 0.45) {
+        const act = isPlatformJob(job) ? 'APPLY' : 'CONTACT';
+        behaviors.push({ tenantId, userId, jobId: job.id, action: act, time: new Date(favT.getTime() + ri(3600, 172800) * 1000) });
       }
-    } else if (r < 0.45) { // 直接投递
-      behaviors.push({ tenantId, userId, jobId: job.id, action: 'APPLY', time: new Date(viewT.getTime() + ri(300, 86400) * 1000) });
-    } else if (r > 0.9) { // 不感兴趣
+    } else if (r < 0.45) {
+      // 直接转化：站内投递 / 外部自主联系
+      const act = isPlatformJob(job) ? 'APPLY' : 'CONTACT';
+      behaviors.push({ tenantId, userId, jobId: job.id, action: act, time: new Date(viewT.getTime() + ri(300, 86400) * 1000) });
+    } else if (r > 0.9) {
       behaviors.push({ tenantId, userId, jobId: job.id, action: 'IGNORE', time: new Date(viewT.getTime() + ri(30, 600) * 1000) });
     }
   }
@@ -320,15 +366,15 @@ for (const def of STUDENT_DEFS) genBehaviorsFor(def[0], 1, def);
 const T2_STUDENT = [24, 'student', '示范学生', '软件工程', ['Java', 'MySQL', 'Vue'], '武汉', '互联网/IT', 7000, 12000, '本科'];
 genBehaviorsFor(24, 2, T2_STUDENT);
 
-// ---------- 保证 HR 发布的职位收到投递 ----------
-// 上面的打分是从全部 96 个职位里挑，HR 发布的只有 6 个，概率上几乎不会被投递，
-// 结果是 HR 端「收到的投递」页面在种子数据下永远为空，双边闭环看不出效果。
+// ---------- 保证每个 HR 职位都收到投递 ----------
+// 上面的打分是从全部职位里挑，站内职位只占 24/114，概率上会有职位一条投递都收不到，
+// 结果是某些 HR 登录后「收到的投递」是空的，双边闭环看不出效果。
 // 这里为每个 HR 职位补足投递：按「技能重合 + 城市一致」挑最匹配的学生，与推荐逻辑自洽。
-const APPLIES_PER_HR_JOB = 2;
+const APPLIES_PER_HR_JOB = 3;
 function hasBehavior(userId, jobId, action) {
   return behaviors.some(b => b.userId === userId && b.jobId === jobId && b.action === action);
 }
-for (const job of jobs.filter(j => j.source === 'HR_PUBLISH')) {
+for (const job of jobs.filter(isPlatformJob)) {
   const ranked = STUDENT_DEFS
     .map(d => ({
       id: d[0],
@@ -351,9 +397,69 @@ for (const job of jobs.filter(j => j.source === 'HR_PUBLISH')) {
   }
 }
 
+// student12(id 16) 没有画像也没有简历，但投了一个站内职位 ——
+// 用来测 HR 端「未完善画像 / 未填写简历」的空态展示
+{
+  const job = jobs.filter(isPlatformJob)[0];
+  const viewT = mk(2026, 7, 6, 15, 20);
+  behaviors.push({ tenantId: 1, userId: 16, jobId: job.id, action: 'VIEW', time: viewT });
+  behaviors.push({ tenantId: 1, userId: 16, jobId: job.id, action: 'APPLY', time: new Date(viewT.getTime() + 7200 * 1000) });
+}
+
+// 自检：APPLY 只落站内、CONTACT 只落采集。违反就直接炸，别让脏数据流进 init.sql
+{
+  const jobById = new Map(jobs.map(j => [j.id, j]));
+  for (const b of behaviors) {
+    const j = jobById.get(b.jobId);
+    if (b.action === 'APPLY' && !isPlatformJob(j)) {
+      throw new Error(`非法种子数据：APPLY 落在采集职位 ${b.jobId} 上`);
+    }
+    if (b.action === 'CONTACT' && isPlatformJob(j)) {
+      throw new Error(`非法种子数据：CONTACT 落在站内职位 ${b.jobId} 上`);
+    }
+  }
+}
+
 behaviors.sort((a, b) => a.time - b.time);
 // 行为时间截断到 2026-07-09 12:00 之前
 const behaviorsFinal = behaviors.filter(b => b.time <= mk(2026, 7, 9, 12));
+
+// ---------- 投递记录（业务实体，由 APPLY 行为派生）----------
+// student_behavior 里的 APPLY 是不可变的行为埋点；job_application 是可流转的业务实体。
+// 同一次投递的两个视角，后端在 apply() 里双写。这里按同样的规则生成，保证一一对应。
+//
+// 状态刻意铺开五种：HR 一登录就能看到完整的处理进度分布，管理端「就业分析」的
+// 转化漏斗也才有形状，而不是一根光秃秃的「全部待查看」。
+const jobById = new Map(jobs.map(j => [j.id, j]));
+const STATUS_PLAN = [
+  { s: 'SUBMITTED', w: 0.34, note: null },
+  { s: 'VIEWED', w: 0.22, note: null },
+  { s: 'INTERVIEW', w: 0.20, note: '简历匹配度高，约技术一面' },
+  { s: 'OFFER', w: 0.10, note: '综合表现优秀，已发放录用意向' },
+  { s: 'REJECTED', w: 0.14, note: '岗位要求的项目经验暂不匹配' },
+];
+function pickStatus() {
+  let r = rnd(), acc = 0;
+  for (const p of STATUS_PLAN) {
+    acc += p.w;
+    if (r < acc) return p;
+  }
+  return STATUS_PLAN[STATUS_PLAN.length - 1];
+}
+const applications = behaviorsFinal
+  .filter(b => b.action === 'APPLY')
+  .map(b => {
+    const p = pickStatus();
+    // 状态变更时间：投递后 2 小时 ~ 10 天，且不晚于数据截止时刻
+    const changedAt = p.s === 'SUBMITTED'
+      ? null
+      : new Date(Math.min(b.time.getTime() + ri(7200, 864000) * 1000, mk(2026, 7, 9, 11, 30).getTime()));
+    return {
+      tenantId: b.tenantId, userId: b.userId, jobId: b.jobId,
+      publisherId: jobById.get(b.jobId).publisherId,
+      status: p.s, note: p.note, appliedAt: b.time, changedAt,
+    };
+  });
 
 // ---------- 推送（引用真实职位）----------
 const pushes = [];
@@ -437,11 +543,28 @@ pushAgg('education', aggregate(j => j.edu));
 // ---------- 组装 SQL ----------
 const L = [];
 L.push('-- ============================================================');
-L.push('-- 初始化种子数据（由 scripts 生成，表间关系已对齐：');
+L.push('-- 初始化种子数据（由 scripts/gen-seed-data.js 确定性生成，勿手改）');
+L.push('--');
+L.push('-- 【职位数据的三个来源，看 source + publisher_id 两列就能区分】');
+L.push('--   source=MOCK,       publisher_id=NULL → 采集来的（无主，不可站内投递）');
+L.push('--   source=HR_PUBLISH, publisher_id=NOT NULL → HR 在平台上发布的（可投递）');
+L.push('--   source=ZHAOPIN,    publisher_id=NULL → 真实爬虫采来的（无主）');
+L.push('--');
+L.push('-- 【为什么种子里的 90 个职位 source 也写着 MOCK？】');
+L.push('--   它们模拟「系统已经运行了一段时间、采集任务跑过 5 次」的历史状态，');
+L.push('--   所以配了完整的证据链：90 条 raw_job_data 归档 + crawler_log 五次成功记录。');
+L.push('--   这些职位是 init.sql 直接 INSERT 的，从没真的经过爬虫 —— 但在数据模型上，');
+L.push('--   它们与「真的采集进来的职位」不可区分，这是有意为之（否则看板没有历史数据）。');
+L.push('--   ⚠️ 它们的 source_url 用 mock.occupation.dev 域名，而运行时 Mock 采集用的是');
+L.push('--   mock.local（见 mock/mock-jobs.json）。两个域名必须不同：清洗按 source_url 去重，');
+L.push('--   撞了的话点「启动采集」一条都进不来。');
+L.push('--');
+L.push('-- 【生成器维护的不变量，改动时务必保持】');
 L.push('--   raw_job_data ↔ job_detail 按 source_url 一一对应；');
 L.push('--   crawler_log 成功批次 record_count 合计 = MOCK 原始数据条数；');
 L.push('--   analysis_result 由 job_detail 按后端同口径聚合得出；');
-L.push('--   student_behavior / push_record 引用真实存在的用户与职位）');
+L.push('--   student_behavior / push_record 引用真实存在的用户与职位');
+L.push('--');
 L.push('-- 所有账号密码均为 admin123');
 L.push('-- ============================================================');
 L.push('');
@@ -478,6 +601,11 @@ const users = [
   [23, 2, 'admin', 'ADMIN', '示范大学管理员', '13900000001', 'admin@demo.edu.cn', 1, 0],
   [24, 2, 'student', 'STUDENT', '示范学生', '13900000002', 'student@demo.edu.cn', 1, 0],
   [25, 2, 'teacher', 'TEACHER', '示范教师', '13900000003', 'teacher@demo.edu.cn', 1, 0],
+  // 后补的 HR：站内职位扩到 24 个后，6 个 HR 才够分（每人 3~5 个）。
+  // id 从 26 起，不打乱租户 2 已占的 23~25
+  [26, 1, 'hr03', 'HR', '孙浩', '13833000003', 'sunhao@yunpin.example.com', 1, 0],
+  [27, 1, 'hr04', 'HR', '许静怡', '13833000004', 'xujingyi@zhihui.example.com', 1, 0],
+  [28, 1, 'hr05', 'HR', '罗晨', '13833000005', 'luochen@hengxin.example.com', 1, 0],
 ];
 L.push('INSERT INTO sys_user (id, tenant_id, username, password_hash, role, real_name, phone, email, status, deleted) VALUES');
 L.push(users.map(u =>
@@ -496,14 +624,111 @@ profileRows.push(`(${profId}, 2, 24, '${esc(T2_STUDENT[3])}', '${esc(JSON.string
 L.push('INSERT INTO sys_student_profile (id, tenant_id, user_id, major, skills, expected_city, expected_industry, expected_salary_min, expected_salary_max, education_level) VALUES');
 L.push(profileRows.join(',\n') + ';');
 L.push('');
+
+// ---------- 学生简历 ----------
+// 13 个有画像的学生全部建简历，HR 点开任何一条投递都能看到内容。
+// 「未填写简历」的空态由 student12(id 16) 覆盖 —— 他没画像、没简历，却投了一个站内职位。
+const RESUME_USER_IDS = STUDENT_DEFS.map(d => d[0]);
+const INTENTION_BY_MAJOR = {
+  '计算机科学与技术': 'Java后端开发工程师',
+  '软件工程': '后端开发工程师',
+  '数据科学与大数据技术': '大数据开发工程师',
+  '人工智能': '算法工程师',
+  '信息安全': '安全工程师',
+  '电子商务': '数据分析师',
+  '统计学': '数据分析师',
+  '计算机应用技术': '前端开发工程师',
+  '教育技术学': '产品经理',
+  '物联网工程': '嵌入式开发工程师',
+};
+const HONOR_POOL = [
+  '国家励志奖学金', '校级一等奖学金', 'ACM-ICPC 省赛二等奖', '蓝桥杯省赛一等奖',
+  '全国大学生数学建模竞赛省二等奖', 'CET-6（546 分）', '软件设计师（中级）',
+  '“互联网+”大学生创新创业大赛校赛金奖', '优秀学生干部',
+];
+const userById = new Map(users.map(u => [u[0], u]));
+const resumeRows = [];
+let resumeId = 0;
+for (const d of STUDENT_DEFS) {
+  const [uid, , realName, major, skills, city] = d;
+  const degree = d[9];
+  if (!RESUME_USER_IDS.includes(uid)) continue;
+  resumeId++;
+  const u = userById.get(uid);
+
+  const educations = [{
+    school: '测试学院',
+    major,
+    degree,
+    startDate: degree === '硕士' ? '2023-09' : '2022-09',
+    endDate: degree === '硕士' ? '2026-06' : '2026-06',
+    gpa: `${(3 + rnd() * 0.9).toFixed(2)}/4.0`,
+  }];
+
+  const projSkills = pickN(skills, Math.min(3, skills.length));
+  const projects = [{
+    name: `${major}综合实训 · ${projSkills[0]}实践项目`,
+    role: pick(['负责人', '核心开发', '后端开发', '数据处理']),
+    startDate: '2025-03',
+    endDate: '2025-07',
+    description: `使用 ${projSkills.join('、')} 搭建完整链路，独立完成核心模块设计与实现，`
+      + `项目在课程答辩中获评优秀，代码已开源。`,
+    skills: projSkills,
+  }];
+  if (rnd() < 0.6) {
+    const more = pickN(skills, Math.min(2, skills.length));
+    projects.push({
+      name: `校园${pick(['信息服务', '数据分析', '实验管理', '竞赛训练'])}平台`,
+      role: pick(['组员', '核心开发']),
+      startDate: '2024-09',
+      endDate: '2025-01',
+      description: `参与需求梳理与 ${more.join('、')} 相关模块开发，负责其中约 40% 的编码量。`,
+      skills: more,
+    });
+  }
+
+  const internships = rnd() < 0.65 ? [{
+    company: pick(COMPANIES),
+    position: (INTENTION_BY_MAJOR[major] || '研发工程师') + '实习生',
+    startDate: '2025-07',
+    endDate: '2025-09',
+    description: `参与线上业务模块迭代，独立承担 2 个需求的开发与自测，代码通过 Code Review 合入主干。`,
+  }] : [];
+
+  const honors = pickN(HONOR_POOL, ri(1, 3));
+
+  const selfIntro = `${major}专业${degree}在读，熟悉 ${skills.slice(0, 3).join('、')} 等技术，`
+    + `有完整项目开发经验，具备良好的工程习惯与团队协作能力。`
+    + `期望在${city}从事${INTENTION_BY_MAJOR[major] || '研发'}相关工作。`;
+
+  resumeRows.push(
+    `(${resumeId}, 1, ${uid}, '${u[5]}', '${u[6]}', '${esc(INTENTION_BY_MAJOR[major] || '研发工程师')}', `
+    + `'${esc(selfIntro)}', '${esc(JSON.stringify(educations))}', '${esc(JSON.stringify(projects))}', `
+    + `'${esc(JSON.stringify(internships))}', '${esc(JSON.stringify(honors))}')`
+  );
+}
+L.push('-- ---------- 学生简历（只覆盖部分学生：未建简历的用于测 HR 端空态）----------');
+L.push('INSERT INTO student_resume (id, tenant_id, user_id, contact_phone, contact_email, job_intention, self_intro, educations, projects, internships, honors) VALUES');
+L.push(resumeRows.join(',\n') + ';');
+L.push('');
+
 L.push('-- ---------- 采集任务 ----------');
+// MOCK 任务的 url_pattern 必须是 classpath 下 mock/ 目录里的真实文件名：
+// CrawlerServiceImpl 会拼成 "mock/" + url_pattern 去加载。留 NULL 会拼出 "mock/null"
+// （现在有默认值兜底，但种子不该依赖兜底）。
+// status 一律给 0：这些任务并没有在跑，写 1 会让页面显示「运行中」而「停止」按钮报错。
 L.push('INSERT INTO crawler_task (id, tenant_id, source_type, source_name, url_pattern, cron_expr, status, create_time) VALUES');
 L.push([
-  `(1, 1, 'MOCK', '模拟采集-mock_jobs.json', NULL, '0 0 2 * * ?', 1, '2026-06-18 10:00:00')`,
-  `(2, 1, 'BOSS_ZHIPIN', 'Boss直聘-互联网技术岗', 'https://www.zhipin.com/web/geek/job?query=*', '0 0 3 * * ?', 0, '2026-06-18 10:05:00')`,
-  `(3, 1, 'ZHAOPIN', '智联招聘-应届生岗位', 'https://sou.zhaopin.com/?kw=*', NULL, 0, '2026-06-25 14:20:00')`,
-  `(4, 1, 'COMPANY_OFFICIAL', '合作企业官网-校招页', 'https://campus.example.com/jobs/*', '0 0 4 * * 1', 1, '2026-07-01 09:00:00')`,
-  `(5, 2, 'MOCK', '模拟采集-示范大学', NULL, NULL, 0, '2026-07-03 11:00:00')`,
+  `(1, 1, 'MOCK', '模拟采集-mock-jobs.json', 'mock-jobs.json', '0 0 2 * * ?', 0, '2026-06-18 10:00:00')`,
+  // 真实采集：url_pattern 存的是参数串而非 URL。CrawlerServiceImpl 解析它，交给
+  // ZhaopinJobPageProcessor.seedRequest 拼地址、解 301、逐段校验 robots.txt。
+  // jl 是智联的城市编码：653=杭州、530=北京。
+  // 原来第 2 条是 BOSS_ZHIPIN，已删除 —— Boss 的 robots.txt 明文禁止抓取职位列表页。
+  `(2, 1, 'ZHAOPIN', '智联招聘-杭州Java岗', 'kw=Java&jl=653&maxPages=2', '0 0 3 * * ?', 0, '2026-06-18 10:05:00')`,
+  `(3, 1, 'ZHAOPIN', '智联招聘-北京应届生岗', 'kw=应届生&jl=530&maxPages=2', NULL, 0, '2026-06-25 14:20:00')`,
+  // COMPANY_OFFICIAL 只有表结构没有实现，启动它会得到一条明确的「暂不支持」提示（而非 500）
+  `(4, 1, 'COMPANY_OFFICIAL', '合作企业官网-校招页（未实现）', 'https://campus.example.com/jobs/*', '0 0 4 * * 1', 0, '2026-07-01 09:00:00')`,
+  `(5, 2, 'MOCK', '模拟采集-示范大学', 'mock-jobs.json', NULL, 0, '2026-07-03 11:00:00')`,
 ].join(',\n') + ';');
 L.push('');
 L.push(`-- ---------- 采集日志（任务1 五次成功合计 ${mockJobCount} + 5 条待清洗/脏数据 = raw_job_data 总量）----------`);
@@ -561,14 +786,108 @@ const jobRows = jobs.map(j =>
 L.push('INSERT INTO job_detail (id, title, company, city, industry, salary_min, salary_max, education, experience, skills, description, publish_date, source, source_url, publisher_id, create_time) VALUES');
 L.push(jobRows.join(',\n') + ';');
 L.push('');
-L.push('-- ---------- 分析结果（口径与 AnalysisJobServiceImpl 一致：avg_salary = AVG((min+max)/2)；两租户各一份）----------');
+L.push('-- ---------- 分析结果 ----------');
+L.push('-- 职位维度（industry/city/skill/education/trend）：口径与 AnalysisJobServiceImpl 一致');
+L.push('--   avg_salary = AVG((min+max)/2)。job_detail 是全平台共享表，所以两租户各一份相同的数据。');
+L.push('-- 学生维度（apply_funnel/gap_*/student_*/contact_*）：口径与 EmploymentAnalysisContributor 一致');
+L.push('--   这些是按租户隔离的，两租户的数字不同。预置它们是为了让「就业分析」页开箱有数据，');
+L.push('--   否则新库打开是一堆空图表。管理员点「重算分析数据」会用后端口径覆盖，数值应当一致。');
 const arRows = [];
 let arId = 0;
+const pushAr = (tid, dim, value, metric, val, period = '2026-07') => {
+  arId++;
+  arRows.push(`(${arId}, ${tid}, '${dim}', '${esc(value)}', '${metric}', ${val}, 'MONTH', '${period}', '${dt(CALC_TIME)}')`);
+};
+
+// ---- 与 Java 完全一致的取整：比值算到 4 位，落库统一 2 位（BigDecimal HALF_UP）----
+const r4 = (part, total) => (total === 0 ? 0 : Math.round((part / total) * 1e4) / 1e4);
+const r2 = (x) => Math.round((x + Number.EPSILON) * 100) / 100;
+const medianOf = (sortedNums) => {
+  if (!sortedNums.length) return 0;
+  const n = sortedNums.length;
+  return n % 2 ? sortedNums[(n - 1) / 2] : r2((sortedNums[n / 2 - 1] + sortedNums[n / 2]) / 2);
+};
+
+// 市场薪资中位数：全部职位的 (min+max)/2（job_detail 共享，两租户相同）
+const marketSalaries = jobs.map(j => Math.trunc((j.salMin + j.salMax) / 2)).sort((a, b) => a - b);
+const marketMedian = medianOf(marketSalaries);
+// 岗位城市分布（共享）
+const jobByCity = {};
+for (const j of jobs) jobByCity[j.city] = (jobByCity[j.city] || 0) + 1;
+const totalJobs = jobs.length;
+
+const SALARY_LABELS = ['6000以下', '6000-8000', '8000-10000', '10000-15000', '15000以上'];
+const SALARY_EDGES = [0, 6000, 8000, 10000, 15000, Infinity];
+const bucketOf = (s) => SALARY_LABELS[SALARY_EDGES.findIndex((_, i) => s >= SALARY_EDGES[i] && s < SALARY_EDGES[i + 1])];
+
+// 各租户的画像：租户1 是 STUDENT_DEFS，租户2 只有 T2_STUDENT
+const profilesOf = (tid) => (tid === 1 ? STUDENT_DEFS : [T2_STUDENT]);
+
 for (const tid of [1, 2]) {
-  for (const r of analysisRows) {
-    arId++;
-    arRows.push(`(${arId}, ${tid}, '${r.dim}', '${esc(r.value)}', '${r.metric}', ${r.val}, 'MONTH', '${r.period}', '${dt(CALC_TIME)}')`);
+  // ---- 职位维度（两租户相同）----
+  for (const r of analysisRows) pushAr(tid, r.dim, r.value, r.metric, r.val, r.period);
+
+  const profiles = profilesOf(tid);
+
+  // ---- 投递漏斗：只统计本租户的 job_application（幽灵投递本就不存在于这张表）----
+  const myApps = applications.filter(a => a.tenantId === tid);
+  const counts = { SUBMITTED: 0, VIEWED: 0, INTERVIEW: 0, OFFER: 0, REJECTED: 0 };
+  const respHours = [];
+  for (const a of myApps) {
+    counts[a.status]++;
+    if (a.changedAt) {
+      // 与 Java 的 Duration.toHours() 一致：向下取整
+      respHours.push(Math.floor((a.changedAt - a.appliedAt) / 3600000));
+    }
   }
+  for (const s of Object.keys(counts)) {
+    pushAr(tid, 'apply_funnel', s, 'application_count', counts[s]);
+  }
+  pushAr(tid, 'apply_funnel', 'TOTAL', 'application_count', myApps.length);
+  respHours.sort((a, b) => a - b);
+  pushAr(tid, 'apply_response', 'responded', 'application_count', respHours.length);
+  pushAr(tid, 'apply_response', 'unresponded', 'application_count', counts.SUBMITTED);
+  pushAr(tid, 'apply_response', 'median_hours', 'hours', r2(medianOf(respHours)));
+
+  // ---- 学生意向分布 ----
+  const stuByCity = {}, stuByInd = {}, stuBySalary = {};
+  for (const l of SALARY_LABELS) stuBySalary[l] = 0;
+  for (const p of profiles) {
+    stuByCity[p[5]] = (stuByCity[p[5]] || 0) + 1;
+    stuByInd[p[6]] = (stuByInd[p[6]] || 0) + 1;
+    stuBySalary[bucketOf(p[7])]++;
+  }
+  for (const [k, v] of Object.entries(stuByCity)) pushAr(tid, 'student_city', k, 'student_count', v);
+  for (const [k, v] of Object.entries(stuByInd)) pushAr(tid, 'student_industry', k, 'student_count', v);
+  for (const l of SALARY_LABELS) pushAr(tid, 'student_salary', l, 'student_count', stuBySalary[l]);
+
+  // ---- 供需错配（学生扎堆的前 10 个城市）----
+  const totalStudents = profiles.length;
+  const topCities = Object.entries(stuByCity).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  for (const [city, n] of topCities) {
+    const sRatio = r4(n, totalStudents);
+    const jRatio = r4(jobByCity[city] || 0, totalJobs);
+    const gap = jRatio === 0 ? 999 : r2(sRatio / jRatio);
+    pushAr(tid, 'gap_city', city, 'student_ratio', r2(sRatio * 100));
+    pushAr(tid, 'gap_city', city, 'job_ratio', r2(jRatio * 100));
+    pushAr(tid, 'gap_city', city, 'gap_ratio', gap);
+  }
+  const stuSalaries = profiles.map(p => Math.trunc((p[7] + p[8]) / 2)).sort((a, b) => a - b);
+  const stuMedian = medianOf(stuSalaries);
+  const deviation = marketMedian === 0 ? 0 : r2(Math.round(((stuMedian - marketMedian) / marketMedian) * 1e4) / 1e4 * 100);
+  pushAr(tid, 'gap_salary', 'overall', 'student_median', r2(stuMedian));
+  pushAr(tid, 'gap_salary', 'overall', 'market_median', r2(marketMedian));
+  pushAr(tid, 'gap_salary', 'overall', 'deviation_percent', deviation);
+
+  // ---- 自主求职流向 ----
+  const contactByCity = {}, contactByInd = {};
+  for (const b of behaviorsFinal.filter(b => b.action === 'CONTACT' && b.tenantId === tid)) {
+    const j = jobById.get(b.jobId);
+    contactByCity[j.city] = (contactByCity[j.city] || 0) + 1;
+    contactByInd[j.industry] = (contactByInd[j.industry] || 0) + 1;
+  }
+  for (const [k, v] of Object.entries(contactByCity)) pushAr(tid, 'contact_city', k, 'contact_count', v);
+  for (const [k, v] of Object.entries(contactByInd)) pushAr(tid, 'contact_industry', k, 'contact_count', v);
 }
 L.push('INSERT INTO analysis_result (id, tenant_id, dimension, dimension_value, metric_name, metric_value, period_type, period_value, calc_time) VALUES');
 L.push(arRows.join(',\n') + ';');
@@ -604,6 +923,15 @@ const behRows = behaviorsFinal.map((b, i) =>
 L.push('INSERT INTO student_behavior (id, tenant_id, user_id, job_id, action, create_time) VALUES');
 L.push(behRows.join(',\n') + ';');
 L.push('');
+
+L.push('-- ---------- 投递记录（与 student_behavior 的 APPLY 一一对应，状态铺开五种）----------');
+L.push('INSERT INTO job_application (id, tenant_id, user_id, job_id, publisher_id, status, hr_note, applied_at, status_changed_at, create_time) VALUES');
+L.push(applications.map((a, i) =>
+  `(${i + 1}, ${a.tenantId}, ${a.userId}, ${a.jobId}, ${a.publisherId}, '${a.status}', ` +
+  `${a.note ? `'${esc(a.note)}'` : 'NULL'}, '${dt(a.appliedAt)}', ${a.changedAt ? `'${dt(a.changedAt)}'` : 'NULL'}, '${dt(a.appliedAt)}')`
+).join(',\n') + ';');
+L.push('');
+
 L.push('-- ---------- API 客户端 ----------');
 L.push('-- api_secret 以 BCrypt 存储（与 sys_user.password_hash 同一套编码器）。');
 L.push('-- 调用 /api/open/auth/token 时传明文 secret，服务端用 passwordEncoder.matches 比对：');
@@ -647,7 +975,17 @@ console.log('=== 生成完成 ===');
 console.log('职位总数:', jobs.length, '（MOCK:', mockJobCount, '+ HR_PUBLISH:', jobs.length - mockJobCount, '）');
 console.log('raw_job_data:', rawId, '（CLEANED:', mockJobCount, '+ RAW 待清洗: 3 + 脏数据: 2）');
 console.log('采集批次 record_count:', BATCHES.map(b => b.count), '+ 最后批次额外 5');
-console.log('用户:', users.length, '画像:', profId, '行为:', behaviorsFinal.length, '推送:', pushes.length);
+console.log('用户:', users.length, '（HR', users.filter(u => u[3] === 'HR').length, '）',
+  '画像:', profId, '简历:', resumeId, '推送:', pushes.length);
+const byAction = {};
+for (const b of behaviorsFinal) byAction[b.action] = (byAction[b.action] || 0) + 1;
+console.log('行为:', behaviorsFinal.length, byAction);
+const byStatus = {};
+for (const a of applications) byStatus[a.status] = (byStatus[a.status] || 0) + 1;
+console.log('投递记录:', applications.length, byStatus);
+const perHr = {};
+for (const j of jobs.filter(j => j.source === 'HR_PUBLISH')) perHr[j.publisherId] = (perHr[j.publisherId] || 0) + 1;
+console.log('站内职位按 HR:', perHr);
 console.log('分析结果: 每租户', analysisRows.length, '条 × 2 租户 =', arRows.length);
 const byMonth = {};
 for (const j of jobs) { const k = pad(j.publishDate.getMonth() + 1); byMonth[k] = (byMonth[k] || 0) + 1; }

@@ -28,4 +28,7 @@ public class TeacherOverviewVO implements Serializable {
 
     /** 全部学生的投递行为总数 */
     private long totalApplies;
+
+    /** 自主联系总数：学生对采集来的外部岗位表达的求职意向 */
+    private long totalContacts;
 }

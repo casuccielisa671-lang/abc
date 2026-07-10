@@ -9,6 +9,15 @@ export function getDashboard() {
   return request.get('/analysis/dashboard')
 }
 
+/**
+ * 就业分析：投递漏斗 / 供需错配 / 自主求职流向。
+ * 与 /dashboard 分开：看板讲市场有什么岗位，这里讲本校学生怎么样。
+ * 数据同样来自 analysis_result，需先「重算分析数据」。
+ */
+export function getEmployment() {
+  return request.get('/analysis/employment')
+}
+
 // ========== 采集任务 ==========
 export function getCrawlerTasks(params) {
   return request.get('/admin/crawler/task', { params })
@@ -38,9 +47,9 @@ export function stopCrawlerTask(id) {
   return request.put(`/admin/crawler/task/${id}/stop`)
 }
 
-export function mockCrawl(dataFile) {
-  return request.post('/admin/crawler/task/mock', null, { params: { dataFile } })
-}
+// 原先这里有个 mockCrawl()，对应后端 POST /admin/crawler/task/mock。
+// 已删除：它与「对一条 MOCK 任务点启动」完全等价，却每调一次就新插一条一次性采集任务，
+// 跑完不清理，任务列表越点越脏。统一走 startCrawlerTask()。
 
 // ========== 采集日志 ==========
 export function getCrawlerLogs(params) {

@@ -62,7 +62,7 @@ import { useUserStore } from '@/store/user'
 import { useAppStore } from '@/store/app'
 import {
   DataAnalysis, Setting, Document, User, House, Fold, Expand, Sunny, Moon,
-  Reading, Star, Files, TrendCharts, Management, Tickets
+  Reading, Star, Files, TrendCharts, Management, Tickets, ChatDotRound, Promotion
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
@@ -89,6 +89,7 @@ const menuGroups = computed(() => {
         label: '工作台',
         items: [
           { index: '/admin', title: '数据看板', icon: DataAnalysis },
+          { index: '/admin/employment', title: '就业分析', icon: TrendCharts },
           { index: '/admin/crawler', title: '采集管理', icon: Setting }
         ]
       },
@@ -112,8 +113,16 @@ const menuGroups = computed(() => {
         items: [
           { index: '/student', title: '职位推荐', icon: House },
           { index: '/student/profile', title: '个人画像', icon: User },
+          { index: '/student/resume', title: '我的简历', icon: Tickets },
+          { index: '/student/applications', title: '我的投递', icon: Promotion },
           { index: '/student/favorites', title: '我的收藏', icon: Star },
           { index: '/student/reports', title: '我的报告', icon: Document }
+        ]
+      },
+      {
+        label: 'AI 助手',
+        items: [
+          { index: '/student/advisor', title: '职业顾问', icon: ChatDotRound }
         ]
       }
     ],

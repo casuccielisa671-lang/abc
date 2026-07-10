@@ -19,6 +19,7 @@
       <div class="stat-card">
         <div class="stat-label">收到投递</div>
         <div class="stat-value">{{ stats.totalApplies }}</div>
+        <div class="stat-hint">来自 {{ stats.applicantCount }} 位学生</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">收到投递的职位</div>
@@ -59,26 +60,39 @@
           <el-button size="small" @click="$router.push('/hr/applications')">查看全部</el-button>
         </div>
       </template>
-      <el-table :data="recentApplications" v-loading="loading" stripe>
-        <el-table-column prop="jobTitle" label="投递职位" min-width="180" />
+      <el-table :data="recentApplications" v-loading="loading" stripe class="clickable" @row-click="openDetail">
+        <el-table-column prop="jobTitle" label="投递职位" min-width="170" />
+        <el-table-column label="投递人" width="100">
+          <template #default="{ row }">{{ row.realName || '—' }}</template>
+        </el-table-column>
         <el-table-column label="专业" min-width="140">
           <template #default="{ row }">{{ row.major || '未填写画像' }}</template>
         </el-table-column>
         <el-table-column label="学历" width="90">
           <template #default="{ row }"><span class="chip">{{ row.educationLevel || '—' }}</span></template>
         </el-table-column>
-        <el-table-column prop="applyTime" label="投递时间" width="180" />
+        <el-table-column label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="statusTag(row.status)" size="small">{{ row.statusLabel }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="投递时间" width="160">
+          <template #default="{ row }">{{ formatTime(row.applyTime) }}</template>
+        </el-table-column>
       </el-table>
       <el-empty v-if="!loading && !recentApplications.length" description="暂无投递记录" />
     </el-card>
+
+    <ApplicantDrawer v-model="detailVisible" :user-id="currentUserId" @changed="loadData" />
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { getHrJobs, getTalents, getHrApplications } from '@/api/student'
+import ApplicantDrawer from '@/components/ApplicantDrawer.vue'
 import { toList, toTotal } from '@/utils/list'
-import { salaryRange } from '@/utils/format'
+import { salaryRange, formatTime } from '@/utils/format'
 
 const recentJobs = ref([])
 const recentApplications = ref([])
@@ -88,8 +102,28 @@ const stats = reactive({
   totalJobs: 0,
   totalTalents: 0,
   totalApplies: 0,
-  jobsWithApplies: 0
+  jobsWithApplies: 0,
+  applicantCount: 0
 })
+
+const detailVisible = ref(false)
+const currentUserId = ref(null)
+
+function openDetail(row) {
+  if (row.userId == null) return
+  currentUserId.value = row.userId
+  detailVisible.value = true
+}
+
+function statusTag(status) {
+  return {
+    SUBMITTED: 'info',
+    VIEWED: 'warning',
+    INTERVIEW: 'primary',
+    OFFER: 'success',
+    REJECTED: 'danger'
+  }[status] || 'info'
+}
 
 async function loadData() {
   loading.value = true
@@ -108,8 +142,9 @@ async function loadData() {
     const all = toList(applications)
     recentApplications.value = all.slice(0, 5)
     stats.totalApplies = all.length
-    // 投递人是脱敏的（没有 userId），无法可靠去重成「人数」，只统计有投递的职位数
     stats.jobsWithApplies = new Set(all.map(a => a.jobId)).size
+    // 投递列表现在带 userId（投递即授权），可以去重成真实的「投递人数」了
+    stats.applicantCount = new Set(all.map(a => a.userId)).size
   } finally {
     loading.value = false
   }
@@ -120,4 +155,5 @@ onMounted(loadData)
 
 <style scoped>
 .card-header-row { display: flex; justify-content: space-between; align-items: center; }
+.clickable :deep(.el-table__row) { cursor: pointer; }
 </style>

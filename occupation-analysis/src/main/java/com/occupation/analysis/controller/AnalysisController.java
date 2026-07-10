@@ -8,6 +8,7 @@ import com.occupation.analysis.service.AnalysisService;
 import com.occupation.analysis.service.DataCleanService;
 import com.occupation.analysis.service.JobDetailService;
 import com.occupation.analysis.vo.DashboardVO;
+import com.occupation.analysis.vo.EmploymentVO;
 import com.occupation.analysis.vo.JobDetailVO;
 import com.occupation.common.result.Result;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +48,21 @@ public class AnalysisController {
         log.info("请求 Dashboard 数据, tenantId={}", query.getTenantId());
         DashboardVO vo = analysisService.getDashboard(query);
         return Result.ok(vo);
+    }
+
+    /**
+     * 就业分析：投递漏斗 / 供需错配 / 自主求职流向
+     * <p>
+     * 与 {@code /dashboard} 分开：看板讲「市场有什么岗位」，这里讲「本校学生怎么样」。
+     * 数据同样来自 {@code analysis_result}，需先执行过「手动重算分析数据」。
+     * <p>
+     * 限管理员与教师：投递转化率反映的是 HR 的处理效率，学生和 HR 都不该看到全局口径。
+     * （{@code /dashboard} 是纯市场数据，不限角色。）
+     */
+    @GetMapping("/employment")
+    @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
+    public Result<EmploymentVO> getEmployment() {
+        return Result.ok(analysisService.getEmployment());
     }
 
     /**

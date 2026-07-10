@@ -95,15 +95,17 @@ com.occupation.<模块名>
 ## 四、数据库 Schema（当前版本）
 
 > 脚本位置：`occupation-common/src/main/resources/sql/init.sql`
-> 执行后可创建全部 13 张表 + 初始化种子数据。
+> 执行后可创建全部 15 张表 + 初始化种子数据。
+> 已有数据的库要补新表，用 `sql/upgrade-2026-07-10-student-resume.sql`（`CREATE TABLE IF NOT EXISTS` + `INSERT IGNORE`，可重复执行、不破坏数据）。
 
-### 已实现表（13 张，全部在 init.sql 中定义）
+### 已实现表（15 张，全部在 init.sql 中定义）
 
 | 表名                   | 所属模块        | 说明                 | tenant_id |
 | ---------------------- | --------------- | -------------------- | --------- |
 | sys_tenant             | common          | 租户表               | ❌（自身不含） |
 | sys_user               | auth            | 用户表               | ✅ |
 | sys_student_profile    | recommend       | 学生画像表           | ✅ |
+| student_resume         | recommend       | 学生简历表           | ✅ |
 | crawler_task           | crawler         | 采集任务表           | ✅ |
 | crawler_log            | crawler         | 采集日志表           | ✅ |
 | raw_job_data           | crawler         | 原始职位数据表       | ❌（全平台共享） |
@@ -116,12 +118,19 @@ com.occupation.<模块名>
 | sys_alert              | web/common      | 系统告警表           | ✅ |
 | api_client             | api             | API 客户端鉴权表     | ✅ |
 
+**画像与简历的分工**（两张表都挂在 recommend 模块，别搞混）：
+
+- `sys_student_profile` = 喂给推荐算法的结构化**匹配依据**，字段扁平可索引（专业/技能/意向城市/期望薪资/学历）
+- `student_resume` = 给 HR 和大模型读的**自我陈述**，教育/项目/实习三段经历以 JSON 数组存 TEXT 列。
+  条目数不定、只读不查，拆子表只会徒增 join。**HTTP 层收发结构化数组**，序列化只在 `ResumeServiceImpl` 里发生
+
 ### 种子数据
 
 | 表 | 数据 |
 |---|---|
 | sys_tenant | id=1, name="测试学院" |
 | sys_user | id=1, username="admin", password="admin123"（BCrypt），role=ADMIN |
+| student_resume | 8 份（userId 2/5/6/7/8/9/11/13）。投递过 HR 职位的 5/6/7/11/13 都有简历；userId=14 投了但没简历，用于测 HR 端空态 |
 
 ---
 
@@ -145,6 +154,26 @@ com.occupation.<模块名>
 | POST /api/admin/crawler/task/mock | POST | 启动模拟爬虫（便捷测试） | Step 1.7 | ✅ |
 | GET /api/analysis/dashboard | GET | Dashboard 分析数据（行业/城市/技能/学历/趋势） | P2 | ✅ |
 | GET /api/analysis/jobs | GET | 职位分页查询（城市/行业/薪资/学历/经验/关键词） | P2 | ✅ |
+
+### 2026-07-10 新增：简历 + HR 解密 + AI 能力
+
+| 接口 | 方法 | 说明 | 状态 |
+|---|---|---|---|
+| /api/student/resume | GET | 我的简历。未填写返回 `{exists:false, educations:[], ...}` 空壳，**不是 null** | ✅ |
+| /api/student/resume | PUT | 保存简历。三段经历直接收结构化数组，前端不要 `JSON.stringify` | ✅ |
+| /api/student/resume/ai-review | POST | AI 简历诊断。`?targetJobId=` 对标岗位，`?refresh=true` 强制重算 | ✅ |
+| /api/student/resume/ai-polish | POST | AI 润色一段文字，返回 `{polished}` | ✅ |
+| /api/student/advisor/chat | POST | AI 职业顾问对话（服务端无状态，前端回传完整历史） | ✅ |
+| /api/student/advisor/explain/{jobId} | POST | 自然语言解读「为什么推荐这个职位」 | ✅ |
+| /api/hr/applicants/{userId} | GET | 投递人详情：姓名/联系方式/画像/简历。**带归属校验，非本人职位的投递者返回 403** | ✅ |
+| /api/teacher/suggestions/ai | GET | 教学建议的 AI 解读（原 `/api/teacher/suggestions` 不变） | ✅ |
+
+`/api/hr/applications` 返回值**新增**（未删除任何字段）：`userId` / `realName` / `hasResume`。
+联系方式刻意不在列表里 —— 列表页不该批量泄露联系方式，要看得单独调 `/api/hr/applicants/{userId}`。
+
+**AI 能力的统一约定**：所有 AI 接口在大模型不可用时都降级为规则化输出，并在响应里带
+`aiGenerated: false` 让前端如实告知用户。唯一例外是 `ai-polish` —— 润色没有合理的规则降级
+（拿什么改写？），直接抛业务异常。
 
 ---
 

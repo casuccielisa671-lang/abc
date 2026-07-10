@@ -10,11 +10,14 @@ import com.occupation.auth.service.UserService;
 import com.occupation.common.result.PageResult;
 import com.occupation.common.result.Result;
 import com.occupation.common.utils.SkillUtils;
+import com.occupation.recommend.entity.BehaviorAction;
 import com.occupation.recommend.entity.StudentBehavior;
 import com.occupation.recommend.entity.SysStudentProfile;
 import com.occupation.recommend.service.BehaviorService;
 import com.occupation.recommend.service.StudentProfileService;
+import com.occupation.recommend.service.TeachingAiService;
 import com.occupation.recommend.service.TeachingSuggestionService;
+import com.occupation.recommend.vo.AdvisorReplyVO;
 import com.occupation.recommend.vo.BehaviorStatsVO;
 import com.occupation.recommend.vo.BehaviorVO;
 import com.occupation.recommend.vo.StudentVO;
@@ -64,6 +67,7 @@ public class TeacherController {
     private final StudentProfileService profileService;
     private final BehaviorService behaviorService;
     private final TeachingSuggestionService suggestionService;
+    private final TeachingAiService teachingAiService;
     private final UserService userService;
     private final JobDetailService jobDetailService;
 
@@ -85,8 +89,9 @@ public class TeacherController {
         TeacherOverviewVO vo = new TeacherOverviewVO();
         vo.setTotalStudents(userService.countByRole("STUDENT"));
         vo.setWithProfile(profileService.listAll().size());
-        vo.setTotalViews(counts.getOrDefault("VIEW", 0L));
-        vo.setTotalApplies(counts.getOrDefault("APPLY", 0L));
+        vo.setTotalViews(counts.getOrDefault(BehaviorAction.VIEW, 0L));
+        vo.setTotalApplies(counts.getOrDefault(BehaviorAction.APPLY, 0L));
+        vo.setTotalContacts(counts.getOrDefault(BehaviorAction.CONTACT, 0L));
         return Result.ok(vo);
     }
 
@@ -120,6 +125,18 @@ public class TeacherController {
     @GetMapping("/suggestions")
     public Result<TeachingSuggestionVO> suggestions() {
         return Result.ok(suggestionService.diagnose(DIAGNOSE_TOP_SKILLS, DIAGNOSE_MAX_ITEMS));
+    }
+
+    /**
+     * 教学建议的 AI 解读 —— 把上面那张技能缺口表翻译成一段可执行的教学调整建议。
+     * <p>
+     * 单独一个接口而不是塞进 {@link #suggestions()}：调大模型要几秒，
+     * 不能让教师每次打开页面都等；表格先出来，解读按需再拉。
+     */
+    @GetMapping("/suggestions/ai")
+    public Result<AdvisorReplyVO> suggestionsAi() {
+        return Result.ok(teachingAiService.analyze(
+                suggestionService.diagnose(DIAGNOSE_TOP_SKILLS, DIAGNOSE_MAX_ITEMS)));
     }
 
     /** 导出本校学生就业数据 Excel（.xlsx） */

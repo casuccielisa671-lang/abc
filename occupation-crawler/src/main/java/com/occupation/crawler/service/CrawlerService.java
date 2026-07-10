@@ -32,13 +32,6 @@ public interface CrawlerService {
     boolean isRunning(Long taskId);
 
     /**
-     * 启动模拟爬虫（开发测试用）
-     * @param task 采集任务
-     * @return 采集日志
-     */
-    CrawlerLog startMockCrawl(CrawlerTask task);
-
-    /**
      * 查询所有运行中的任务
      */
     List<CrawlerTask> listRunningTasks();

@@ -1,0 +1,22 @@
+# 本机私密配置示例
+#
+# 用法：复制成同目录下的 application-local.yml（该文件名已被 .gitignore 忽略），填入自己的密钥。
+# application.yml 里 spring.profiles.active 已包含 local；文件不存在时 Spring 静默跳过，不影响启动。
+#
+#   cp application-local.yml.example application-local.yml
+#
+# 也可以完全不建这个文件，改用环境变量：
+#   PowerShell:  $env:AI_ENABLED="true"; $env:AI_API_KEY="sk-xxx"
+#   bash:        export AI_ENABLED=true AI_API_KEY=sk-xxx
+#
+# ⚠️ 永远不要把真实密钥提交进 git。密钥一旦推上远端就等同于公开，必须去控制台吊销重发。
+
+app:
+  ai:
+    enabled: true
+    # DeepSeek 控制台 https://platform.deepseek.com/api_keys
+    api-key: sk-在这里填你自己的密钥
+    base-url: https://api.deepseek.com/v1
+    # deepseek-chat  = V3 通用对话，快且便宜，本项目默认
+    # deepseek-reasoner = R1 推理模型，会先输出思维链，慢 3~5 倍、贵，适合复杂诊断
+    model: deepseek-chat

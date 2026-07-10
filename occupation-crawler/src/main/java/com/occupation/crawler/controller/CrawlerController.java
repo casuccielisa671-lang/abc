@@ -137,22 +137,11 @@ public class CrawlerController {
         return Result.ok();
     }
 
-    /**
-     * 启动模拟爬虫（便捷测试接口）
-     */
-    @PostMapping("/task/mock")
-    public Result<Long> startMock(@RequestParam(defaultValue = "mock-jobs.json") String dataFile) {
-        CrawlerTask task = new CrawlerTask();
-        task.setId(System.currentTimeMillis()); // 临时 ID
-        task.setSourceType("MOCK");
-        task.setSourceName("模拟采集-" + dataFile);
-        task.setUrlPattern(dataFile);
-        task.setStatus(0);
-        crawlerTaskMapper.insert(task);
-
-        crawlerService.startMockCrawl(task);
-        return Result.ok(task.getId());
-    }
+    // 原先这里还有一个 POST /task/mock「便捷测试接口」：它每次调用都用
+    // System.currentTimeMillis() 当主键新插一条一次性 crawler_task，跑完不清理，
+    // 采集任务列表越点越脏（线上真留下过两条这样的垃圾任务）。
+    // 而它的行为与「对一条 source_type=MOCK 的任务点启动」完全等价 —— createProcessor
+    // 见到 MOCK 一样走 MockJobPageProcessor。既然等价，就只保留一个入口。
 
     // ==================== 采集日志查询 ====================
 

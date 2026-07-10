@@ -10,7 +10,9 @@ spring:
   application:
     name: occupation-platform
   profiles:
-    active: dev
+    # local 用于放本机私密配置（AI 密钥等）。application-local.yml 已 gitignore，
+    # 文件不存在时 Spring 会静默跳过，队友不配也能正常启动
+    active: dev,local
   http:
     encoding:
       charset: UTF-8
@@ -85,12 +87,23 @@ app:
       # 都找不到会打告警且中文显示为方块（字体文件受授权限制，不随仓库分发）
       font-path: ${REPORT_PDF_FONT_PATH:}
   ai:
-    # LLM 智能报告摘要（差异化亮点）。关闭时报告引擎自动降级为模板化文字
-    enabled: false
-    # OpenAI 兼容接口（DeepSeek / 通义千问 / 智谱均可），密钥用环境变量注入，严禁硬编码
+    # LLM 能力总开关（报告摘要 / 简历诊断 / 职业顾问 / 匹配理由）。
+    # 关闭或密钥为空时，全部自动降级为规则化输出，功能不中断。
+    # 打开方式见 application-local.yml.example
+    enabled: ${AI_ENABLED:false}
+    # OpenAI 兼容接口（DeepSeek / 通义千问 / 智谱均可）
     base-url: ${AI_BASE_URL:https://api.deepseek.com/v1}
+    # ⚠️ 密钥严禁写在本文件里（它会进 git）。用环境变量或 application-local.yml
     api-key: ${AI_API_KEY:}
     model: ${AI_MODEL:deepseek-chat}
+    # 报告/诊断类要稳定复现，走低温；职业顾问对话在代码里另行调高
+    temperature: 0.3
+    max-tokens: 1200
+    connect-timeout-ms: 5000
+    # 大模型首字延迟常达数秒，长回复可到数十秒。设短了会把正常请求误判成失败
+    read-timeout-ms: 60000
+    # 只对超时和 5xx 重试；4xx 是入参问题，重试没有意义
+    max-retries: 1
   open-api:
     # 开放 API Token 有效期（秒）
     token-ttl: 7200

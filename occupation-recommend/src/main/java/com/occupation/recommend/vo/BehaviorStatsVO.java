@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import com.occupation.recommend.entity.BehaviorAction;
 import com.occupation.recommend.entity.StudentBehavior;
 
 /**
@@ -26,16 +27,19 @@ public class BehaviorStatsVO implements Serializable {
     private long favoriteCount;
     private long applyCount;
     private long ignoreCount;
+    /** 自主联系（对采集职位表达求职意向）的次数 */
+    private long contactCount;
 
     /** 最近一次行为时间；无任何行为时为 null */
     private LocalDateTime lastActiveTime;
 
     public static BehaviorStatsVO of(Map<String, Long> counts, List<StudentBehavior> recent) {
         BehaviorStatsVO vo = new BehaviorStatsVO();
-        vo.viewCount = counts.getOrDefault("VIEW", 0L);
-        vo.favoriteCount = counts.getOrDefault("FAVORITE", 0L);
-        vo.applyCount = counts.getOrDefault("APPLY", 0L);
-        vo.ignoreCount = counts.getOrDefault("IGNORE", 0L);
+        vo.viewCount = counts.getOrDefault(BehaviorAction.VIEW, 0L);
+        vo.favoriteCount = counts.getOrDefault(BehaviorAction.FAVORITE, 0L);
+        vo.applyCount = counts.getOrDefault(BehaviorAction.APPLY, 0L);
+        vo.ignoreCount = counts.getOrDefault(BehaviorAction.IGNORE, 0L);
+        vo.contactCount = counts.getOrDefault(BehaviorAction.CONTACT, 0L);
         // recent 已按时间倒序，第一条即最近一次
         vo.lastActiveTime = recent.isEmpty() ? null : recent.get(0).getCreateTime();
         return vo;

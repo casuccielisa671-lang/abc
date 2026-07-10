@@ -8,8 +8,28 @@
       </p>
     </div>
 
+    <!-- AI 解读：单独一个接口，按需触发，不拖慢表格 -->
+    <el-card class="ai-card">
+      <template #header>
+        <div class="card-head">
+          <span>AI 教学解读</span>
+          <el-button size="small" :loading="aiLoading" @click="loadAiAnalysis">
+            {{ aiAnalysis ? '重新生成' : '生成解读' }}
+          </el-button>
+        </div>
+      </template>
+      <p v-if="!aiAnalysis && !aiLoading" class="ai-placeholder">
+        点击「生成解读」，AI 会基于下方的技能缺口数据，给出可执行的教学调整建议。
+      </p>
+      <template v-else-if="aiAnalysis">
+        <p class="ai-body">{{ aiAnalysis.reply }}</p>
+        <p v-if="!aiAnalysis.aiGenerated" class="ai-degraded">AI 未启用，以上为规则化文字</p>
+      </template>
+      <el-skeleton v-else :rows="3" animated />
+    </el-card>
+
     <!-- 技能缺口分析 -->
-    <el-card>
+    <el-card class="section">
       <template #header>技能缺口分析</template>
 
       <el-empty
@@ -85,7 +105,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { getDashboard } from '@/api/admin'
-import { getTeacherSuggestions } from '@/api/student'
+import { getTeacherSuggestions, getTeacherSuggestionsAi } from '@/api/student'
 import * as echarts from 'echarts'
 import { useAppStore } from '@/store/app'
 import { chartThemeName, primarySeriesColor, moneySeriesColor } from '@/styles/chartTheme'
@@ -98,6 +118,21 @@ const skillGaps = ref([])
 const courseSuggestions = ref([])
 const studentsWithProfile = ref(0)
 const trendData = ref([])
+
+/** AI 解读单独拉：调大模型要几秒，不能让教师每次开页面都干等 */
+const aiAnalysis = ref(null)
+const aiLoading = ref(false)
+
+async function loadAiAnalysis() {
+  aiLoading.value = true
+  try {
+    aiAnalysis.value = await getTeacherSuggestionsAi()
+  } catch {
+    /* 拦截器已提示 */
+  } finally {
+    aiLoading.value = false
+  }
+}
 
 const trendCountChart = ref(null)
 const trendSalaryChart = ref(null)
@@ -213,6 +248,12 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.card-head { display: flex; justify-content: space-between; align-items: center; }
+.section { margin-top: 16px; }
+.ai-placeholder { font-size: 13px; color: var(--app-ink-3); margin: 0; }
+.ai-body { font-size: 14px; line-height: 1.9; color: var(--app-ink-2); margin: 0; white-space: pre-line; }
+.ai-degraded { font-size: 11px; color: var(--app-ember); margin: 10px 0 0; }
+
 .sugg-title { font-size: 15px; font-weight: 600; color: var(--app-ink); margin: 0; }
 .sugg-desc { color: var(--app-ink-3); font-size: 13px; margin: 4px 0 0; }
 .trend-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }

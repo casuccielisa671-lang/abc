@@ -1,5 +1,6 @@
 package com.occupation.recommend.vo;
 
+import com.occupation.recommend.entity.BehaviorAction;
 import com.occupation.recommend.entity.SysStudentProfile;
 import lombok.Data;
 
@@ -33,6 +34,8 @@ public class StudentVO implements Serializable {
     private Integer expectedSalaryMax;
 
     private long viewCount;
+    /** 自主联系（对采集职位表达求职意向）次数 */
+    private long contactCount;
     private long favoriteCount;
     private long applyCount;
 
@@ -49,9 +52,10 @@ public class StudentVO implements Serializable {
         vo.expectedIndustry = p.getExpectedIndustry();
         vo.expectedSalaryMin = p.getExpectedSalaryMin();
         vo.expectedSalaryMax = p.getExpectedSalaryMax();
-        vo.viewCount = behaviorCounts.getOrDefault("VIEW", 0L);
-        vo.favoriteCount = behaviorCounts.getOrDefault("FAVORITE", 0L);
-        vo.applyCount = behaviorCounts.getOrDefault("APPLY", 0L);
+        vo.viewCount = behaviorCounts.getOrDefault(BehaviorAction.VIEW, 0L);
+        vo.favoriteCount = behaviorCounts.getOrDefault(BehaviorAction.FAVORITE, 0L);
+        vo.applyCount = behaviorCounts.getOrDefault(BehaviorAction.APPLY, 0L);
+        vo.contactCount = behaviorCounts.getOrDefault(BehaviorAction.CONTACT, 0L);
         return vo;
     }
 }

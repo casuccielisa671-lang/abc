@@ -3,10 +3,9 @@
     <div class="page-head with-actions">
       <div>
         <h2 class="page-title">采集任务管理</h2>
-        <p class="page-sub">管理职位数据采集任务与执行日志</p>
+        <p class="page-sub">管理职位数据采集任务与执行日志。选中一条任务点「启动」即可采集，MOCK 源读本地样例文件、不访问外网</p>
       </div>
       <div class="page-actions">
-        <el-button @click="handleMockCrawl">Mock 模拟采集</el-button>
         <el-button type="primary" @click="openDialog()">新增任务</el-button>
       </div>
     </div>
@@ -87,17 +86,19 @@
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="采集源类型" prop="sourceType">
           <el-select v-model="form.sourceType" style="width:100%">
-            <el-option label="MOCK（模拟数据，推荐）" value="MOCK" />
-            <el-option label="BOSS 直聘" value="BOSS_ZHIPIN" />
-            <el-option label="智联招聘" value="ZHAOPIN" />
+            <el-option label="MOCK（本地样例，不访问外网，推荐）" value="MOCK" />
+            <el-option label="智联招聘（真实采集）" value="ZHAOPIN" />
+            <!-- BOSS 直聘已移除：其 robots.txt 明文禁止抓取职位列表页
+                 （Disallow: /*?query=*、*?city=*），后端 createProcessor 会直接拒绝 -->
           </el-select>
         </el-form-item>
         <el-alert
           v-if="form.sourceType !== 'MOCK'" type="warning" :closable="false" show-icon
           style="margin:0 0 18px 100px; width:calc(100% - 100px)"
         >
-          真实站点采集依赖目标网站的页面结构，改版后会失效，且高频抓取可能违反其服务条款。
-          日常开发与演示请使用 MOCK 数据源。
+          真实站点采集会向对方服务器发起请求。系统会先校验 robots.txt，单线程、每次请求间隔 5~10 秒，
+          且只抓取列表页（不进详情页，避免采集到 HR 联系方式等个人信息）。
+          页面改版仍可能导致解析失效，日常开发与演示请使用 MOCK 数据源。
         </el-alert>
         <el-form-item label="任务名称" prop="sourceName">
           <el-input v-model="form.sourceName" placeholder="如：BOSS直聘-Java开发" />
@@ -122,7 +123,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import {
   getCrawlerTasks, getCrawlerTask, createCrawlerTask, updateCrawlerTask,
-  deleteCrawlerTask, startCrawlerTask, stopCrawlerTask, mockCrawl,
+  deleteCrawlerTask, startCrawlerTask, stopCrawlerTask,
   getCrawlerLogs
 } from '@/api/admin'
 import { toList, toTotal } from '@/utils/list'
@@ -193,15 +194,6 @@ async function handleDelete(id) {
   } catch { /* handled */ }
 }
 
-// ========== Mock 采集 ==========
-async function handleMockCrawl() {
-  try {
-    await mockCrawl('mock-jobs.json')
-    ElMessage.success('Mock 采集已触发，数据将通过 Kafka 进入清洗链路')
-    setTimeout(() => { loadLogs(); loadTasks() }, 3000)
-  } catch { /* handled */ }
-}
-
 // ========== 新增/编辑对话框 ==========
 const dialogVisible = ref(false)
 const editingId = ref(null)
@@ -259,12 +251,18 @@ async function handleSave() {
 
 const urlPatternHint = computed(() => ({
   MOCK: '填 mock 数据文件名，如 mock-jobs.json',
-  BOSS_ZHIPIN: '填参数串，如 query=Java&city=101010100&maxPages=3',
-  ZHAOPIN: '填参数串，如 kw=Java&jl=530&maxPages=3（jl 是智联的城市编码）'
+  ZHAOPIN: '填参数串，如 kw=Java&jl=653&maxPages=3（jl 是智联的城市编码，653=杭州）'
 }[form.sourceType] || ''))
 
+// 历史任务里可能还存着 BOSS_ZHIPIN / COMPANY_OFFICIAL，列表要能显示出来，
+// 只是不再允许新建。启动它们时后端会给出明确的拒绝理由。
 function sourceLabel(type) {
-  return { MOCK: 'MOCK', BOSS_ZHIPIN: 'BOSS 直聘', ZHAOPIN: '智联招聘' }[type] || type
+  return {
+    MOCK: 'MOCK',
+    ZHAOPIN: '智联招聘',
+    BOSS_ZHIPIN: 'BOSS 直聘（已停用）',
+    COMPANY_OFFICIAL: '企业官网（未实现）'
+  }[type] || type
 }
 
 // RUNNING 是进行中，不是失败

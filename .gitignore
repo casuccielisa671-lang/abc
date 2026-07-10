@@ -12,6 +12,9 @@
 data/reports/
 **/data/reports/
 
+# 本机私密配置（AI 密钥等）。仓库里只留 application-local.yml.example
+application-local.yml
+
 # Maven
 target/
 *.jar
