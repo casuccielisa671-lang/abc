@@ -37,6 +37,15 @@
       </el-menu>
 
       <div class="header-right">
+        <button class="theme-toggle-btn" @click="handleThemeToggle" :title="appStore.dark ? '切换到日光模式' : '切换到夜光模式'">
+          <svg v-if="!appStore.dark" class="theme-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <svg v-else class="theme-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
         <span class="user-name">{{ userStore.realName || userStore.username }}</span>
         <el-tag size="small" class="role-tag">{{ roleLabel }}</el-tag>
         <el-button text type="danger" @click="userStore.logout()">退出登录</el-button>
@@ -53,6 +62,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user'
+import { useAppStore } from '@/store/app'
 import {
   DataAnalysis, Setting, Document, User, House,
   Reading, Star, Files, TrendCharts, Management,
@@ -61,6 +71,11 @@ import {
 
 const route = useRoute()
 const userStore = useUserStore()
+const appStore = useAppStore()
+
+function handleThemeToggle() {
+  appStore.toggleTheme()
+}
 
 const ROLE_HOME = {
   ADMIN: '/admin',
@@ -139,7 +154,13 @@ const activeIndex = computed(() => {
 <style scoped>
 .main-layout {
   height: 100vh;
-  background: var(--app-canvas);
+  /* 日光模式：科技蓝渐变背景（专业数据平台风格） */
+  background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 50%, #F0F4FF 100%);
+}
+
+/* 深色模式：深蓝-深灰渐变背景 */
+html.dark .main-layout {
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #1F2937 100%);
 }
 
 .main-header {
@@ -147,8 +168,16 @@ const activeIndex = computed(() => {
   align-items: center;
   gap: 8px;
   padding: 0 20px;
-  background: var(--app-canvas);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--app-stone);
+}
+
+/* 深色模式header背景 */
+html.dark .main-header {
+  background: rgba(30, 20, 60, 0.5);
+  border-bottom-color: rgba(100, 100, 100, 0.3);
 }
 
 .brand {
@@ -181,6 +210,11 @@ const activeIndex = computed(() => {
   letter-spacing: -0.013em;
 }
 
+/* 日光模式header文字颜色 */
+html:not(.dark) .brand-name {
+  color: #000000;
+}
+
 .top-menu {
   flex: 1;
   min-width: 0;
@@ -192,8 +226,36 @@ const activeIndex = computed(() => {
   flex: none;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   margin-left: 12px;
+}
+
+.theme-toggle-btn {
+  background: transparent;
+  border: 1px solid var(--app-stone);
+  border-radius: 6px;
+  padding: 6px 8px;
+  color: var(--app-ink-2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--app-surface-2);
+  border-color: var(--app-ink-3);
+  color: var(--app-ink);
+}
+
+.theme-icon {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .user-name {
@@ -205,6 +267,11 @@ const activeIndex = computed(() => {
   white-space: nowrap;
 }
 
+/* 日光模式用户名颜色 */
+html:not(.dark) .user-name {
+  color: #000000;
+}
+
 .role-tag {
   border: none;
   background: var(--app-surface-2);
@@ -213,7 +280,7 @@ const activeIndex = computed(() => {
 
 .main-content {
   padding: 32px;
-  background: var(--app-canvas);
+  background: transparent;
   overflow-y: auto;
 }
 

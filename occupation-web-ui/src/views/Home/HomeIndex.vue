@@ -321,7 +321,7 @@ onBeforeUnmount(() => {
   gap: 12px;
   height: calc(100vh - 56px);
   padding: 12px;
-  background: linear-gradient(180deg, #fff8f0 0%, #f3ebe0 55%, #ebe3d6 100%);
+  background: linear-gradient(180deg, #F8FAFC 0%, #EFF6FF 50%, #F0F4FF 100%);
   overflow: hidden;
   transition: grid-template-columns 0.28s ease;
 }
@@ -340,19 +340,11 @@ onBeforeUnmount(() => {
   overflow: hidden;
   padding: 14px 12px;
   border-radius: 14px;
-  background: linear-gradient(
-    168deg,
-    rgba(255, 255, 255, 0.52) 0%,
-    rgba(255, 246, 232, 0.38) 38%,
-    rgba(235, 220, 198, 0.32) 72%,
-    rgba(220, 205, 185, 0.28) 100%
-  );
-  backdrop-filter: blur(22px) saturate(1.35);
-  -webkit-backdrop-filter: blur(22px) saturate(1.35);
-  border: 1px solid rgba(255, 255, 255, 0.62);
-  box-shadow:
-    0 8px 32px rgba(120, 90, 50, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(37, 99, 235, 0.1);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
 }
 
 .search-row :deep(.el-input-group__append) {
@@ -366,16 +358,12 @@ onBeforeUnmount(() => {
 
 .job-panel,
 .role-panel {
-  background: linear-gradient(
-    165deg,
-    rgba(255, 255, 255, 0.28) 0%,
-    rgba(255, 250, 240, 0.18) 100%
-  );
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border-radius: 10px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.38);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.05);
+  border: 1px solid rgba(37, 99, 235, 0.08);
 }
 
 .panel-head {
@@ -412,7 +400,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 8px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(180, 140, 80, 0.45) transparent;
+  scrollbar-color: rgba(37, 99, 235, 0.3) transparent;
 }
 
 .job-scroll::-webkit-scrollbar {
@@ -420,7 +408,7 @@ onBeforeUnmount(() => {
 }
 
 .job-scroll::-webkit-scrollbar-thumb {
-  background: rgba(180, 140, 80, 0.45);
+  background: rgba(37, 99, 235, 0.3);
   border-radius: 3px;
 }
 
@@ -440,10 +428,10 @@ onBeforeUnmount(() => {
 }
 
 .job-card.active {
-  background: linear-gradient(135deg, rgba(255, 140, 60, 0.88), rgba(230, 95, 40, 0.92));
-  border-color: rgba(255, 160, 80, 0.6);
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+  border-color: rgba(37, 99, 235, 0.4);
   color: #fff;
-  box-shadow: 0 4px 14px rgba(220, 100, 40, 0.25);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 .job-card.active .job-count {

@@ -1,0 +1,320 @@
+/**
+ * 职业能力大数据服务平台 - 统一交互效果
+ *
+ * 设计目标：科技蓝 + AI 数据平台风格
+ * - 流畅的过渡动画（0.25s）
+ * - 视觉反馈明确
+ * - 禁止夸张动画和大面积紫色变化
+ */
+
+/* ================= 全局交互基础 ================= */
+
+/* 所有可交互元素统一过渡 */
+button, a, .el-button, .el-menu-item, .el-sub-menu__title,
+.job-card, .tag, .chip, [role="button"],
+.el-input__wrapper, .el-select, .el-date-editor,
+.el-table__body tr {
+  transition: all 0.25s ease;
+}
+
+/* 禁用快速点击的视觉反馈延迟 */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ================= 职位卡片交互 ================= */
+
+.job-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.job-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #2563EB, #60A5FA);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
+}
+
+.job-card:hover {
+  transform: translateY(-6px);
+  border-color: #93C5FD;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.15),
+              0 0 0 1px rgba(147, 197, 253, 0.3);
+}
+
+.job-card:hover::before {
+  transform: scaleX(1);
+}
+
+.job-card:active {
+  transform: translateY(-3px);
+}
+
+/* ================= 导航菜单交互 ================= */
+
+.el-menu--horizontal .el-menu-item,
+.el-menu--horizontal .el-sub-menu__title {
+  position: relative;
+  transition: all 0.25s ease;
+  color: var(--color-text-secondary);
+}
+
+.el-menu--horizontal .el-menu-item:hover,
+.el-menu--horizontal .el-sub-menu__title:hover {
+  background-color: #EFF6FF !important;
+  color: #2563EB !important;
+}
+
+/* 底部蓝色指示线（活跃菜单项） */
+.el-menu--horizontal .el-menu-item.is-active::after,
+.el-menu--horizontal .el-sub-menu.is-active > .el-sub-menu__title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #2563EB, #60A5FA);
+  animation: slideIn 0.25s ease;
+}
+
+@keyframes slideIn {
+  from {
+    width: 0;
+    left: 50%;
+  }
+  to {
+    width: 100%;
+    left: 0;
+  }
+}
+
+/* ================= 标签交互 ================= */
+
+/* 普通标签（如分类标签） */
+.el-tag:not([type="success"]):not([type="danger"]):not([type="warning"]):not([type="info"]):hover,
+.tag:hover {
+  background-color: #DBEAFE !important;
+  color: #1E40AF !important;
+  border-color: #93C5FD !important;
+}
+
+/* 技能标签（绿色系） */
+.el-tag[type="success"]:hover,
+.skill-tag:hover,
+.tag--success:hover {
+  background-color: #10B981 !important;
+  color: #FFFFFF !important;
+  border-color: #059669 !important;
+}
+
+/* 普通标签淡蓝底 */
+.el-tag {
+  background-color: #EFF6FF;
+  border-color: #DBEAFE;
+  color: #1E40AF;
+}
+
+/* ================= 按钮交互 ================= */
+
+.el-button {
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+/* 主按钮 hover */
+.el-button--primary:hover {
+  background-color: #1D4ED8 !important;
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.25);
+}
+
+/* 普通按钮 hover */
+.el-button--default:hover {
+  background-color: #F1F5F9 !important;
+  color: #2563EB !important;
+  border-color: #93C5FD !important;
+}
+
+/* 文本按钮 hover */
+.el-button--text:hover {
+  color: #2563EB !important;
+}
+
+/* 按钮点击效果（缩放0.96） */
+.el-button:active {
+  transform: scale(0.96);
+}
+
+/* ================= 输入框交互 ================= */
+
+.el-input__wrapper:hover {
+  border-color: #93C5FD !important;
+}
+
+.el-input__wrapper.is-focus {
+  border-color: #2563EB !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1) !important;
+}
+
+/* ================= 表格行交互 ================= */
+
+.el-table__body tr:hover {
+  background-color: #F0F4FF !important;
+}
+
+.el-table__body tr {
+  transition: background-color 0.25s ease;
+}
+
+/* ================= 菜单下拉项交互 ================= */
+
+.el-menu--horizontal .el-menu .el-menu-item:hover {
+  background-color: #EFF6FF !important;
+  color: #2563EB !important;
+}
+
+.el-menu--horizontal .el-menu .el-menu-item.is-active {
+  color: #2563EB !important;
+  background-color: #DBEAFE !important;
+}
+
+/* ================= 数据卡片交互 ================= */
+
+.data-card:hover,
+[class*="card"]:not(.job-card):hover {
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.1);
+  border-color: #93C5FD;
+}
+
+/* ================= 链接交互 ================= */
+
+a, .el-link {
+  color: #2563EB;
+  transition: all 0.25s ease;
+}
+
+a:hover, .el-link:hover {
+  color: #1D4ED8;
+  text-decoration: underline;
+}
+
+/* ================= 复选框/单选框交互 ================= */
+
+.el-checkbox__input.is-checked .el-checkbox__inner,
+.el-radio__input.is-checked .el-radio__inner {
+  background-color: #2563EB !important;
+  border-color: #2563EB !important;
+}
+
+.el-checkbox__input:hover .el-checkbox__inner,
+.el-radio__input:hover .el-radio__inner {
+  border-color: #2563EB !important;
+}
+
+/* ================= 下拉菜单交互 ================= */
+
+.el-select .el-input__wrapper:hover {
+  border-color: #93C5FD !important;
+}
+
+.el-popper {
+  transition: all 0.25s ease;
+}
+
+/* ================= 分页交互 ================= */
+
+.el-pagination .btn-next:hover,
+.el-pagination .btn-prev:hover,
+.el-pager li:hover {
+  color: #2563EB !important;
+}
+
+.el-pager li.active {
+  color: #2563EB !important;
+  background-color: #EFF6FF !important;
+}
+
+/* ================= 对话框交互 ================= */
+
+.el-dialog {
+  box-shadow: 0 20px 40px rgba(37, 99, 235, 0.15);
+}
+
+.el-dialog__header {
+  border-bottom: 1px solid #E2E8F0;
+}
+
+/* ================= 标签栏交互 ================= */
+
+.el-tabs__nav-next:hover,
+.el-tabs__nav-prev:hover {
+  color: #2563EB !important;
+}
+
+.el-tabs__item.is-active {
+  color: #2563EB !important;
+}
+
+.el-tabs__active-bar {
+  background-color: #2563EB !important;
+}
+
+/* ================= 深色模式适配 ================= */
+
+html.dark .job-card:hover {
+  border-color: #60A5FA;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.3),
+              0 0 0 1px rgba(96, 165, 250, 0.2);
+}
+
+html.dark .el-menu--horizontal .el-menu-item:hover,
+html.dark .el-menu--horizontal .el-sub-menu__title:hover {
+  background-color: #1E293B !important;
+  color: #60A5FA !important;
+}
+
+html.dark .el-tag:not([type="success"]) {
+  background-color: #1E293B;
+  border-color: #334155;
+  color: #60A5FA;
+}
+
+html.dark .el-tag:not([type="success"]):hover {
+  background-color: #0F172A !important;
+  border-color: #60A5FA !important;
+}
+
+html.dark .el-table__body tr:hover {
+  background-color: #1E293B !important;
+}
+
+html.dark .el-button--default:hover {
+  background-color: #334155 !important;
+  border-color: #60A5FA !important;
+}
+
+/* ================= 禁用状态 ================= */
+
+button:disabled, .el-button:disabled, .el-button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+button:disabled:hover, .el-button:disabled:hover {
+  transform: none;
+}
+
+/* ================= 关闭其他不需要的过渡 ================= */
+
+/* 避免背景色过渡导致的闪烁 */
+.el-menu-item.is-active,
+.el-sub-menu.is-active > .el-sub-menu__title {
+  transition: color 0.25s ease;
+}

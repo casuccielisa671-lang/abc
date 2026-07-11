@@ -6,7 +6,9 @@ import 'element-plus/theme-chalk/dark/css-vars.css'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
-import './styles/theme.css'
+import './styles/tech-colors.css'
+import './styles/theme-tech.css'
+import './styles/interactions.css'
 import { registerChartThemes } from './styles/chartTheme'
 
 import App from './App.vue'

@@ -1,0 +1,185 @@
+/**
+ * 职业能力大数据服务平台 — 科技蓝主题色系统
+ *
+ * 设计定位：专业数据平台 + AI职业推荐 + 现代科技感
+ * 色彩逻辑：科技蓝主色 + AI紫补色 + 数据绿/黄/红语义色
+ */
+
+:root {
+  /* ==================== 主色系统 ==================== */
+
+  /* 品牌蓝（主操作、强调、链接） */
+  --color-primary: #2563EB;           /* 科技蓝 */
+  --color-primary-light: #DBEAFE;    /* 极浅蓝（背景/悬停） */
+  --color-primary-lighter: #EFF6FF;  /* 最浅蓝（容器背景） */
+  --color-primary-dark: #1E40AF;     /* 深蓝（活跃态） */
+
+  /* 辅助紫（AI、推荐、高级功能） */
+  --color-secondary: #6366F1;         /* AI紫 */
+  --color-secondary-light: #E0E7FF;  /* 极浅紫 */
+  --color-secondary-lighter: #F0F4FF; /* 最浅紫 */
+  --color-secondary-dark: #4F46E5;   /* 深紫 */
+
+  /* ==================== 中性色系统 ==================== */
+
+  /* 背景色 */
+  --color-bg-primary: #F8FAFC;        /* 页面背景 - 浅蓝灰 */
+  --color-bg-secondary: #F1F5F9;      /* 次级背景 - 深一级 */
+  --color-bg-tertiary: #E2E8F0;       /* 三级背景 - 卡片悬停 */
+
+  /* 卡片/表面 */
+  --color-surface: #FFFFFF;           /* 卡片白底 */
+  --color-surface-hover: #F8FAFC;    /* 卡片悬停态 */
+
+  /* 分隔线/边框 */
+  --color-border: #E2E8F0;            /* 标准边框 */
+  --color-border-light: #F1F5F9;     /* 浅边框 */
+  --color-divider: #CBD5E1;           /* 分隔线 */
+
+  /* ==================== 文字色系统 ==================== */
+
+  /* 标题/正文 */
+  --color-text-primary: #0F172A;      /* 标题黑 */
+  --color-text-secondary: #475569;    /* 正文灰 */
+  --color-text-tertiary: #64748B;     /* 辅助灰 */
+  --color-text-placeholder: #94A3B8;  /* 占位符灰 */
+  --color-text-inverse: #FFFFFF;      /* 反色文字 */
+
+  /* ==================== 语义色系统 ==================== */
+
+  /* 成功/薪资 - 绿系 */
+  --color-success: #10B981;           /* 深成功绿 */
+  --color-success-light: #D1FAE5;    /* 浅成功绿 */
+  --color-success-lighter: #ECFDF5;  /* 极浅成功绿 */
+
+  /* 警告/推荐 - 琥珀系 */
+  --color-warning: #F59E0B;           /* 琥珀黄 */
+  --color-warning-light: #FCD34D;    /* 浅琥珀 */
+  --color-warning-lighter: #FFFBEB;  /* 极浅琥珀 */
+
+  /* 危险/失败 - 红系 */
+  --color-danger: #EF4444;            /* 鲜红 */
+  --color-danger-light: #FCA5A5;     /* 浅红 */
+  --color-danger-lighter: #FEE2E2;   /* 极浅红 */
+
+  /* 信息/中性 - 蓝灰系 */
+  --color-info: #3B82F6;              /* 信息蓝 */
+  --color-info-light: #BFDBFE;       /* 浅信息蓝 */
+  --color-info-lighter: #EFF6FF;     /* 极浅信息蓝 */
+
+  /* ==================== 功能色系统 ==================== */
+
+  /* 薪资数字 - 使用成功绿 */
+  --color-salary: #10B981;
+  --color-salary-bg: #ECFDF5;
+
+  /* 匹配分 - 使用琥珀黄 */
+  --color-score: #F59E0B;
+  --color-score-bg: #FFFBEB;
+
+  /* 标签/芯片 - 使用各种浅色 */
+  --color-tag-blue: #DBEAFE;
+  --color-tag-green: #DCFCE7;
+  --color-tag-amber: #FEF3C7;
+  --color-tag-purple: #E9D5FF;
+  --color-tag-rose: #FFE4E6;
+
+  /* ==================== 阴影系统 ==================== */
+
+  /* 卡片阴影（轻） */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* 悬停/聚焦效果 */
+  --shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  --shadow-focus-secondary: 0 0 0 3px rgba(99, 102, 241, 0.1);
+
+  /* ==================== 圆角系统 ==================== */
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
+  --radius-full: 9999px;
+
+  /* ==================== 过渡/动画 ==================== */
+
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.3s ease;
+  --transition-slow: 0.6s ease;
+}
+
+/* ==================== 深色模式 ==================== */
+
+html.dark {
+  /* 主色系统 - 深色下浅化 */
+  --color-primary: #60A5FA;           /* 浅蓝 */
+  --color-primary-light: #1E3A8A;    /* 深蓝（反转作深背景） */
+  --color-primary-lighter: #0F172A;  /* 最深蓝 */
+  --color-primary-dark: #93C5FD;     /* 更浅蓝 */
+
+  --color-secondary: #818CF8;         /* 浅紫 */
+  --color-secondary-light: #312E81;  /* 深紫 */
+  --color-secondary-lighter: #1E1B4B; /* 最深紫 */
+  --color-secondary-dark: #A5B4FC;   /* 更浅紫 */
+
+  /* 背景色 - 深色反转 */
+  --color-bg-primary: #0F172A;        /* 深灰黑 */
+  --color-bg-secondary: #1E293B;      /* 深灰 */
+  --color-bg-tertiary: #334155;       /* 中灰 */
+
+  /* 表面 - 深色反转 */
+  --color-surface: #1E293B;           /* 深卡片 */
+  --color-surface-hover: #334155;    /* 深卡片悬停 */
+
+  /* 边框 - 深色反转 */
+  --color-border: #475569;            /* 深边框 */
+  --color-border-light: #334155;     /* 浅深边框 */
+  --color-divider: #1E293B;           /* 深分隔线 */
+
+  /* 文字色 - 反转 */
+  --color-text-primary: #F1F5F9;      /* 浅文字 */
+  --color-text-secondary: #CBD5E1;    /* 浅次文字 */
+  --color-text-tertiary: #94A3B8;     /* 浅辅助 */
+  --color-text-placeholder: #64748B;  /* 浅占位符 */
+
+  /* 语义色 - 保持可见性 */
+  --color-success: #34D399;
+  --color-success-light: #064E3B;
+  --color-success-lighter: #0F2F1F;
+
+  --color-warning: #FBBF24;
+  --color-warning-light: #78350F;
+  --color-warning-lighter: #451A03;
+
+  --color-danger: #F87171;
+  --color-danger-light: #7F1D1D;
+  --color-danger-lighter: #450A0A;
+
+  --color-info: #60A5FA;
+  --color-info-light: #1E3A8A;
+  --color-info-lighter: #0F172A;
+
+  /* 功能色 */
+  --color-salary: #34D399;
+  --color-salary-bg: #0F2F1F;
+
+  --color-score: #FBBF24;
+  --color-score-bg: #451A03;
+
+  /* 标签颜色 - 深色优化 */
+  --color-tag-blue: #1E3A8A;
+  --color-tag-green: #064E3B;
+  --color-tag-amber: #78350F;
+  --color-tag-purple: #3F0F64;
+  --color-tag-rose: #831843;
+
+  /* 阴影 - 深色优化 */
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  --shadow-focus: 0 0 0 3px rgba(96, 165, 250, 0.1);
+  --shadow-focus-secondary: 0 0 0 3px rgba(129, 140, 248, 0.1);
+}

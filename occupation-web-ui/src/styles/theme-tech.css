@@ -1,0 +1,551 @@
+/**
+ * 职业能力大数据服务平台 - 科技蓝统一主题
+ *
+ * 此文件整合了新的科技蓝色系统(tech-colors.css)与 Element Plus 组件库
+ * 替代原有的 "奶油+墨黑" 风格，统一为"科技蓝+数据绿"专业平台风格
+ */
+
+/* ================= 1. 导入颜色系统 ================= */
+@import url('./tech-colors.css');
+
+/* ================= 2. 基础元素 ================= */
+
+html {
+  transition: background-color var(--transition-slow) ease,
+              color var(--transition-slow) ease;
+}
+
+body {
+  background: var(--color-bg-primary);
+  color: var(--color-text-secondary);
+  font-family: Inter, "Inter var", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.006em;
+}
+
+/* ================= 3. Element Plus 令牌覆写 ================= */
+
+:root {
+  /* 主色系 - 科技蓝 */
+  --el-color-primary: var(--color-primary);                     /* #2563EB */
+  --el-color-primary-light-3: #BFDBFE;                          /* 浅蓝3 */
+  --el-color-primary-light-5: #93C5FD;                          /* 浅蓝5 */
+  --el-color-primary-light-7: #60A5FA;                          /* 浅蓝7 */
+  --el-color-primary-light-8: #3B82F6;                          /* 浅蓝8 */
+  --el-color-primary-light-9: var(--color-primary-light);       /* 极浅 */
+  --el-color-primary-dark-2: var(--color-primary-dark);         /* 深蓝 */
+
+  /* 语义色 */
+  --el-color-success: var(--color-success);                     /* 成功绿 */
+  --el-color-warning: var(--color-warning);                     /* 琥珀黄 */
+  --el-color-danger: var(--color-danger);                       /* 危险红 */
+  --el-color-error: var(--color-danger);
+  --el-color-info: var(--color-text-tertiary);                  /* 信息灰 */
+
+  /* 背景 */
+  --el-bg-color-page: var(--color-bg-primary);                  /* #F8FAFC */
+  --el-bg-color: var(--color-surface);                          /* #FFFFFF */
+  --el-bg-color-overlay: var(--color-surface);                  /* 浮层底色 */
+  --el-fill-color-blank: var(--color-surface);
+
+  /* 文字 */
+  --el-text-color-primary: var(--color-text-primary);           /* #0F172A */
+  --el-text-color-regular: var(--color-text-secondary);         /* #475569 */
+  --el-text-color-secondary: var(--color-text-tertiary);        /* #64748B */
+  --el-text-color-placeholder: var(--color-text-placeholder);   /* #94A3B8 */
+
+  /* 边框与分隔 */
+  --el-border-color: var(--color-border);                       /* #E2E8F0 */
+  --el-border-color-light: var(--color-border-light);           /* #F1F5F9 */
+  --el-border-color-lighter: var(--color-bg-tertiary);          /* #E2E8F0 */
+  --el-border-color-extra-light: var(--color-bg-secondary);     /* #F1F5F9 */
+  --el-fill-color: var(--color-bg-secondary);                   /* #F1F5F9 */
+  --el-fill-color-light: var(--color-bg-secondary);
+  --el-fill-color-lighter: var(--color-bg-primary);             /* #F8FAFC */
+
+  /* 圆角 */
+  --el-border-radius-base: var(--radius-lg);                    /* 8px */
+  --el-border-radius-small: var(--radius-md);                   /* 6px */
+  --el-border-radius-round: var(--radius-full);                 /* 9999px */
+
+  /* 阴影 */
+  --el-box-shadow: var(--shadow-md);
+  --el-box-shadow-light: var(--shadow-sm);
+}
+
+/* 深色模式覆写 */
+html.dark {
+  --el-color-primary: var(--color-primary);                     /* 保持蓝色 */
+  --el-color-primary-light-3: #475569;
+  --el-color-primary-light-5: #334155;
+  --el-color-primary-light-7: #1E293B;
+  --el-color-primary-light-8: #0F172A;
+  --el-color-primary-light-9: #0F172A;
+  --el-color-primary-dark-2: #FFFFFF;
+
+  --el-color-success: var(--color-success);
+  --el-color-warning: var(--color-warning);
+  --el-color-danger: var(--color-danger);
+  --el-color-error: var(--color-danger);
+  --el-color-info: var(--color-text-tertiary);
+
+  --el-bg-color-page: var(--color-bg-primary);                  /* #0F172A */
+  --el-bg-color: var(--color-surface);                          /* #1E293B */
+  --el-bg-color-overlay: var(--color-surface);
+  --el-fill-color-blank: var(--color-surface);
+
+  --el-text-color-primary: var(--color-text-primary);           /* #F1F5F9 */
+  --el-text-color-regular: var(--color-text-secondary);         /* #CBD5E1 */
+  --el-text-color-secondary: var(--color-text-tertiary);        /* #94A3B8 */
+  --el-text-color-placeholder: var(--color-text-placeholder);   /* #64748B */
+
+  --el-border-color: var(--color-border);                       /* #475569 */
+  --el-border-color-light: var(--color-border-light);           /* #334155 */
+  --el-border-color-lighter: #1E293B;
+  --el-border-color-extra-light: #0F172A;
+  --el-fill-color: var(--color-bg-secondary);                   /* #1E293B */
+  --el-fill-color-light: var(--color-bg-secondary);
+  --el-fill-color-lighter: var(--color-bg-primary);             /* #0F172A */
+}
+
+/* ================= 4. Element Plus 组件重塑 ================= */
+
+/* 按钮：主色蓝 + 副色灰 */
+.el-button {
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+  --el-button-bg-color: var(--color-bg-secondary);
+  --el-button-border-color: var(--color-border);
+  --el-button-text-color: var(--color-text-secondary);
+  --el-button-hover-bg-color: var(--color-bg-tertiary);
+  --el-button-hover-border-color: var(--color-border);
+  --el-button-hover-text-color: var(--color-text-primary);
+}
+
+.el-button--primary {
+  --el-button-bg-color: var(--color-primary);
+  --el-button-border-color: var(--color-primary);
+  --el-button-text-color: var(--color-text-inverse);
+  --el-button-hover-bg-color: var(--color-primary-dark);
+  --el-button-hover-border-color: var(--color-primary-dark);
+  --el-button-active-bg-color: var(--color-primary-dark);
+  --el-button-active-border-color: var(--color-primary-dark);
+}
+
+.el-button.is-text,
+.el-button.is-link {
+  border-radius: var(--radius-md);
+  --el-button-bg-color: transparent;
+  --el-button-border-color: transparent;
+}
+
+/* 输入框：白底 + 蓝边框 */
+.el-input__wrapper,
+.el-textarea__inner,
+.el-select__wrapper {
+  background-color: var(--color-surface);
+  box-shadow: inset 0 0 0 1px var(--color-border) !important;
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+}
+
+.el-input__wrapper.is-focus,
+.el-select__wrapper.is-focused,
+.el-textarea__inner:focus {
+  background-color: var(--color-surface);
+  box-shadow: inset 0 0 0 2px var(--color-primary) !important;
+}
+
+/* 卡片：简洁白底 + 蓝灰边框 */
+.el-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  --el-card-padding: 24px;
+}
+
+.el-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.el-card__header {
+  border-bottom: 1px solid var(--color-border);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  padding: 16px 24px;
+  background: transparent;
+}
+
+/* 表格：科技感 */
+.el-table {
+  --el-table-border-color: var(--color-border);
+  --el-table-header-bg-color: var(--color-bg-secondary);
+  --el-table-row-hover-bg-color: var(--color-bg-secondary);
+  background: transparent;
+}
+
+.el-table th.el-table__cell {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: var(--color-bg-secondary);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.el-table td.el-table__cell {
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+/* 标签：清晰的语义色 */
+.el-tag {
+  border: none;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+}
+
+.el-tag--success {
+  background: var(--color-success-lighter);
+  color: var(--color-success);
+}
+
+.el-tag--warning {
+  background: var(--color-warning-lighter);
+  color: var(--color-warning);
+}
+
+.el-tag--danger {
+  background: var(--color-danger-lighter);
+  color: var(--color-danger);
+}
+
+.el-tag--info {
+  background: var(--color-info-lighter);
+  color: var(--color-info);
+}
+
+/* 复选框/单选/开关：科技蓝 */
+.el-checkbox {
+  --el-checkbox-checked-bg-color: var(--color-primary);
+  --el-checkbox-checked-input-border-color: var(--color-primary);
+  --el-checkbox-checked-icon-color: var(--color-text-inverse);
+  --el-checkbox-checked-text-color: var(--color-text-primary);
+}
+
+.el-radio {
+  --el-radio-input-border-color-hover: var(--color-primary);
+}
+
+html.dark .el-radio__input.is-checked .el-radio__inner::after {
+  background: var(--color-text-inverse);
+}
+
+html.dark .el-switch.is-checked .el-switch__core {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* 分页：右对齐 */
+.el-pagination {
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+/* ================= 5. 通用页面样式 ================= */
+
+/* 页头 */
+.page-head {
+  margin-bottom: 24px;
+}
+
+.page-head.with-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.page-title {
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.page-sub {
+  font-size: 14px;
+  color: var(--color-text-tertiary);
+  margin: 6px 0 0;
+}
+
+.page-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 统计卡 */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  padding: 20px 24px;
+  transition: all var(--transition-fast);
+}
+
+.stat-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary-light);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+  margin: 8px 0 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-value.accent {
+  color: var(--color-primary);
+}
+
+.stat-hint {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  margin-top: 4px;
+}
+
+/* 芯片标签 */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.chip.learn {
+  background: var(--color-warning-lighter);
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+
+.chip.success {
+  background: var(--color-success-lighter);
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+/* 职位卡片 */
+.job-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.job-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.job-card:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+}
+
+.job-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.job-title {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.job-company {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+  margin: 4px 0 0;
+}
+
+.job-score {
+  text-align: right;
+  flex: none;
+}
+
+.job-score .num {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-score);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.job-score .cap {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+}
+
+.job-salary {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-salary);
+  font-variant-numeric: tabular-nums;
+}
+
+.job-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.job-reason {
+  font-size: 13px;
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+}
+
+.job-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border-light);
+}
+
+.job-foot .date {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+/* 薪资高亮 */
+.salary-text {
+  color: var(--color-salary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 匹配分高亮 */
+.score-text {
+  color: var(--color-score);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 链接 */
+.link-ember {
+  color: var(--color-primary);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.link-ember:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+/* 图表容器 */
+.chart-box {
+  width: 100%;
+  height: 320px;
+}
+
+/* ================= 6. 响应式适配 ================= */
+
+@media (max-width: 768px) {
+  .page-title {
+    font-size: 24px;
+  }
+
+  .stat-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  .job-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ================= 7. 深色模式专用调整 ================= */
+
+html.dark {
+  /* 深色模式下的悬停效果更细致 */
+  .el-card:hover {
+    background: var(--color-surface-hover);
+  }
+
+  .job-card:hover {
+    border-color: var(--color-primary);
+    background: var(--color-surface-hover);
+  }
+
+  /* 深色模式按钮文字保持对比 */
+  .el-button {
+    --el-button-text-color: var(--color-text-secondary);
+    --el-button-hover-text-color: var(--color-text-primary);
+  }
+}
+
+/* ================= 8. 辅助类 ================= */
+
+.text-primary { color: var(--color-text-primary); }
+.text-secondary { color: var(--color-text-secondary); }
+.text-tertiary { color: var(--color-text-tertiary); }
+.text-success { color: var(--color-success); }
+.text-warning { color: var(--color-warning); }
+.text-danger { color: var(--color-danger); }
+.text-primary-link { color: var(--color-primary); }
+
+.bg-primary { background: var(--color-bg-primary); }
+.bg-secondary { background: var(--color-bg-secondary); }
+.bg-tertiary { background: var(--color-bg-tertiary); }
+
+.border-primary { border-color: var(--color-border); }
+.border-light { border-color: var(--color-border-light); }
