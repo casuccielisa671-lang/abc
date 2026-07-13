@@ -17,6 +17,12 @@
           <el-option label="硕士" value="硕士" />
           <el-option label="博士" value="博士" />
         </el-select>
+        <el-select v-model="searchMajor" placeholder="专业筛选" clearable filterable style="width:200px" @change="search">
+          <el-option v-for="m in majors" :key="m" :label="m" :value="m" />
+        </el-select>
+        <el-select v-model="searchYear" placeholder="年级筛选" clearable style="width:130px" @change="search">
+          <el-option v-for="y in years" :key="y" :label="y + ' 级'" :value="y" />
+        </el-select>
         <el-button type="primary" @click="search">查询</el-button>
       </div>
 
@@ -29,6 +35,12 @@
           <template #default="{ row }">{{ row.realName || '—' }}</template>
         </el-table-column>
         <el-table-column prop="major" label="专业" min-width="140" />
+        <el-table-column label="班级" min-width="180">
+          <template #default="{ row }">
+            <span v-if="row.classCode" class="chip">{{ row.classCode }}</span>
+            <span v-else>—</span>
+          </template>
+        </el-table-column>
         <el-table-column label="学历" width="90">
           <template #default="{ row }"><span class="chip">{{ row.educationLevel || '—' }}</span></template>
         </el-table-column>
@@ -118,7 +130,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getTeacherStudents, getStudentStats, getStudentBehaviors } from '@/api/student'
+import { getTeacherStudents, getStudentStats, getStudentBehaviors, getTeacherFilters } from '@/api/student'
 import { toList, toTotal } from '@/utils/list'
 import { parseSkills } from '@/utils/skills'
 import { salaryRange, formatTime } from '@/utils/format'
@@ -132,6 +144,10 @@ const size = ref(10)
 const total = ref(0)
 const searchKeyword = ref('')
 const searchEducation = ref('')
+const searchMajor = ref('')
+const searchYear = ref('')
+const majors = ref([])
+const years = ref([])
 
 const selectedUser = ref(null)
 const userStats = ref(null)
@@ -144,6 +160,8 @@ async function loadStudents() {
     const params = { page: page.value, size: size.value }
     if (searchKeyword.value) params.keyword = searchKeyword.value
     if (searchEducation.value) params.education = searchEducation.value
+    if (searchMajor.value) params.major = searchMajor.value
+    if (searchYear.value) params.enrollYear = searchYear.value
     const data = await getTeacherStudents(params)
     students.value = toList(data)
     total.value = toTotal(data, students.value)
@@ -183,8 +201,18 @@ function actionLabel(action) {
   return { VIEW: '浏览', FAVORITE: '收藏', APPLY: '投递', IGNORE: '忽略', CONTACT: '自主联系' }[action] || action
 }
 
+async function loadFilters() {
+  try {
+    const data = await getTeacherFilters()
+    majors.value = data?.majors || []
+    years.value = data?.years || []
+  } catch {
+    // 筛选项加载失败不阻塞主列表
+  }
+}
+
 onMounted(async () => {
-  await loadStudents()
+  await Promise.all([loadStudents(), loadFilters()])
   // 从班级概览「查看详情」跳转过来时，自动展开对应学生
   const userId = Number(route.query.userId)
   if (userId) {

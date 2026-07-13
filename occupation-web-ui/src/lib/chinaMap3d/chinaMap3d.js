@@ -69,12 +69,17 @@ export async function mountChinaMap3d(container, options = {}) {
 
   const camera = new PerspectiveCamera(50, width / height, 0.1, 5000)
 
-  const renderer = new WebGLRenderer({ antialias: true, alpha: true })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+  const renderer = new WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' })
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
   renderer.setSize(width, height)
-  renderer.shadowMap.enabled = true
+  // 阴影未实际使用，关闭省 GPU。黑屏多因反复开关地图累积/丢失 WebGL 上下文，
+  // 关键缓解在 dispose() 里的 renderer.forceContextLoss()（立即释放上下文，防止累积超过浏览器上限）。
+  renderer.shadowMap.enabled = false
   container.appendChild(renderer.domElement)
   renderer.domElement.style.touchAction = 'none'
+  // 上下文丢失时阻止默认行为，允许浏览器尝试恢复，避免直接永久黑屏
+  const onContextLost = (e) => e.preventDefault()
+  renderer.domElement.addEventListener('webglcontextlost', onContextLost, false)
 
   const { controls, blockScroll } = setupOrbitControls(camera, renderer.domElement, container)
 
@@ -168,13 +173,10 @@ export async function mountChinaMap3d(container, options = {}) {
       window.removeEventListener('resize', onResize)
       renderer.domElement.removeEventListener('wheel', blockScroll)
       container.removeEventListener('wheel', blockScroll)
+      renderer.domElement.removeEventListener('webglcontextlost', onContextLost)
       hoverCtrl.dispose()
       controls.dispose()
       heatLayer?.dispose()
-      renderer.dispose()
-      if (renderer.domElement.parentNode === container) {
-        container.removeChild(renderer.domElement)
-      }
       scene.traverse((obj) => {
         if (obj.geometry) obj.geometry.dispose()
         if (obj.material) {
@@ -182,6 +184,12 @@ export async function mountChinaMap3d(container, options = {}) {
           else obj.material.dispose()
         }
       })
+      renderer.dispose()
+      // 立即释放 WebGL 上下文，避免反复打开地图累积上下文导致后续黑屏
+      renderer.forceContextLoss()
+      if (renderer.domElement.parentNode === container) {
+        container.removeChild(renderer.domElement)
+      }
     }
   }
 }

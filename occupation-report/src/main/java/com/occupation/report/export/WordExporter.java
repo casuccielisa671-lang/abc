@@ -2,6 +2,7 @@ package com.occupation.report.export;
 
 import com.occupation.analysis.vo.DashboardVO;
 import com.occupation.common.exception.BizException;
+import com.occupation.recommend.vo.EmploymentReportData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -72,6 +73,61 @@ public class WordExporter {
             log.error("Word 导出失败", e);
             throw new BizException("Word 导出失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 结构化导出学生就业数据报告（EMPLOYMENT 类）。数据取自 {@link EmploymentReportData}，
+     * 与 PDF/HTML 走同一份聚合结果，口径一致。
+     */
+    public byte[] exportEmployment(String title, String aiSummary, EmploymentReportData data) {
+        try (XWPFDocument doc = new XWPFDocument();
+             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+
+            writeTitle(doc, title);
+            writeMeta(doc, "范围：" + data.getScopeLabel()
+                    + "    生成时间：" + LocalDateTime.now().format(TIME_FMT));
+
+            writeHeading(doc, "一、智能摘要");
+            writeBody(doc, aiSummary == null || aiSummary.isEmpty() ? "（无摘要）" : aiSummary);
+
+            writeHeading(doc, "二、总览");
+            writeBody(doc, String.format(
+                    "学生 %d 人，已填画像 %d 人；累计投递 %d 次（%d 人投递），已录用 %d，OFFER 率 %.1f%%。",
+                    data.getStudentCount(), data.getProfiledCount(), data.getApplicationCount(),
+                    data.getAppliedStudentCount(), data.getOfferCount(), data.getOfferRate()));
+
+            writeHeading(doc, "三、投递状态分布");
+            writeDimItemTable(doc, "状态", "数量", data.getFunnel());
+
+            writeHeading(doc, "四、意向城市");
+            writeDimItemTable(doc, "城市", "人数", data.getIntentCity());
+
+            writeHeading(doc, "五、意向行业");
+            writeDimItemTable(doc, "行业", "人数", data.getIntentIndustry());
+
+            writeHeading(doc, "六、期望薪资分布");
+            writeDimItemTable(doc, "薪资区间", "人数", data.getSalaryBuckets());
+
+            writeHeading(doc, "七、学生掌握技能 Top");
+            writeDimItemTable(doc, "技能", "掌握人数", data.getTopSkills());
+
+            doc.write(baos);
+            return baos.toByteArray();
+        } catch (Exception e) {
+            log.error("就业报告 Word 导出失败", e);
+            throw new BizException("Word 导出失败: " + e.getMessage());
+        }
+    }
+
+    private void writeDimItemTable(XWPFDocument doc, String nameHeader, String valueHeader,
+                                   List<EmploymentReportData.DimItem> items) {
+        if (items == null || items.isEmpty()) {
+            writeBody(doc, "（暂无数据）");
+            return;
+        }
+        writeTable(doc, new String[]{nameHeader, valueHeader}, items,
+                EmploymentReportData.DimItem::getName,
+                i -> String.valueOf(i.getValue()));
     }
 
     private void writeTitle(XWPFDocument doc, String title) {

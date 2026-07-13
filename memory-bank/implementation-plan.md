@@ -5,6 +5,8 @@
 > **基于**: design-document.md v0.2 + tech-stack.md v1.0  
 > **原则**: 每个步骤小而具体，必须包含可执行的验证方法
 
+> **⚠️ 2026-07-12 更正**：下文提到的 `TeacherHome.vue` / `HrHome.vue` 已合并进统一的 `views/Home/HomeIndex.vue` 并删除；前端主题已由旧 theme.css（奶油/墨黑）改为科技蓝（tech-colors.css + theme-tech.css）。详见 `progress.md` 顶部更正注与 CLAUDE.md。
+
 ---
 
 ## 阶段总览

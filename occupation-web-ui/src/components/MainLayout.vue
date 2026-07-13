@@ -65,8 +65,8 @@ import { useUserStore } from '@/store/user'
 import { useAppStore } from '@/store/app'
 import {
   DataAnalysis, Setting, Document, User, House,
-  Reading, Star, Files, TrendCharts, Management,
-  Tickets, ChatDotRound, Promotion
+  Reading, Star, TrendCharts, Management,
+  Tickets, ChatDotRound, Promotion, Notebook
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
@@ -101,16 +101,10 @@ const flatMenuItems = computed(() => {
       { index: '/admin/dashboard', title: '数据看板', icon: DataAnalysis },
       { index: '/admin/employment', title: '就业分析', icon: TrendCharts },
       { index: '/admin/crawler', title: '采集管理', icon: Setting },
-      {
-        index: 'admin-report',
-        title: '报告中心',
-        icon: Document,
-        children: [
-          { index: '/admin/report-template', title: '模板管理', icon: Files },
-          { index: '/admin/report-list', title: '报告列表', icon: Document }
-        ]
-      },
-      { index: '/admin/user', title: '用户管理', icon: User }
+      { index: '/admin/report-list', title: '报告中心', icon: Document },
+      { index: '/admin/user', title: '用户管理', icon: User },
+      { index: '/admin/class', title: '班级管理', icon: Reading },
+      { index: '/admin/news-manage', title: '资讯管理', icon: Notebook }
     ],
     STUDENT: [
       { index: '/student', title: '首页', icon: House },
@@ -120,18 +114,21 @@ const flatMenuItems = computed(() => {
       { index: '/student/applications', title: '我的投递', icon: Promotion },
       { index: '/student/favorites', title: '我的收藏', icon: Star },
       { index: '/student/reports', title: '我的报告', icon: Document },
-      { index: '/student/advisor', title: '职业顾问', icon: ChatDotRound }
+      { index: '/student/advisor', title: '职业顾问', icon: ChatDotRound },
+      { index: '/student/news', title: '资讯', icon: Notebook }
     ],
     TEACHER: [
       { index: '/teacher', title: '首页', icon: House },
       { index: '/teacher/students', title: '学生管理', icon: Reading },
-      { index: '/teacher/suggestions', title: '教学建议', icon: TrendCharts }
+      { index: '/teacher/suggestions', title: '教学建议', icon: TrendCharts },
+      { index: '/teacher/news', title: '资讯', icon: Notebook }
     ],
     HR: [
       { index: '/hr', title: '首页', icon: House },
       { index: '/hr/jobs', title: '职位管理', icon: Management },
       { index: '/hr/applications', title: '收到的投递', icon: Tickets },
-      { index: '/hr/talents', title: '人才浏览', icon: User }
+      { index: '/hr/talents', title: '人才浏览', icon: User },
+      { index: '/hr/news', title: '资讯', icon: Notebook }
     ]
   }
   return menus[userStore.role] || []

@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -63,8 +65,21 @@ public class StudentProfileServiceImpl implements StudentProfileService {
     @Override
     public Page<SysStudentProfile> pageProfiles(String keyword, String educationLevel,
                                                 int pageNum, int pageSize) {
+        return pageProfiles(keyword, educationLevel, null, pageNum, pageSize);
+    }
+
+    @Override
+    public Page<SysStudentProfile> pageProfiles(String keyword, String educationLevel,
+                                                Collection<Long> restrictUserIds, int pageNum, int pageSize) {
+        // 有限定集合但为空 → 直接返回空页，避免拼出 IN () 或退化成全查
+        if (restrictUserIds != null && restrictUserIds.isEmpty()) {
+            return new Page<>(pageNum, pageSize);
+        }
         LambdaQueryWrapper<SysStudentProfile> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(StrUtil.isNotBlank(educationLevel), SysStudentProfile::getEducationLevel, educationLevel);
+        if (restrictUserIds != null) {
+            wrapper.in(SysStudentProfile::getUserId, restrictUserIds);
+        }
         if (StrUtil.isNotBlank(keyword)) {
             wrapper.and(w -> w.like(SysStudentProfile::getMajor, keyword)
                               .or()
@@ -72,5 +87,17 @@ public class StudentProfileServiceImpl implements StudentProfileService {
         }
         wrapper.orderByAsc(SysStudentProfile::getUserId);
         return profileMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+    }
+
+    @Override
+    public List<SysStudentProfile> listByUserIds(Collection<Long> userIds) {
+        if (userIds == null) {
+            return listAll();
+        }
+        if (userIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return profileMapper.selectList(new LambdaQueryWrapper<SysStudentProfile>()
+                .in(SysStudentProfile::getUserId, userIds));
     }
 }

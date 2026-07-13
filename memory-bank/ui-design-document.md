@@ -5,6 +5,8 @@
 > **文档类型**: 前端 UI 设计文档（含全部页面布局、组件结构、交互描述）
 > **技术栈**: Vue 3 + Element Plus + ECharts 5 + Three.js (r3f) + Pinia + Axios + Vite
 
+> **⚠️ 2026-07-12 更正**：下文的 `AppLayout` 已被 `components/MainLayout.vue` 取代（路由实际使用后者），`AppLayout.vue` 已删除；角色首页统一为 `views/Home/HomeIndex.vue`（原 TeacherHome/HrHome 已删）；主题已改为科技蓝（tech-colors.css + theme-tech.css，旧 theme.css 已删）。详见 `progress.md` 顶部更正注与 CLAUDE.md。
+
 ---
 
 ## 目录

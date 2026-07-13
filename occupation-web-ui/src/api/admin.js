@@ -92,26 +92,6 @@ export function downloadImportTemplate() {
   return request.get('/admin/users/import-template', { responseType: 'blob' })
 }
 
-// ========== 报告模板 ==========
-export function getReportTemplates(params) {
-  return request.get('/admin/report/template', { params })
-}
-
-export function getReportTemplate(id) {
-  return request.get(`/admin/report/template/${id}`)
-}
-
-export function createReportTemplate(data) {
-  return request.post('/admin/report/template', data)
-}
-
-export function updateReportTemplate(id, data) {
-  return request.put(`/admin/report/template/${id}`, data)
-}
-
-export function deleteReportTemplate(id) {
-  return request.delete(`/admin/report/template/${id}`)
-}
 
 // ========== 报告记录 ==========
 export function getReportRecords(params) {
@@ -133,4 +113,77 @@ export function downloadReport(id) {
 
 export function generateReport(data) {
   return request.post('/report/generate', data)
+}
+
+/**
+ * 把就业报告发送给某范围学生。
+ * @param {number} id 报告 id
+ * @param {{targetType:'ALL'|'MAJOR'|'GRADE'|'CLASS', targetValue?:string}} data
+ * 返回本次新增下发人数（市场报告已全体可见，后端会拒绝下发）
+ */
+export function deliverReport(id, data) {
+  return request.post(`/report/${id}/deliver`, data)
+}
+
+/** 该报告已下发的学生人数 */
+export function getReportDeliveryCount(id) {
+  return request.get(`/report/${id}/delivery-count`)
+}
+
+// ========== 班级管理（学院内组织结构） ==========
+export function getClasses() {
+  return request.get('/admin/classes')
+}
+
+export function saveClass(data) {
+  return request.post('/admin/classes', data)
+}
+
+export function deleteClass(id) {
+  return request.delete(`/admin/classes/${id}`)
+}
+
+/** 把一批学生分配到班级；userIds 为学生 userId 数组 */
+export function assignStudentsToClass(classId, userIds) {
+  return request.post(`/admin/classes/${classId}/students`, userIds)
+}
+
+/** 班级筛选项：当前租户的专业 / 入学年级 */
+export function getClassFilters() {
+  return request.get('/admin/classes/filters')
+}
+
+// ========== 资讯管理 ==========
+export function getAdminNews(params) {
+  return request.get('/admin/news', { params })
+}
+export function saveNews(data) {
+  return request.post('/admin/news', data)
+}
+export function deleteNews(id) {
+  return request.delete(`/admin/news/${id}`)
+}
+export function updateNewsStatus(id, status) {
+  return request.put(`/admin/news/${id}/status`, null, { params: { status } })
+}
+/** 从站内分析数据重新生成"数据播报" */
+export function generateDataCast() {
+  return request.post('/admin/news/generate-datacast')
+}
+/** 从 Google News RSS 拉取外部资讯（服务器需能访问 Google，否则返回 0） */
+export function pullRssNews(query, maxItems = 8) {
+  return request.post('/admin/news/pull-rss', null, { params: { query, maxItems }, timeout: 20000 })
+}
+
+// ========== 教师可见范围配置 ==========
+export function getTeacherScopes(teacherId) {
+  return request.get('/admin/teacher-scopes', { params: { teacherId } })
+}
+
+export function saveTeacherScope(data) {
+  return request.post('/admin/teacher-scopes', data)
+}
+
+export function deleteTeacherScope(id) {
+  return request.delete(`/admin/teacher-scopes/${id}`)
 }

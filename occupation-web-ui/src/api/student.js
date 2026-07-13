@@ -99,17 +99,46 @@ export function contactJob(jobId) {
   return request.post(`/student/job/${jobId}/contact`)
 }
 
-// ========== 推送消息 ==========
-export function getPushList(params) {
-  return request.get('/push/list', { params })
+// ========== 我的 AI 分析报告 ==========
+/** 生成/多轮改：返回正文，不落库（AI 调用，超时放宽到 90s） */
+export function previewAiReport(data) {
+  return request.post('/student/ai-report/preview', data, { timeout: 90000 })
+}
+/** 定稿保存：落库为个人报告 */
+export function saveAiReport(data) {
+  return request.post('/student/ai-report/save', data)
+}
+/** 我的报告列表（仅本人） */
+export function getMyReports(params) {
+  return request.get('/student/reports', { params })
+}
+/** 下载我的报告（复用带鉴权的下载接口，含归属校验） */
+export function downloadMyReport(id) {
+  return request.get(`/report/download/${id}`, { responseType: 'blob' })
 }
 
-export function markRead(id) {
-  return request.put(`/push/${id}/read`)
+// ========== 收到的报告（管理员下发的市场/就业报告） ==========
+/** 收到的报告列表：广播的市场报告 + 定向下发给我的就业报告 */
+export function getReceivedReports(params) {
+  return request.get('/student/received-reports', { params })
+}
+/** 标记某收到的报告已读 */
+export function markReportRead(id) {
+  return request.post(`/student/received-reports/${id}/read`)
 }
 
-export function getUnreadCount() {
-  return request.get('/push/unread/count')
+// ========== 资讯（首页资讯板块 / 资讯页） ==========
+/** 首页资讯格子：最新若干条（置顶优先） */
+export function getLatestNews(limit = 6) {
+  return request.get('/news/latest', { params: { limit } })
+}
+/** 资讯分页列表（技术方向 category / 类型 type 可选筛选） */
+export function getNewsPage(params) {
+  return request.get('/news', { params })
+}
+/** 资讯详情（含正文，浏览数 +1） */
+export function getNewsDetail(id) {
+  return request.get(`/news/${id}`)
 }
 
 // ========== 教师端 ==========
@@ -117,9 +146,24 @@ export function getTeacherStudents(params) {
   return request.get('/teacher/students', { params })
 }
 
-/** 班级概览统计（学生总数 / 已填画像 / 总浏览 / 总投递） */
+/** 班级概览统计（学生总数 / 已填画像 / 总浏览 / 总投递，按教师可见范围计） */
 export function getTeacherOverview() {
   return request.get('/teacher/overview')
+}
+
+/** 地图图层：学生求职意向城市分布（按教师可见范围） */
+export function getIntentCities() {
+  return request.get('/teacher/map/intent-cities')
+}
+
+/** 地图图层：投递去向城市分布（按教师可见范围） */
+export function getApplicationCities() {
+  return request.get('/teacher/map/application-cities')
+}
+
+/** 教师可见范围内的专业 / 入学年级筛选项 */
+export function getTeacherFilters() {
+  return request.get('/teacher/filters')
 }
 
 /** 教学建议 — 技能缺口诊断（市场热度 vs 学生掌握率，全部真实数据） */
@@ -130,11 +174,6 @@ export function getTeacherSuggestions() {
 /** 教学建议的 AI 解读。单独一个接口：调大模型要几秒，不能拖慢表格渲染 */
 export function getTeacherSuggestionsAi() {
   return request.get('/teacher/suggestions/ai', { timeout: 90000 })
-}
-
-/** 导出学生就业数据 Excel（走 axios 以携带 Token，配合 utils/download.js 保存） */
-export function exportTeacherStudents() {
-  return request.get('/teacher/export', { responseType: 'blob' })
 }
 
 export function getStudentStats(userId) {

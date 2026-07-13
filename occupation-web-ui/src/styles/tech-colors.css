@@ -110,6 +110,29 @@
   --transition-fast: 0.15s ease;
   --transition-base: 0.3s ease;
   --transition-slow: 0.6s ease;
+
+  /* ==================== --app-* 兼容层 ==================== */
+  /* 组件（MainLayout、就业分析、AI 顾问、简历等 19 个文件）仍以 --app-* 引用颜色，
+   * 这些令牌原本定义在已废弃的 theme.css（奶油/墨黑主题）里。此处把它们别名到科技蓝
+   * --color-*，用 var() 引用即可让深色模式随 html.dark 自动跟随（无需在 html.dark 重复定义）。
+   * 新代码请直接用 --color-*；--app-* 仅为兼容存量组件保留。 */
+  --app-canvas: var(--color-bg-primary);        /* 页面底 */
+  --app-surface-2: var(--color-bg-secondary);   /* 次级面 / 悬停底 */
+  --app-stone: var(--color-border-light);       /* 细分隔线 / 进度条底 */
+  --app-stone-strong: var(--color-border);
+  --app-ink: var(--color-text-primary);         /* 标题 */
+  --app-ink-2: var(--color-text-secondary);     /* 正文 */
+  --app-ink-3: var(--color-text-tertiary);      /* 辅助文字 */
+  --app-action: var(--color-primary);           /* 主操作背景 */
+  --app-action-ink: var(--color-text-inverse);  /* 主操作上的文字 */
+  --app-money: var(--color-salary);             /* 薪资绿 */
+  --app-score: var(--color-score);              /* 匹配分琥珀 */
+  --app-link: var(--color-info);                /* 链接蓝 */
+  --app-ember: var(--color-warning);            /* 强调暖色 */
+  --app-danger: var(--color-danger);            /* 危险红 */
+  --app-radius-card: var(--radius-xl);          /* 卡片圆角 10px */
+  --app-hairline: inset 0 0 0 1px var(--color-border);          /* 内描边（整条 box-shadow 值）*/
+  --app-hairline-strong: inset 0 0 0 1px var(--color-divider);
 }
 
 /* ==================== 深色模式 ==================== */

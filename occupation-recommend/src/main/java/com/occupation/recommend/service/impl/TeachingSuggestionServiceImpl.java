@@ -49,10 +49,15 @@ public class TeachingSuggestionServiceImpl implements TeachingSuggestionService 
 
     @Override
     public TeachingSuggestionVO diagnose(int topSkills, int maxGapItems) {
+        return diagnose(topSkills, maxGapItems, null);
+    }
+
+    @Override
+    public TeachingSuggestionVO diagnose(int topSkills, int maxGapItems, java.util.Collection<Long> restrictUserIds) {
         TeachingSuggestionVO vo = new TeachingSuggestionVO();
 
-        // ① 学生掌握情况：技能（小写）→ 掌握人数
-        List<SysStudentProfile> profiles = profileService.listAll();
+        // ① 学生掌握情况：技能（小写）→ 掌握人数（限定在范围内的学生）
+        List<SysStudentProfile> profiles = profileService.listByUserIds(restrictUserIds);
         int studentCount = profiles.size();
         vo.setStudentsWithProfile(studentCount);
 

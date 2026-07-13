@@ -2,6 +2,8 @@ package com.occupation.recommend.service;
 
 import com.occupation.recommend.vo.TeachingSuggestionVO;
 
+import java.util.Collection;
+
 /**
  * 教学建议服务 — 技能缺口诊断
  * <p>
@@ -19,4 +21,11 @@ public interface TeachingSuggestionService {
      * @param maxGapItems 返回的缺口条目上限
      */
     TeachingSuggestionVO diagnose(int topSkills, int maxGapItems);
+
+    /**
+     * 生成技能缺口诊断，学生样本限定在 {@code restrictUserIds}（教师端范围过滤）。
+     *
+     * @param restrictUserIds 学生 userId 集合：{@code null}=当前租户全部；空集=无学生样本
+     */
+    TeachingSuggestionVO diagnose(int topSkills, int maxGapItems, Collection<Long> restrictUserIds);
 }

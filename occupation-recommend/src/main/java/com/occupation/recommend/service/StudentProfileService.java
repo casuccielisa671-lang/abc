@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.occupation.recommend.dto.ProfileSaveDTO;
 import com.occupation.recommend.entity.SysStudentProfile;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -35,4 +36,21 @@ public interface StudentProfileService {
      * @param educationLevel 学历筛选，空表示不筛选
      */
     Page<SysStudentProfile> pageProfiles(String keyword, String educationLevel, int pageNum, int pageSize);
+
+    /**
+     * 分页查询画像，并按可见学生集合 {@code restrictUserIds} 限定（教师端范围过滤）。
+     *
+     * @param restrictUserIds 可见学生 userId 集合：{@code null}=不限制（管理员）；
+     *                        空集=返回 0 条；非空=仅返回 userId 在集合内的画像
+     */
+    Page<SysStudentProfile> pageProfiles(String keyword, String educationLevel,
+                                         Collection<Long> restrictUserIds, int pageNum, int pageSize);
+
+    /**
+     * 指定学生集合的画像（教师端范围内的概览统计 / 导出）。
+     *
+     * @param userIds {@code null}=当前租户全部（等价 {@link #listAll()}）；空集=空列表；
+     *                非空=仅这些 userId 的画像
+     */
+    List<SysStudentProfile> listByUserIds(Collection<Long> userIds);
 }

@@ -15,10 +15,16 @@ import lombok.EqualsAndHashCode;
 @TableName("report_record")
 public class ReportRecord extends BaseEntity {
 
-    /** 关联模板 ID */
-    private Long templateId;
+    /** 归属人：null=管理员生成的租户级报告；有值=该学生的个人 AI 报告 */
+    private Long userId;
 
-    /** 生成参数（JSON） */
+    /** 报告名称（生成时按 大类 + 范围 自动生成，如「学生就业数据报告（软件工程-2022-1班）」） */
+    private String name;
+
+    /** 报告大类：MARKET=市场行业 / EMPLOYMENT=学生就业 */
+    private String category;
+
+    /** 生成参数（JSON）；EMPLOYMENT 类在此存 scope：{major,enrollYear,classId} */
     private String params;
 
     /** 生成文件 URL */

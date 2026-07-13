@@ -2,6 +2,7 @@ package com.occupation.analysis.controller;
 
 import com.occupation.analysis.service.AnalysisJobService;
 import com.occupation.analysis.service.MapService;
+import com.occupation.analysis.vo.CityStatVO;
 import com.occupation.analysis.vo.JobCityHeatVO;
 import com.occupation.analysis.vo.RecommendJobVO;
 import com.occupation.common.result.Result;
@@ -42,6 +43,15 @@ public class MapController {
     @PreAuthorize("hasAnyRole('ADMIN','STUDENT','TEACHER','HR')")
     public Result<List<JobCityHeatVO>> getJobCityHeat(@RequestParam String jobName) {
         return Result.ok(mapService.getJobCityHeat(jobName));
+    }
+
+    /**
+     * 全量城市岗位分布（岗位数 + 平均薪资 + 坐标），3D 柱状地图默认展示
+     */
+    @GetMapping("/cityDistribution")
+    @PreAuthorize("hasAnyRole('ADMIN','STUDENT','TEACHER','HR')")
+    public Result<List<CityStatVO>> cityDistribution() {
+        return Result.ok(mapService.cityDistribution());
     }
 
     /**

@@ -574,6 +574,47 @@ L.push("(1, '测试学院', 1),");
 L.push("(2, '示范大学', 1),");
 L.push("(3, '停用学院', 0);  -- 已禁用租户：测试“租户停用后无法登录”");
 L.push('');
+
+// ---------- 班级（学院内组织：专业-入学年级-班级）----------
+// 按现有学生的专业建；入学年级混用 2022/2023，以演示"届老师"的年级筛选有对比
+const CLASSES = [
+  // [id, tenantId, major, enrollYear, className]
+  [1, 1, '软件工程', 2022, '1班'],
+  [2, 1, '计算机科学与技术', 2022, '1班'],
+  [3, 1, '数据科学与大数据技术', 2022, '1班'],
+  [4, 1, '人工智能', 2022, '1班'],
+  [5, 1, '信息安全', 2022, '1班'],
+  [6, 1, '统计学', 2022, '1班'],
+  [7, 1, '物联网工程', 2022, '1班'],
+  [8, 1, '电子商务', 2023, '1班'],
+  [9, 1, '计算机应用技术', 2023, '1班'],
+  [10, 1, '教育技术学', 2023, '1班'],
+  [11, 2, '软件工程', 2022, '1班'],       // 租户2 示范大学
+];
+const classCode = (c) => `${c[2]}-${c[3]}-${c[4]}`;
+L.push('-- ---------- 班级（学院内组织：专业-入学年级-班级）----------');
+L.push('INSERT INTO sys_class (id, tenant_id, major, enroll_year, class_name, code, status) VALUES');
+L.push(CLASSES.map(c =>
+  `(${c[0]}, ${c[1]}, '${esc(c[2])}', ${c[3]}, '${esc(c[4])}', '${esc(classCode(c))}', 1)`
+).join(',\n') + ';');
+L.push('');
+
+// 学生 user id → 班级 id（班级归属放 sys_user，不依赖选填的画像）
+// student12(16) 无画像但有班级；student98/99(禁用/删除) 故意不入班（class_id=NULL）
+const STUDENT_CLASS = {
+  2: 2, 8: 2,           // 计算机科学与技术-2022-1班：演示学生、student04
+  5: 1, 11: 1, 16: 1,   // 软件工程-2022-1班：student01、student07、student12(无画像)
+  6: 3,                 // 数据科学-2022
+  7: 4,                 // 人工智能-2022
+  9: 5,                 // 信息安全-2022
+  12: 6,                // 统计学-2022（student08）
+  15: 7,                // 物联网-2022（student11）
+  10: 8,                // 电子商务-2023（student06）
+  13: 9,                // 计算机应用-2023（student09）
+  14: 10,               // 教育技术-2023（student10）
+  24: 11,               // 租户2 示范学生
+};
+
 L.push('-- ---------- 用户（密码均 admin123）----------');
 const users = [
   [1, 1, 'admin', 'ADMIN', '系统管理员', '13800000001', 'admin@test.edu.cn', 1, 0],
@@ -607,9 +648,25 @@ const users = [
   [27, 1, 'hr04', 'HR', '许静怡', '13833000004', 'xujingyi@zhihui.example.com', 1, 0],
   [28, 1, 'hr05', 'HR', '罗晨', '13833000005', 'luochen@hengxin.example.com', 1, 0],
 ];
-L.push('INSERT INTO sys_user (id, tenant_id, username, password_hash, role, real_name, phone, email, status, deleted) VALUES');
+L.push('INSERT INTO sys_user (id, tenant_id, username, password_hash, role, real_name, phone, email, status, deleted, class_id) VALUES');
 L.push(users.map(u =>
-  `(${u[0]}, ${u[1]}, '${u[2]}', '${HASH}', '${u[3]}', '${esc(u[4])}', '${u[5]}', '${u[6]}', ${u[7]}, ${u[8]})`
+  `(${u[0]}, ${u[1]}, '${u[2]}', '${HASH}', '${u[3]}', '${esc(u[4])}', '${u[5]}', '${u[6]}', ${u[7]}, ${u[8]}, ${STUDENT_CLASS[u[0]] || 'NULL'})`
+).join(',\n') + ';');
+L.push('');
+
+// ---------- 教师可见范围（班主任=CLASS / 专业老师=MAJOR / 届老师=GRADE）----------
+// 三种范围各一，可见学生互不重叠，一眼看出区别
+const TEACHER_SCOPES = [
+  // [id, tenantId, teacherId, scopeType, scopeValue]
+  [1, 1, 17, 'CLASS', '1'],               // teacher01 王建国 → 班主任 软件工程-2022-1班（student01/07/12）
+  [2, 1, 18, 'MAJOR', '计算机科学与技术'],  // teacher02 林晓芳 → 专业老师（演示学生、student04）
+  [3, 1, 3,  'GRADE', '2022'],             // teacher 演示教师 → 届老师 2022 级（全部 2022 级学生）
+  [4, 2, 25, 'CLASS', '11'],               // 租户2 演示教师 → 班主任 软件工程-2022-1班
+];
+L.push('-- ---------- 教师可见范围（班主任/专业老师/届老师）----------');
+L.push('INSERT INTO teacher_scope (id, tenant_id, teacher_id, scope_type, scope_value) VALUES');
+L.push(TEACHER_SCOPES.map(s =>
+  `(${s[0]}, ${s[1]}, ${s[2]}, '${s[3]}', '${esc(s[4])}')`
 ).join(',\n') + ';');
 L.push('');
 L.push('-- ---------- 学生画像（student12/孙梦琪 故意无画像，测试“请先完善画像”提示）----------');
@@ -892,23 +949,51 @@ for (const tid of [1, 2]) {
 L.push('INSERT INTO analysis_result (id, tenant_id, dimension, dimension_value, metric_name, metric_value, period_type, period_value, calc_time) VALUES');
 L.push(arRows.join(',\n') + ';');
 L.push('');
-L.push('-- ---------- 报告模板（content 为 NULL 时走内置默认模板；模板5已禁用）----------');
-// font-family 列多个候选：PdfExporter 注册的是系统上实际存在的中文字体，只写 SimSun 在 Linux 容器里会变方块
-const simpleTpl = '<html><head><meta charset="UTF-8"/><style>body{font-family:SimSun,"Microsoft YaHei","WenQuanYi Zen Hei","Noto Sans CJK SC","PingFang SC",sans-serif;padding:24px;}</style></head><body><h1>${title}</h1><p>生成时间：${generateTime}</p><h2>智能摘要</h2><p>${aiSummary}</p><h2>热门技能 Top20</h2><table><#list skillHot as item><tr><td>${item.name}</td><td>${item.value}</td></tr></#list></table></body></html>';
-L.push('INSERT INTO report_template (id, tenant_id, name, industry, type, template_content, status, deleted, create_time) VALUES');
-L.push([
-  `(1, 1, '就业市场月度分析报告', NULL, 'MONTHLY', NULL, 1, 0, '2026-06-20 10:00:00')`,
-  `(2, 1, '互联网行业季度专项报告', '互联网/IT', 'QUARTERLY', NULL, 1, 0, '2026-06-22 15:30:00')`,
-  `(3, 1, '年度就业质量白皮书', NULL, 'YEARLY', NULL, 1, 0, '2026-06-25 09:00:00')`,
-  `(4, 1, '简版摘要报告（自定义模板）', NULL, 'MONTHLY', '${esc(simpleTpl)}', 1, 0, '2026-07-02 16:45:00')`,
-  `(5, 1, '旧版月报模板（标签未闭合已停用）', NULL, 'MONTHLY', '<html><body><h1>$\{title}<table><tr><td>废弃', 0, 0, '2026-06-19 11:00:00')`,
-  `(6, 2, '就业市场月度分析报告', NULL, 'MONTHLY', NULL, 1, 0, '2026-07-03 10:00:00')`,
-].join(',\n') + ';');
+L.push('-- ---------- 报告记录（一条历史失败样例；成功记录请在页面上现场生成。报告已无模板概念，由 大类+范围 直接生成）----------');
+L.push('INSERT INTO report_record (id, tenant_id, name, category, params, file_url, file_type, status, error_msg, create_time) VALUES');
+L.push(`(1, 1, '就业市场分析报告', 'MARKET', '{}', NULL, 'PDF', 'FAILED', '示例：一条历史失败记录（PDF 渲染失败）', '2026-06-28 14:12:00');`);
 L.push('');
-L.push('-- ---------- 报告记录（一条历史失败记录，对应模板5被停用的原因；成功记录请在页面上现场生成）----------');
-L.push('INSERT INTO report_record (id, tenant_id, template_id, params, file_url, file_type, status, error_msg, create_time) VALUES');
-L.push(`(1, 1, 5, '{}', NULL, 'PDF', 'FAILED', 'PDF 渲染失败：模板 HTML 标签未闭合（tr/td/table）', '2026-06-28 14:12:00');`);
+
+// ---------- 资讯（首页资讯板块）----------
+// type: DATA_CAST=数据播报(平台数据自动生成,可点进图表) / ARTICLE=精选文章(有正文) / EXTERNAL=外部资讯(跳原文)
+// cover_style: blue/green/purple/amber
+const NEWS = [
+  // [id, category, type, title, summary, content, cover, source, sourceUrl, linkTarget, featured, publishTime]
+  [1, null, 'DATA_CAST', '本平台在库岗位达 114 个，数据分析已就绪',
+    '涵盖 90 个采集岗位与 24 个站内职位，覆盖 10 座主要城市、8 大技术方向，看板与推荐均基于此。',
+    null, 'blue', '平台数据播报', null, '/admin/dashboard', 1, '2026-07-09 08:10:00'],
+  [2, 'backend', 'DATA_CAST', 'Java 稳居技能热度榜首',
+    '在全部岗位中，要求 Java 的职位数量最多，其后为 Python、MySQL。后端方向需求持续旺盛。',
+    null, 'blue', '平台数据播报', null, '/admin/dashboard', 0, '2026-07-09 08:12:00'],
+  [3, null, 'DATA_CAST', '上海、北京、深圳岗位最集中',
+    '按城市分布，上海岗位数领先，北京、深圳紧随其后；杭州、成都为新一线热门去向。',
+    null, 'green', '平台数据播报', null, '/admin/dashboard', 0, '2026-07-09 08:14:00'],
+  [4, 'bigdata', 'DATA_CAST', '大数据方向平均薪资领先',
+    '按行业统计，大数据 / 人工智能方向平均薪资高于全站均值，Spark、Flink 等技能溢价明显。',
+    null, 'purple', '平台数据播报', null, '/admin/employment', 0, '2026-07-09 08:16:00'],
+  [5, null, 'DATA_CAST', '投递转化：73 份投递中已产生 3 个 OFFER',
+    '站内投递共 73 份，其中面试阶段 19 份、录用 3 份；及时完善画像与简历有助于提升转化。',
+    null, 'amber', '平台数据播报', null, '/admin/employment', 0, '2026-07-09 08:18:00'],
+  [6, 'backend', 'ARTICLE', '2026 后端开发就业观察：微服务与云原生成标配',
+    '从平台岗位要求看，Spring Boot、微服务、容器化几乎成为后端岗位的默认门槛。',
+    '<p>综合本平台采集到的后端岗位数据，Spring Boot、Spring Cloud、Redis、消息队列（Kafka/RocketMQ）出现频率显著上升。</p><p>建议在校生优先夯实 Java 基础与数据库，再向微服务、容器化（Docker/K8s）延伸，配合一到两个完整项目经历，将明显提升竞争力。</p>',
+    'blue', '就业指导中心', null, null, 1, '2026-07-06 10:00:00'],
+  [7, 'frontend', 'ARTICLE', '前端招聘趋势：工程化与框架深度并重',
+    '企业更看重 Vue/React 的工程化实践与组件设计能力，而非仅会写页面。',
+    '<p>平台前端岗位中，Vue、TypeScript、构建工具（Vite/Webpack）、组件化设计是高频关键词。</p><p>建议同学在掌握一个主流框架的基础上，理解其响应式原理与工程化配置，并积累可展示的项目。</p>',
+    'green', '就业指导中心', null, null, 0, '2026-07-05 14:30:00'],
+  [8, null, 'EXTERNAL', '示例：外部就业资讯（接入 Google News RSS 后在此展示）',
+    '外部资讯仅展示标题与摘要，点击「阅读原文」跳转来源站点；封面用色块占位。',
+    null, 'purple', '外部来源示例', 'https://news.google.com/', null, 0, '2026-07-08 09:00:00'],
+];
+L.push('-- ---------- 资讯（DATA_CAST 数据播报 / ARTICLE 精选文章 / EXTERNAL 外部资讯占位）----------');
+L.push('INSERT INTO news (id, tenant_id, category, type, title, summary, content, cover_style, source, source_url, link_target, view_count, featured, status, publish_time) VALUES');
+L.push(NEWS.map(n => {
+  const q = (v) => v == null ? 'NULL' : `'${esc(v)}'`;
+  return `(${n[0]}, 1, ${q(n[1])}, '${n[2]}', ${q(n[3])}, ${q(n[4])}, ${q(n[5])}, '${n[6]}', ${q(n[7])}, ${q(n[8])}, ${q(n[9])}, ${ri(20, 320)}, ${n[10]}, 1, '${n[11]}')`;
+}).join(',\n') + ';');
 L.push('');
+
 L.push('-- ---------- 推送记录 ----------');
 const pushRows = pushes.map((p, i) =>
   `(${i + 1}, ${p.tenantId}, ${p.userId}, '${p.type}', '${esc(p.title)}', '${esc(p.content)}', ${p.isRead}, '${dt(p.time)}')`

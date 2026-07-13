@@ -3,6 +3,13 @@
 > 每完成一个 Step 后由 AI 更新，便于新会话恢复上下文。
 > **最后更新**: 2026-07-08（P0 端到端验证完成：学生端全流程 + 报告生成链路 + JAR 重建）
 
+> **⚠️ 2026-07-12 结构清理更正（正文未逐行改，以本条为准）**：以下组件已删除，其在下文标注的「✅ 已实现」为历史状态——
+> - `views/teacher/TeacherHome.vue`、`views/hr/HrHome.vue`：角色首页已统一为 `views/Home/HomeIndex.vue`，两文件删除
+> - `components/AppLayout.vue`：被 `components/MainLayout.vue` 取代（路由实际用后者），删除
+> - `components/MeteorCanvas.vue`（流星背景）：无引用，删除
+> - 前端主题：旧 `styles/theme.css`（奶油/墨黑）已删，全站实际生效为**科技蓝**（`styles/tech-colors.css` + `theme-tech.css`）；存量组件的 `--app-*` 变量已在 tech-colors.css 末尾别名到 `--color-*` 作兼容层
+> - 详见 CLAUDE.md「前端设计系统」章节
+
 ---
 
 ## 一、项目整体完成度

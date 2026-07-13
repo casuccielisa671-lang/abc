@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-const HomeIndex = () => import('@/views/Home/HomeIndex.vue')
 
 const routes = [
   {
@@ -15,13 +14,16 @@ const routes = [
     component: () => import('@/components/MainLayout.vue'),
     meta: { role: 'ADMIN' },
     children: [
-      { path: '', name: 'AdminHome', component: HomeIndex, meta: { layout: 'full' } },
+      { path: '', name: 'AdminHome', component: () => import('@/views/admin/Dashboard.vue') },
       { path: 'dashboard', name: 'Dashboard', component: () => import('@/views/admin/Dashboard.vue') },
       { path: 'employment', name: 'Employment', component: () => import('@/views/admin/Employment.vue') },
       { path: 'crawler', name: 'CrawlerTask', component: () => import('@/views/admin/CrawlerTask.vue') },
-      { path: 'report-template', name: 'ReportTemplate', component: () => import('@/views/admin/ReportTemplate.vue') },
       { path: 'report-list', name: 'ReportList', component: () => import('@/views/admin/ReportList.vue') },
-      { path: 'user', name: 'UserManage', component: () => import('@/views/admin/UserManage.vue') }
+      { path: 'user', name: 'UserManage', component: () => import('@/views/admin/UserManage.vue') },
+      { path: 'class', name: 'ClassManage', component: () => import('@/views/admin/ClassManage.vue') },
+      { path: 'news', name: 'AdminNews', component: () => import('@/views/common/NewsPage.vue') },
+      { path: 'news-manage', name: 'NewsManage', component: () => import('@/views/admin/NewsManage.vue') },
+      { path: 'map', name: 'AdminMap', component: () => import('@/views/common/MapExplore.vue') }
     ]
   },
 
@@ -30,7 +32,7 @@ const routes = [
     component: () => import('@/components/MainLayout.vue'),
     meta: { role: 'STUDENT' },
     children: [
-      { path: '', name: 'StudentHome', component: HomeIndex, meta: { layout: 'full' } },
+      { path: '', name: 'StudentHome', component: () => import('@/views/student/StudentDashboard.vue') },
       { path: 'jobs', name: 'StudentJobs', component: () => import('@/views/student/StudentHome.vue') },
       { path: 'job/:id', name: 'JobDetail', component: () => import('@/views/student/JobDetail.vue') },
       { path: 'profile', name: 'Profile', component: () => import('@/views/student/Profile.vue') },
@@ -38,7 +40,9 @@ const routes = [
       { path: 'applications', name: 'MyApplications', component: () => import('@/views/student/Applications.vue') },
       { path: 'advisor', name: 'Advisor', component: () => import('@/views/student/Advisor.vue') },
       { path: 'favorites', name: 'Favorites', component: () => import('@/views/student/Favorites.vue') },
-      { path: 'reports', name: 'StudentReports', component: () => import('@/views/student/Reports.vue') }
+      { path: 'reports', name: 'StudentReports', component: () => import('@/views/student/Reports.vue') },
+      { path: 'news', name: 'StudentNews', component: () => import('@/views/common/NewsPage.vue') },
+      { path: 'map', name: 'StudentMap', component: () => import('@/views/common/MapExplore.vue') }
     ]
   },
 
@@ -47,9 +51,11 @@ const routes = [
     component: () => import('@/components/MainLayout.vue'),
     meta: { role: 'TEACHER' },
     children: [
-      { path: '', name: 'TeacherHome', component: HomeIndex, meta: { layout: 'full' } },
+      { path: '', name: 'TeacherHome', component: () => import('@/views/teacher/TeacherDashboard.vue') },
       { path: 'students', name: 'Students', component: () => import('@/views/teacher/Students.vue') },
-      { path: 'suggestions', name: 'Suggestions', component: () => import('@/views/teacher/Suggestions.vue') }
+      { path: 'suggestions', name: 'Suggestions', component: () => import('@/views/teacher/Suggestions.vue') },
+      { path: 'news', name: 'TeacherNews', component: () => import('@/views/common/NewsPage.vue') },
+      { path: 'map', name: 'TeacherMap', component: () => import('@/views/common/MapExplore.vue') }
     ]
   },
 
@@ -58,10 +64,12 @@ const routes = [
     component: () => import('@/components/MainLayout.vue'),
     meta: { role: 'HR' },
     children: [
-      { path: '', name: 'HrHome', component: HomeIndex, meta: { layout: 'full' } },
+      { path: '', name: 'HrHome', component: () => import('@/views/hr/HrDashboard.vue') },
       { path: 'jobs', name: 'JobManage', component: () => import('@/views/hr/JobManage.vue') },
       { path: 'applications', name: 'HrApplications', component: () => import('@/views/hr/Applications.vue') },
-      { path: 'talents', name: 'Talents', component: () => import('@/views/hr/Talents.vue') }
+      { path: 'talents', name: 'Talents', component: () => import('@/views/hr/Talents.vue') },
+      { path: 'news', name: 'HrNews', component: () => import('@/views/common/NewsPage.vue') },
+      { path: 'map', name: 'HrMap', component: () => import('@/views/common/MapExplore.vue') }
     ]
   },
 

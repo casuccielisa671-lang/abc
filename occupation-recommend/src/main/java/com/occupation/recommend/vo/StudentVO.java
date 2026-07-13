@@ -28,6 +28,13 @@ public class StudentVO implements Serializable {
     private String major;
     private String skills;
     private String educationLevel;
+
+    /** 所属班级ID（未入班为 null） */
+    private Long classId;
+    /** 班级统一命名：专业-入学年级-班级（未入班为 null） */
+    private String classCode;
+    /** 入学年级（未入班为 null） */
+    private Integer enrollYear;
     private String expectedCity;
     private String expectedIndustry;
     private Integer expectedSalaryMin;

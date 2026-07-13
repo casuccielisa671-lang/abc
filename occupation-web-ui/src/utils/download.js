@@ -6,6 +6,8 @@
  * 必须走 axios（拦截器会注入 Token），拿到 Blob 后再用 <a download> 触发保存。
  */
 
+import { ElMessage } from 'element-plus'
+
 /** 从 Content-Disposition 解析文件名，优先 RFC 5987 的 filename*（中文名走这个） */
 function parseFilename(disposition, fallback) {
   if (!disposition) return fallback
@@ -28,9 +30,24 @@ function parseFilename(disposition, fallback) {
  */
 export async function saveBlob(responsePromise, fallbackName) {
   const response = await responsePromise
+
+  // 后端下载失败时返回的是 JSON 错误体（Content-Type: application/json），
+  // 但 responseType:'blob' 让它也变成 Blob。若不识别就会把 `{"code":500,...}`
+  // 当成文件存盘——用户打开「PDF」看到的却是一段 JSON。这里拦下来，改为抛错弹提示。
+  const blob = response.data
+  if (blob && typeof blob.type === 'string' && blob.type.includes('application/json')) {
+    const text = await blob.text()
+    let msg = '下载失败'
+    try { msg = JSON.parse(text).message || msg } catch { /* 非标准 JSON，用默认文案 */ }
+    const err = new Error(msg)
+    err.handled = true            // 已在此处弹过提示，调用方不必重复
+    ElMessage.error(msg)
+    throw err
+  }
+
   const filename = parseFilename(response.headers?.['content-disposition'], fallbackName)
 
-  const url = URL.createObjectURL(response.data)
+  const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
   a.download = filename

@@ -3,11 +3,11 @@ package com.occupation.report.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.occupation.common.result.PageResult;
 import com.occupation.common.result.Result;
+import com.occupation.report.dto.DeliverReportDTO;
 import com.occupation.report.dto.GenerateReportDTO;
 import com.occupation.report.entity.ReportRecord;
-import com.occupation.report.entity.ReportTemplate;
+import com.occupation.report.service.ReportDeliveryService;
 import com.occupation.report.service.ReportGeneratorService;
-import com.occupation.report.service.ReportTemplateService;
 import com.occupation.report.vo.ReportRecordVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -18,8 +18,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -35,7 +33,7 @@ import java.util.stream.Collectors;
 public class ReportRecordController {
 
     private final ReportGeneratorService generatorService;
-    private final ReportTemplateService templateService;
+    private final ReportDeliveryService deliveryService;
 
     /** 触发生成报告（ADMIN） */
     @PostMapping("/generate")
@@ -44,22 +42,13 @@ public class ReportRecordController {
         return Result.ok(generatorService.generate(dto));
     }
 
-    /** 报告记录列表（登录即可查看，租户内共享；附模板名称与报告类型） */
+    /** 报告记录列表（登录即可查看，租户内共享） */
     @GetMapping("/records")
     public Result<PageResult<ReportRecordVO>> pageRecords(@RequestParam(defaultValue = "1") int pageNum,
                                                           @RequestParam(defaultValue = "10") int pageSize) {
         Page<ReportRecord> page = generatorService.pageRecords(pageNum, pageSize);
-
-        // 一页最多十几条，逐条取模板即可；模板服务内部走 selectById，命中主键索引
-        Map<Long, ReportTemplate> templates = page.getRecords().stream()
-                .map(ReportRecord::getTemplateId)
-                .distinct()
-                .map(templateService::findById)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(ReportTemplate::getId, t -> t));
-
         List<ReportRecordVO> list = page.getRecords().stream()
-                .map(r -> ReportRecordVO.of(r, templates.get(r.getTemplateId())))
+                .map(ReportRecordVO::of)
                 .collect(Collectors.toList());
         return Result.ok(PageResult.of(page.getTotal(), page.getCurrent(), page.getSize(), list));
     }
@@ -99,5 +88,22 @@ public class ReportRecordController {
     public Result<Void> delete(@PathVariable Long id) {
         generatorService.deleteRecord(id);
         return Result.ok();
+    }
+
+    /**
+     * 把就业报告发送给某范围内的学生（ADMIN）。
+     * 市场行业报告已对全体可见、无需发送，服务端会拒绝。返回本次新增下发人数。
+     */
+    @PostMapping("/{id}/deliver")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result<Integer> deliver(@PathVariable Long id, @RequestBody @Validated DeliverReportDTO dto) {
+        return Result.ok(deliveryService.deliver(id, dto.getTargetType(), dto.getTargetValue()));
+    }
+
+    /** 该报告已下发的学生人数（ADMIN，用于列表展示「已发送 N 人」） */
+    @GetMapping("/{id}/delivery-count")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result<Long> deliveryCount(@PathVariable Long id) {
+        return Result.ok(deliveryService.deliveredCount(id));
     }
 }

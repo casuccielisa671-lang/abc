@@ -3,6 +3,7 @@ package com.occupation.analysis.service.impl;
 import cn.hutool.core.util.StrUtil;
 import com.occupation.analysis.mapper.MapJobMapper;
 import com.occupation.analysis.service.MapService;
+import com.occupation.analysis.vo.CityStatVO;
 import com.occupation.analysis.vo.JobCityHeatVO;
 import com.occupation.analysis.vo.RecommendJobVO;
 import com.occupation.common.exception.BizException;
@@ -81,6 +82,27 @@ public class MapServiceImpl implements MapService {
             vo.setGatherValue(BigDecimal.valueOf(cnt)
                     .divide(BigDecimal.valueOf(maxCnt), 4, RoundingMode.HALF_UP)
                     .multiply(BigDecimal.valueOf(100)));
+            result.add(vo);
+        }
+        return result;
+    }
+
+    @Override
+    public List<CityStatVO> cityDistribution() {
+        List<Map<String, Object>> rows = mapJobMapper.selectCityDistribution();
+        List<CityStatVO> result = new ArrayList<>();
+        for (Map<String, Object> row : rows) {
+            String city = String.valueOf(row.get("cityName"));
+            Optional<double[]> coord = CityGeoUtil.resolve(city);
+            if (!coord.isPresent()) {
+                continue;
+            }
+            CityStatVO vo = new CityStatVO();
+            vo.setCityName(city);
+            vo.setLongitude(coord.get()[0]);
+            vo.setLatitude(coord.get()[1]);
+            vo.setJobCount((int) toLong(row.get("jobCount")));
+            vo.setAvgSalary((int) toLong(row.get("avgSalary")));
             result.add(vo);
         }
         return result;

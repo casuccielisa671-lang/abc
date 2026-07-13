@@ -4,10 +4,10 @@
 
 相关文档：`AGENTS.md`（AI 编码规则，生成代码前必读）、`docs/项目开发说明书.md`（架构与分工）、`memory-bank/`（设计文档）。
 
-仓库根目录还有三个一次性输入文件，**都已消化完毕，不要再当待办**：
-- `error_analysis.md` — 问题排查清单。**其中的 TODO 已全部实现**（代码里已无任何 `TODO(` 与 `UnsupportedOperationException`）。注意它有两处结论是错的：① 它说给 `TeacherHome.vue` 加个 `Array.isArray` 就能「瞬间填满数据」，实际前端是照着一份后端从未实现的契约写的，光改前端只会得到一张全是 `—` 的表；② 它建议把无鉴权租户接口放在 `/api/open/tenants`，那个命名空间会被 `ApiTokenInterceptor` 拦下返回 401
+仓库根目录保留一个一次性输入文件，**已消化完毕，不要再当待办**：
 - `DESIGN.md` — 视觉规范，实为 **Family（以太坊钱包）落地页**的扒取产物（组件名里还留着 "Explore Ethereum"、"Watching Wallets"）。有三处不能照搬，见下方设计系统章节
-- `mockup_demo_login.html` — 登录页静态稿，已落地为 `LoginView.vue`
+
+（另有 `error_analysis.md` 排查清单与 `mockup_demo_login.html` 登录页静态稿，均已消化并于 2026-07-12 结构清理时删除：前者 TODO 已全部实现、结论已过时；后者已落地为 `LoginView.vue`。）
 
 ## 模块结构
 
@@ -31,7 +31,8 @@ cd occupation-web-ui && npm run dev       # 前端 5173
 - **后端跑着的时候，内置定时任务会持续改库**（`app.scheduler.enabled: true`）：`AnalysisScheduler` 会把 `raw_job_data` 里待清洗的数据洗进 `job_detail`，所以 `job_detail` 的行数会从种子的 96 慢慢往上涨。这是设计如此，不是 bug，但排查数据问题时别把它当成异常
 - 登录账号（租户 `测试学院`，密码均 `admin123`）：`admin`（管理员）、`student`（学生）、`teacher`（教师）、`hr`（HR）——init.sql 预置
 - init.sql 含全量测试数据（由 `scripts/gen-seed-data.js` 确定性生成）：**114 个职位**（90 采集 + 24 站内）、13 份学生画像（租户1 占 12、租户2 占 1）、12 份简历、**391 条行为**（VIEW 212 / APPLY 73 / FAVORITE 63 / CONTACT 32 / IGNORE 11）、**73 条投递**（五种状态铺开）、分析结果已预算好，**开箱即可看到看板/推荐/投递漏斗/供需错配**
-- **种子账号的边界用例**（写统计逻辑时留意）：`student12` 有账号、无画像、无简历，却投递了一个站内职位 —— 一次覆盖三个空态（学生端「请先完善画像」+ HR 端「未完善画像 / 未填写简历」）；`student98` 状态禁用（`status=0`，**仍计入** `countByRole`）；`student99` 逻辑删除（`deleted=1`，**不计入**）。所以教师端「学生总数 14 / 已填画像 12」是对的，别当成 bug。另有 `student01`~`student11`、`teacher01/02`、`hr01`~`hr05`；第二租户 `示范大学`（admin/student/teacher）测多租户隔离；`停用学院` 测租户禁用
+- **种子账号的边界用例**（写统计逻辑时留意）：`student12` 有账号、无画像、无简历，却投递了一个站内职位 —— 一次覆盖三个空态（学生端「请先完善画像」+ HR 端「未完善画像 / 未填写简历」）；`student98` 状态禁用（`status=0`，**仍计入** `countByRole`）；`student99` 逻辑删除（`deleted=1`，**不计入**）。所以**管理员**看到的教师端「学生总数 14 / 已填画像 12」是对的，别当成 bug。另有 `student01`~`student11`、`teacher01/02`、`hr01`~`hr05`；第二租户 `示范大学`（admin/student/teacher）测多租户隔离；`停用学院` 测租户禁用。
+  **注意（2026-07-12 后）**：教师端数字随登录教师的可见范围变化——`teacher01`（班主任软工班）看到 3 人 / 2 有画像、`teacher02`（专业老师计科）2/2、`teacher`（届老师 2022 级）10/9；只有 ADMIN 看整租户 14/12。见下方「教师可见范围」章节
 - **HR 职位归属**：24 个 `HR_PUBLISH` 职位平均分给 6 个 HR（`hr`/`hr01`~`hr05`，各 4 个），分属 3 家公司。六个账号登录后「职位管理」看到的列表各不相同 —— 这是验证「只看我发布的」是否生效的最快方式。每个 HR 都收到 10~13 条投递，且五种处理状态都有样本，HR 端与「就业分析」的漏斗开箱就有形状
 - 登录页有角色选择标签，但仅作入口提示；实际进入哪个端由**账号自身的 role** 决定（选错会提示并按实际角色进入）
 - MySQL：root/root，库名 `occupation`
@@ -44,13 +45,18 @@ cd occupation-web-ui && npm run dev       # 前端 5173
 
 ## 数据库协作流程（以 init.sql 为唯一事实来源）
 
-- 脚本位置：`occupation-common/src/main/resources/sql/init.sql`（DROP+CREATE 16 张表 + 种子数据，可重复执行）
+- 脚本位置：`occupation-common/src/main/resources/sql/init.sql`（DROP+CREATE 19 张表 + 种子数据，可重复执行）
+- **资讯表 `news`（2026-07-12 新增，首页资讯板块）**：`type` = DATA_CAST（数据播报，点击去图表 `link_target`）/ ARTICLE（精选文章，有 `content`）/ EXTERNAL（外部资讯，跳 `source_url`）；`category` = 技术方向（backend/frontend/…，null=通用）；封面用 `cover_style` 色块占位。后端在 **occupation-recommend**（`News`/`NewsService`/`NewsController`，`GET /api/news`、`/api/news/latest`、`/api/news/{id}`，任意登录角色可读）。增量脚本 `upgrade-2026-07-12-news.sql`。种子 8 条（5 播报 + 2 文章 + 1 外部占位）。**RSS 拉取(Google News)与管理端资讯 CRUD、数据播报自动生成 = 待做**
+- **首页改造已完成（2026-07-13，各角色 Bento 工作台）**：各角色首页从"整屏大地图落地页"改为**角色工作台**。学生 `views/student/StudentDashboard.vue`、教师 `views/teacher/TeacherDashboard.vue`、HR `views/hr/HrDashboard.vue`（Bento 网格：欢迎条 + 地图 hero + 角色 KPI + 主内容 + 资讯格子），**管理员** `/admin` 首页直接指现成的 `views/admin/Dashboard.vue`（方案A，不套 Bento）。共享组件 `components/home/`：`MapHeroTile.vue`（地图 hero 静态预览，**点击跳独立地图页 `/{role}/map`**）、`NewsTile.vue`（资讯格子）、`NewsDetailDialog.vue`。共享页 `views/common/`：`NewsPage.vue`（资讯全览，四端 `/{role}/news`）、`MapExplore.vue`（3D 地图页，四端 `/{role}/map`）。**旧 `views/Home/`（HomeIndex/JobNews/jobNewsData）已整目录删除。** 注意 `views/student/StudentHome.vue` 是**职位推荐列表**（路由 `/student/jobs`），命名易误解，别和首页 `StudentDashboard.vue` 搞混
+- **3D 地图已换 echarts-gl（2026-07-13，弃用自研 three.js）**：`MapExplore.vue` 用 **echarts-gl `geo3D` + `bar3D`/`scatter3D`**（柱状/光点两模式），装了 `echarts-gl`，中国底图从 Aliyun DataV geojson 外链注册。**图层**：`岗位数`/`平均薪资`（市场，全角色）+ `学生意向`/`投递去向`（学生侧，仅教师/ADMIN，按可见范围过滤）。后端接口：`GET /api/map/cityDistribution`（analysis，全量城市岗位数+平均薪资+坐标）、`GET /api/teacher/map/intent-cities`、`/application-cities`（recommend `TeacherMapService`，按 `TeacherScopeService` 范围过滤）；城市坐标走 `common/CityGeoUtil`。**旧 `components/visualization/China3DMap.vue` + `lib/chinaMap3d/` 已无引用（孤儿），待清理。** 地图默认展示全量分布、自动旋转、hover tooltip、visualMap 图例、城市排行侧栏。**echarts-gl 3D 视觉（柱高/配色/光照）待浏览器微调。**
+- **学院内组织结构（2026-07-12 新增）**：`sys_class`（班级：专业-入学年级-班级）、`sys_user.class_id`（学生班级归属，仅学生非空）、`teacher_scope`（教师可见范围：CLASS=班主任 / MAJOR=专业老师 / GRADE=届老师，一教师可多行）。种子：11 个班级 + 4 条教师范围，演示三种可见范围（班主任软工班 3 人 / 专业老师计科 2 人 / 届老师 2022 级 10 人——**均为当前租户内计数**，跨租户裸 SQL 会多算租户2的 2022 班而得 11，别被误导）。增量升级脚本 `upgrade-2026-07-12-class-org.sql`。**注意班级归属放 `sys_user` 不放选填的画像；MAJOR/GRADE 范围经 class 解析，`sys_class.major` 为组织权威专业，与 `sys_student_profile.major`（喂推荐）分工**
 - MySQL 容器**首次启动（数据卷为空）时自动执行**它
 - **不想 `down -v` 丢数据时**，用同目录的增量脚本给现有库补表：
   ```bash
   docker exec -i occupation-mysql mysql -uroot -proot occupation < occupation-common/src/main/resources/sql/upgrade-2026-07-10-student-resume.sql
   ```
-  它是 `CREATE TABLE IF NOT EXISTS` + `INSERT IGNORE`，可重复执行、不 DROP、不覆盖已有行。内容由脚本从 init.sql 抽取，两处同源不会漂移
+  它是 `CREATE TABLE IF NOT EXISTS` + `INSERT IGNORE`，可重复执行、不 DROP、不覆盖已有行。内容由脚本从 init.sql 抽取，两处同源不会漂移。
+  **`sql/` 下现有三份增量脚本**（`upgrade-2026-07-10-student-resume`、`upgrade-2026-07-10-job-application`、`upgrade-2026-07-12-class-org`）：不 `down -v` 的库要**按日期顺序都跑一遍**才与 init.sql 对齐；每份都幂等，重复跑无副作用
 
 **日常同步（最常用，就两步）：**
 ```bash
@@ -71,20 +77,23 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 - **不要用 `mysqldump > init.sql` 覆盖**（旧文档里的做法）。它会冲掉文件头的 `SET NAMES utf8mb4;` 与 `CREATE DATABASE`，也会把 `gen-seed-data.js` 维护的结构与注释全部抹平；`file_url` 之类的本机绝对路径还会被带进仓库
 - **`init.sql` 第 8–12 行有 `CREATE DATABASE occupation;` + `USE occupation;`**。这意味着 `mysql -uroot -p 别的库名 < init.sql` 里指定的库名**会被脚本自己的 `USE` 覆盖**，DROP TABLE 直接打在 `occupation` 上。想导进临时库验证，必须先 `sed` 掉这两行
 
-## 前端设计系统（2026-07 全站改版，DESIGN.md 版）
+## 前端设计系统
 
-设计方向：奶油画布 + 墨黑主操作 + **内描边代替阴影**、Inter、深浅双主题。设计系统样品页（含配色实测与组件规范）：https://claude.ai/code/artifact/681fbf62-a0ee-4224-a551-f7348b1a6914
+> **⚠️ 现状（2026-07-12）**：全站实际生效的是**科技蓝主题** —— 入口 `main.js` 引入 `styles/tech-colors.css`（`--color-*` 调色板，含 `:root` 浅色 + `html.dark` 深色）、`styles/theme-tech.css`（共享类 + Element Plus 覆写）、`styles/interactions.css`。
+> 下面「奶油画布 + 墨黑」那套是**上一版 `theme.css` 的设计规范，该文件已删除**（它早已不被任何地方 import）。存量组件仍以 `--app-*` 变量引用颜色，现已在 `tech-colors.css` 末尾以「`--app-*` 兼容层」别名到 `--color-*`（用 `var()` 引用，深色自动跟随）。**新代码请直接用 `--color-*`，`--app-*` 仅为兼容保留。** 下方历史规范中关于图表主题、共享类、深色模式的约定仍然适用。
 
-**DESIGN.md 是从 Family（以太坊钱包）落地页扒的规范，有三处不能照搬，theme.css 顶部注释里写了原因：**
+以下为历史设计规范（奶油/墨黑，theme.css 版，保留作背景）。设计方向：奶油画布 + 墨黑主操作 + **内描边代替阴影**、Inter、深浅双主题。设计系统样品页：https://claude.ai/code/artifact/681fbf62-a0ee-4224-a551-f7348b1a6914
+
+**DESIGN.md 是从 Family（以太坊钱包）落地页扒的规范，有三处不能照搬（原因原写在已删的 theme.css 顶部，要点保留于此）：**
 1. 它的强调色作正文字色全部不达标（Grass Green 2.09:1、Gold 2.61:1、连它自己的 Muted Gray 也只有 3.90:1，正文需 4.5:1）。**保留色相压暗**成 `--app-money / --app-score / --app-link / --app-ember / --app-danger`；原始亮色只用于 chip 背景和图表填充
 2. DESIGN.md 标注 `Theme: light` 没给深色色值，深色令牌是按同一骨架推演的（暖近黑画布、卡片比画布亮、主操作翻转为奶油）
 3. 展示字体 Family 是商用定制字，拿不到；标题用 Inter 600，正文 13–14px（不是 DESIGN.md 的 17px）
 
-- **主题令牌**：`src/styles/theme.css` — 全部颜色走 `--app-*` 变量（浅色 `:root`，深色 `html.dark`），并覆写 Element Plus 的 `--el-*`。主操作 `--app-action`（浅色墨黑 `#121212` / 深色奶油 `#f4f1ec`），配 `--app-action-ink` 作其上的文字色
+- **主题令牌（历史，theme.css 已删）**：原 `theme.css` 的颜色走 `--app-*` 变量（浅色墨黑 `#121212` / 深色奶油 `#f4f1ec`）。**现状**：实际令牌是 `tech-colors.css` 的 `--color-*`（科技蓝，浅色 `:root` + 深色 `html.dark`），`--app-*` 已在该文件末尾别名到 `--color-*` 作兼容层
 - **高度**：卡片一律 `box-shadow: var(--app-hairline)`（内描边），**禁止投影**；只有浮层（dialog / dropdown / tooltip）能用 `--app-overlay-shadow`
-- **深色模式**：`useAppStore().toggleTheme()` 切 `html.dark`，持久化在 localStorage `theme`。深色下 `--el-color-primary` 接近白色，Element 会把勾/文字也画成白的 —— theme.css 已显式覆盖 checkbox / radio / switch，新增控件注意同样问题
+- **深色模式**：`useAppStore().toggleTheme()` 切 `html.dark`，持久化在 localStorage `theme`。深色下 `--el-color-primary` 接近白色，Element 会把勾/文字也画成白的 —— `theme-tech.css` 已显式覆盖 checkbox / radio / switch，新增控件注意同样问题
 - **图表主题**：`src/styles/chartTheme.js` 注册 `app-light` / `app-dark`。八槽分类色板已过色盲校验（浅色相邻 ΔE 24.2，深色对比度全 ≥3:1）。规则：**槽位固定顺序不循环**；单系列图表用 `primarySeriesColor()`；薪资用 `moneySeriesColor()`；**禁止双 Y 轴**（数量与薪资拆两张图，参考 Dashboard.vue）；图表页必须 `watch(() => appStore.dark)` 重绘
-- **共享样式类**（theme.css 内，全局可用）：`.page-head / .page-title / .page-sub`、`.page-head.with-actions + .page-actions`、`.stat-grid / .stat-card / .stat-value / .stat-label`、`.chip`（中性标签，`.chip.learn` 琥珀）、`.job-grid / .job-card` 系列、`.salary-text`
+- **共享样式类**（现定义在 `theme-tech.css`，全局可用）：`.page-head / .page-title / .page-sub`、`.page-head.with-actions + .page-actions`、`.stat-grid / .stat-card / .stat-value / .stat-label`、`.chip`（中性标签，`.chip.learn` 琥珀）、`.job-grid / .job-card` 系列、`.salary-text`
 - **新页面约定**：装饰性信息（城市/学历/技能）用 `.chip` 而不是彩色 el-tag；el-tag 只留给状态语义（成功/警告/危险）；分页不需要手写对齐样式（全局已右对齐）
 - **共享工具**：`utils/list.js` 的 `toList/toTotal`（**所有列表响应必须走它**）、`utils/skills.js` 的 `parseSkills`、`utils/format.js` 的 `salaryRange/formatTime`、`utils/download.js` 的 `saveBlob`（带鉴权下载，**不要用 window.open**）
 
@@ -104,7 +113,7 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 
 | 参数名 | 用在哪些接口 |
 |---|---|
-| `pageNum` / `pageSize` | `/api/admin/users`、`/api/report/records`、`/api/admin/report/template`、`/api/push/list`，以及所有吃 `JobQueryDTO` 的（`/api/hr/jobs`、`/api/open/jobs`…） |
+| `pageNum` / `pageSize` | `/api/admin/users`、`/api/report/records`、`/api/push/list`，以及所有吃 `JobQueryDTO` 的（`/api/hr/jobs`、`/api/open/jobs`…） |
 | `page` / `size` | `/api/hr/talents`、`/api/teacher/students`、`/api/admin/crawler/task`、`/api/admin/crawler/log` |
 
 传错不会报错，Spring 用默认值 `1 / 10`，表现为「翻页没反应」。**加新接口请统一用 `pageNum/pageSize`**。
@@ -132,6 +141,14 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 `window.open('/api/report/download/1')` 不带 `Authorization` 头 → 401 → 浏览器静默跳走，表现为「点了没反应」。
 走 `utils/download.js` 的 `saveBlob(axios请求, 兜底文件名)`：axios 拦截器注入 Token，拿到 Blob 再用 `<a download>` 触发保存，并从 `Content-Disposition` 解析 RFC 5987 编码的中文文件名。
 `api/request.js` 的响应拦截器已对 `responseType === 'blob'` 放行（否则会去读 `data.code` 而报错）。
+`saveBlob` 还会**先检查 `blob.type` 是否含 `application/json`**：下载失败时后端返回的是 JSON 错误体（HTTP 200 + json），若不识别就会把 `{"code":..}` 当文件存盘。识别到则弹 `ElMessage.error` 并抛错，不存假文件。
+
+### 5. 雪花 id 必须序列化成字符串，否则前端下载/删除/详情按 id 找不到（2026-07-13 修，全站性）
+
+主键用雪花算法（`BaseEntity` 的 `@TableId(ASSIGN_ID)`），**运行时生成**的 id 是 19 位大整数（约 2e18），超过 JS `Number` 的精确上限 2^53（约 9e15）。后端若把 Long 当**裸数字**返回，浏览器 `JSON.parse` 后**尾数被静默改写**（`2076547053897310210` → `...310200`），前端拿这个变了的 id 去 `/download/{id}`、`/records/{id}` 等，后端按 id 查不到 → 「报告不存在」「点了没反应」。**种子数据 id 小（1/2/5…）不触发**，所以潜伏到下载运行时生成的报告才暴露（曾被误诊为"旧报告/文件丢失"）。
+- **修法**：`occupation-common/config/JacksonConfig` 注册 `BeanSerializerModifier`，**只把名为 `id` 或以 `Id` 结尾的 `Long` 字段转字符串**（id/userId/jobId/classId/reportId/tenantId…）。
+- **为什么不是全局 Long→String**：会误伤计数字段——`DashboardVO.DimensionItem.count`（Long）喂图表，而 `Dashboard.vue` 有 `sum + (i.count||0)`，字符串会变拼接、把饼图聚合弄坏。所以 `count/jobCount` 保持数字；`value` 本就是 BigDecimal（数字）。`PageResult.total/pageNum/pageSize` 是基本类型 `long`、不匹配包装类，天然不受影响（前端 `toTotal` 用 `typeof==='number'` 判断，靠这个才没坏）。
+- 验证：`id` 出参带引号、`count/jobCount/value/total` 不带引号；`JSON.parse` 出的字符串 id 原样下载 → 200 合法 PDF。**加新的按 id 操作的接口时不用管，全局已生效**。
 
 ## 采集链路的几个隐坑（2026-07-10 修）
 
@@ -262,6 +279,37 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 | `GET /api/report/records` | 改返回 `ReportRecordVO`，补 `templateName/type` |
 | `GET /api/report/download/{id}` | 文件名补扩展名（原来是 `report-1`，双击打不开） |
 
+## 学院组织结构与教师可见范围（2026-07-12，功能①前后端已完成）
+
+学院（租户）**内部**加了 `专业 → 入学年级 → 班级` 三层结构，教师按范围分三种可见性。DDL/种子见上方「数据库协作流程」的组织结构说明。
+
+- **数据模型**：`sys_class`（班级）、`sys_user.class_id`（学生班级归属）、`teacher_scope`（教师范围）。实体/服务在 **occupation-auth**（`SysClass`/`TeacherScope`/`ClassService`/`TeacherScopeService`），recommend 依赖 auth 调用它。两张新表都带 `tenant_id`，多租户插件自动隔离。
+- **教师 = TEACHER + 范围**，不是新角色。`teacher_scope.scope_type`：`CLASS`（班主任，值=班级id）/ `MAJOR`（专业老师，值=专业名）/ `GRADE`（届老师，值=入学年级）。一个教师可多条。
+- **范围强制是安全核心**：`TeacherScopeService.visibleStudentIds(teacherId, role)` 解析 scope→班级id→学生userId 集合（**null=ADMIN 不受限；空集=看不到；否则为可见集**）。`TeacherController` 全部学生接口都经它过滤；`/students/{userId}/*` 带**归属校验**（不在可见集→`BizException(403)`，防枚举越权，镜像 HR 端）。`class.major` 是组织权威专业（scope 解析走它），`sys_student_profile.major` 仍是喂推荐的自填专业，二者分工。
+- **新增接口**：
+  - `GET /api/teacher/students`：加 `major` / `enrollYear` 筛选参数（在可见范围内二次收窄）；StudentVO 增 `classId/classCode/enrollYear`（**只加字段**）；概览 `overview` 数字按范围计
+  - `GET /api/teacher/filters`：可见范围内的专业/年级下拉
+  - `GET/POST/DELETE /api/admin/classes`、`POST /api/admin/classes/{id}/students`（分配学生）、`GET /api/admin/classes/filters`：**ADMIN** 班级管理
+  - `GET/POST/DELETE /api/admin/teacher-scopes`：**ADMIN** 配置教师范围
+- **前端**（`api/student.js` 加 `getTeacherFilters`；`api/admin.js` 加班级 CRUD/分配 + 教师范围函数）：
+  - 教师端 `views/teacher/Students.vue`：加班级列（`classCode`）+ 专业/年级筛选下拉
+  - 管理端 `views/admin/ClassManage.vue`（**新页面**，路由 `/admin/class`，ADMIN 菜单「班级管理」）：Tab「班级」CRUD + 分配学生；Tab「教师范围」按教师配置班主任/专业老师/届老师
+- **验证过**（真实 HTTP + `npm run build`，2026-07-12）：teacher01=3/2、teacher02=2/2、teacher(届2022)=10/9、admin=14/12；越权 403；租户隔离（届老师只见本租户 2022）；班级管理、筛选、班级展示、专业/年级筛选均正确。**注意中文 query 参数**（major）前端 axios 会 UTF-8 编码，命令行 curl 测要手工百分号编码，否则误判为 0。**浏览器肉眼点验尚未做**（留待统一测试）
+
+## 报告：两大类、无模板、数据驱动（2026-07-13，已简化并验证）
+
+**⚠️ 2026-07-13 大简化：彻底去掉了「模板」层。** 报告不再"先建模板、再从模板生成"，而是**直接选 大类 + 范围 + 格式** 一步生成。`report_template` 表、`ReportTemplate` 实体/Service/Controller/Mapper、`TemplateSaveDTO`、前端 `ReportTemplate.vue` 及模板 API、菜单「模板管理」**全部删除**。增量脚本 `upgrade-2026-07-13-report-simplify.sql`（`report_record` 加 `name`、**去掉 `template_id`**——原列 NOT NULL 会挡新插入、务必去掉、删 `report_template`）。
+
+- **两大类**（`report_record.category`）：
+  - **MARKET 市场行业**：`AnalysisService.getDashboard()` → 智能摘要 + 行业/技能/城市/学历/趋势（PDF/HTML/Word **统一 6 节**）。
+  - **EMPLOYMENT 学生就业**：按 scope（专业/年级/班级，均可空→全校）聚合。`EmploymentReportService`（recommend，`report` 直接依赖 recommend、无环）解析 scope→学生 userId（走 `ClassService`），产出 `EmploymentReportData`（投递漏斗/意向城市行业/薪资分桶/技能掌握，投递**只统计 job_application**）。摘要为**规则化文字**（无 AI 依赖）。
+- **生成**：`GenerateReportDTO` = `category` + `fileType` + `major/enrollYear/classId`（就业类范围，无 templateId）。`generate()` 按 `dto.category` 分支，用**固定内置模板**（`DEFAULT_TEMPLATE` / `DEFAULT_EMPLOYMENT_TEMPLATE`，不再有自定义模板内容）。报告名 `report_record.name` 按 大类+范围**自动生成**（如「学生就业数据报告（软件工程-2022-1班）」）；scope 存进 `params`。`ReportRecordVO` = `name` + `category`（不再有 templateName/type）。
+- **前端**：`views/admin/ReportList.vue`（报告中心，菜单「报告中心」直达）生成弹窗 = 选大类 → 就业类再选范围（班级优先，否则专业/年级，不选=全校）→ 选格式；列表显示 报告名 + 大类。
+- **验证过**（真实 HTTP，2026-07-13）：市场报告 → SUCCESS；就业报告(班级1) → 名「学生就业数据报告（软件工程-2022-1班）」SUCCESS。`mvn install` + `npm build` 通过。
+- **学生个人 AI 分析报告（2026-07-13，已完成并验证）**：`report_record` 加 `user_id`（归属；**NULL=管理员租户级报告**，有值=学生个人报告）+ 新大类 `STUDENT_AI`（升级脚本 `upgrade-2026-07-13-report-user.sql`，已灌真库）。后端在 **report 模块**（`StudentAiReportService`/`StudentReportController`，`@PreAuthorize STUDENT`）：`POST /api/student/ai-report/preview`（综合本人 画像+简历+推荐匹配+技能缺口+市场热点 → AI 写个性化求职分析，AI 关则规则化兜底；支持前端持多轮历史"让AI改"，**不落库**）、`POST /api/student/ai-report/save`（定稿落库为个人报告 + 导出 PDF/HTML）、`GET /api/student/reports`（只列本人）。**归属校验**：`loadReportFile` 对 `user_id` 非空的报告校验只有本人/ADMIN 可下载（防枚举越权，已验证 teacher 下学生报告→403）。租户级列表 `pageRecords`/`latestSuccess` 加了 `user_id IS NULL` 过滤，学生个人报告不混入。前端 `views/student/Reports.vue` 重做（修好字段+只显示自己的+生成/多轮改/保存弹窗）。**AI 对话/润色现状**：均不存库、后端无状态、前端持多轮历史；唯一持久化的 AI 输出是 `report_record.ai_summary`。验证过（真实 HTTP，AI 已启用）：预览返回真 AI 内容、保存 STUDENT_AI 记录、我的报告只本人、越权下载 403。
+- **报告分发：管理员发送 → 学生接收（2026-07-13，已验证）**：新增 **`report_delivery` 表**（init.sql 升到 **19 张表**；增量脚本 `upgrade-2026-07-13-report-delivery.sql`，已灌真库）。产品决策（用户选定）：**①按范围批量发送（ALL/MAJOR/GRADE/CLASS）；②市场报告发布即全体可见（广播、不落 delivery），就业报告按范围定向发送（每接收学生落一行，`uk_report_user` 防重）。** 后端（report 模块）：`ReportDeliveryService`（`deliver` 经 auth 的 `ClassService` 解析范围→userId；`receivedFor` 广播市场+定向下发内存合并分页；`canStudentAccess`；`markRead`）；`ClassService` 加 `allStudentIds()`。接口：`POST /api/report/{id}/deliver`、`GET /api/report/{id}/delivery-count`（ADMIN，**下发市场报告会被拒**）；`GET /api/student/received-reports`、`POST /api/student/received-reports/{id}/read`（STUDENT）。**`loadReportFile` 归属校验扩展**：租户级报告 **STUDENT 仅能下广播市场 或 已下发给自己的就业报告（否则 403）**，ADMIN/TEACHER/HR 不受限。前端：admin `ReportList.vue` 加两类报告生成依据说明 + 就业报告「发送」范围弹窗；student `Reports.vue` 拆两 Tab（我的 AI 报告 / 收到的报告，未读角标）。验证：市场下发被拒；就业发软工班=3 人；student01(软工)收到广播市场+定向就业并下 200 合法 PDF、student02(数据科学)只收市场、下就业**403**、下广播市场 200；mark-read 翻转成功。
+- **下载健壮性（`utils/download.js` 的 `saveBlob`）**：后端下载失败返回的是 JSON 错误体（HTTP 200 + `application/json`），但 `responseType:'blob'` 会把它也变成 Blob。`saveBlob` **必须先检查 `blob.type` 含 `application/json`**——是则读文本、`ElMessage.error(message)` 并抛错，**不能当文件存盘**（否则用户打开「PDF」看到的是 `{"code":500,...}`，约 67B）。已修。
+
 ## 后端要点
 
 - **技能字段解析统一走 `SkillUtils`**（common/utils）：库里标准格式是 JSON 数组 `["Java","MySQL"]`，但存在逗号/顿号分隔的旧数据。前端对应 `utils/skills.js`
@@ -306,7 +354,7 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 - HR：投递列表含身份不含联系方式 / 详情含简历全文 / **越权 403**（枚举 userId 与跨 HR 查看都被拦）/ 人才浏览仍全脱敏
 - 早前已验证：租户下拉 / 五个角色登录 / 教师看板统计 / 技能缺口诊断非随机 / HR「只看我发布的」(2/1/3) / Excel 导出 / PDF 内嵌中文字体 / Word 结构化表格 / 开放 API BCrypt 校验
 - **报告下载已重新验证无误**：用真实数据库拉取，PDF/Word 下载字节与磁盘文件 sha256 完全一致；PDF 为 3 页、内嵌 SimSun 子集、51 个文字块。此前「下载打不开」的报告应为旧 jar 所致（见启动流程那节）
-- **未做**：浏览器里的人工点验（深色模式配色、图表重绘、简历表单与顾问对话的交互手感）；`error_analysis.md` 里提的 XXL-Job 分布式调度未跑通
+- **未做**：浏览器里的人工点验（深色模式配色、图表重绘、简历表单与顾问对话的交互手感）；XXL-Job 分布式调度未跑通
 
 ## 下次接手前必读的三条
 

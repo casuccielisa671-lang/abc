@@ -35,4 +35,7 @@ public class SysUser extends BaseEntity {
 
     /** 状态：1=启用 0=禁用 */
     private Integer status;
+
+    /** 所属班级ID（仅学生非空，关联 sys_class.id；教师/HR/管理员为 null） */
+    private Long classId;
 }

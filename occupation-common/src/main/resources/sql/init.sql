@@ -42,12 +42,14 @@ CREATE TABLE sys_user (
     email         VARCHAR(100) DEFAULT NULL COMMENT '邮箱',
     status        TINYINT      NOT NULL DEFAULT 1 COMMENT '状态：1=启用 0=禁用',
     deleted       TINYINT      NOT NULL DEFAULT 0 COMMENT '逻辑删除：0=正常 1=已删除',
+    class_id      BIGINT       DEFAULT NULL COMMENT '所属班级ID（仅学生，关联 sys_class.id；教师/HR/管理员为 NULL）',
     create_time   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (id),
     UNIQUE KEY uk_tenant_username (tenant_id, username),
     KEY idx_tenant_id (tenant_id),
-    KEY idx_role (role)
+    KEY idx_role (role),
+    KEY idx_class_id (class_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
 -- ============================================================
@@ -181,34 +183,16 @@ CREATE TABLE analysis_result (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='分析结果表';
 
 -- ============================================================
--- 9. 报告模板表
--- ============================================================
-DROP TABLE IF EXISTS report_template;
-CREATE TABLE report_template (
-    id               BIGINT       NOT NULL AUTO_INCREMENT COMMENT '模板ID',
-    tenant_id        BIGINT       NOT NULL COMMENT '所属租户ID',
-    name             VARCHAR(200) NOT NULL COMMENT '模板名称',
-    industry         VARCHAR(100) DEFAULT NULL COMMENT '适用行业（NULL=通用）',
-    type             VARCHAR(20)  NOT NULL COMMENT '报告类型：MONTHLY/QUARTERLY/YEARLY',
-    template_content LONGTEXT     DEFAULT NULL COMMENT '模板内容（JSON 结构）',
-    status           TINYINT      NOT NULL DEFAULT 1 COMMENT '状态：1=启用 0=禁用',
-    deleted          TINYINT      NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-    create_time      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    PRIMARY KEY (id),
-    KEY idx_tenant_id (tenant_id),
-    KEY idx_type (type)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='报告模板表';
-
--- ============================================================
--- 10. 报告记录表
+-- 9. 报告记录表（无模板：报告由 大类+范围 直接生成）
 -- ============================================================
 DROP TABLE IF EXISTS report_record;
 CREATE TABLE report_record (
     id          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '记录ID',
     tenant_id   BIGINT       NOT NULL COMMENT '所属租户ID',
-    template_id BIGINT       NOT NULL COMMENT '关联模板ID',
-    params      TEXT         DEFAULT NULL COMMENT '生成参数（JSON）',
+    user_id     BIGINT       DEFAULT NULL COMMENT '归属人：NULL=管理员生成的租户级报告；有值=该学生的个人 AI 报告',
+    name        VARCHAR(200) NOT NULL COMMENT '报告名称（生成时按 大类+范围 自动生成）',
+    category    VARCHAR(20)  NOT NULL DEFAULT 'MARKET' COMMENT '报告大类：MARKET=市场行业 EMPLOYMENT=学生就业 STUDENT_AI=学生个人AI分析',
+    params      TEXT         DEFAULT NULL COMMENT '生成参数（JSON）；EMPLOYMENT 类在此存 scope：{major,enrollYear,classId}',
     file_url    VARCHAR(500) DEFAULT NULL COMMENT '生成文件URL',
     file_type   VARCHAR(10)  DEFAULT NULL COMMENT '文件类型：PDF/WORD/HTML',
     ai_summary  LONGTEXT     DEFAULT NULL COMMENT '生成时产出的智能摘要（开放API直接读取，避免重复调用大模型）',
@@ -219,7 +203,7 @@ CREATE TABLE report_record (
     update_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (id),
     KEY idx_tenant_id (tenant_id),
-    KEY idx_template_id (template_id),
+    KEY idx_user_id (user_id),
     KEY idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='报告记录表';
 
@@ -365,6 +349,91 @@ CREATE TABLE job_application (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='投递记录表';
 
 -- ============================================================
+-- 17. 班级表（学院内组织结构：专业-入学年级-班级）
+-- ============================================================
+DROP TABLE IF EXISTS sys_class;
+CREATE TABLE sys_class (
+    id          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '班级ID',
+    tenant_id   BIGINT       NOT NULL COMMENT '所属租户（学院）ID',
+    major       VARCHAR(100) NOT NULL COMMENT '专业',
+    enroll_year INT          NOT NULL COMMENT '入学年级（如 2022）',
+    class_name  VARCHAR(50)  NOT NULL COMMENT '班级名（如 "1班"）',
+    code        VARCHAR(200) NOT NULL COMMENT '统一命名：专业-入学年级-班级（如 软件工程-2022-1班）',
+    status      TINYINT      NOT NULL DEFAULT 1 COMMENT '状态：1=启用 0=禁用',
+    create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_tenant_code (tenant_id, code),
+    KEY idx_tenant_major (tenant_id, major),
+    KEY idx_tenant_year (tenant_id, enroll_year)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='班级表';
+
+-- ============================================================
+-- 18. 教师可见范围表（一个教师可多行：班主任=CLASS / 专业老师=MAJOR / 届老师=GRADE）
+-- ============================================================
+DROP TABLE IF EXISTS teacher_scope;
+CREATE TABLE teacher_scope (
+    id          BIGINT       NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    tenant_id   BIGINT       NOT NULL COMMENT '所属租户ID',
+    teacher_id  BIGINT       NOT NULL COMMENT '教师用户ID（sys_user.id，role=TEACHER）',
+    scope_type  VARCHAR(10)  NOT NULL COMMENT '范围类型：CLASS=班主任 MAJOR=专业老师 GRADE=届老师',
+    scope_value VARCHAR(200) NOT NULL COMMENT '范围值：CLASS→班级id / MAJOR→专业名 / GRADE→入学年级',
+    create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (id),
+    KEY idx_tenant_teacher (tenant_id, teacher_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='教师可见范围表';
+
+-- ============================================================
+-- 19. 资讯表（首页资讯板块：数据播报 / 精选文章 / 外部资讯）
+-- ============================================================
+DROP TABLE IF EXISTS news;
+CREATE TABLE news (
+    id           BIGINT       NOT NULL AUTO_INCREMENT COMMENT '资讯ID',
+    tenant_id    BIGINT       NOT NULL COMMENT '所属租户ID',
+    category     VARCHAR(20)  DEFAULT NULL COMMENT '技术方向：backend/frontend/test/devops/bigdata；NULL=通用',
+    type         VARCHAR(20)  NOT NULL COMMENT '类型：DATA_CAST=数据播报 ARTICLE=精选文章 EXTERNAL=外部资讯',
+    title        VARCHAR(300) NOT NULL COMMENT '标题',
+    summary      VARCHAR(600) DEFAULT NULL COMMENT '摘要',
+    content      LONGTEXT     DEFAULT NULL COMMENT '正文（仅精选文章，外部/播报为空）',
+    cover_style  VARCHAR(20)  DEFAULT 'blue' COMMENT '封面色块样式：blue/green/purple/amber',
+    source       VARCHAR(100) DEFAULT NULL COMMENT '来源：平台数据播报 / RSS源名 / 作者',
+    source_url   VARCHAR(600) DEFAULT NULL COMMENT '外部原文链接（EXTERNAL 点击跳出）',
+    link_target  VARCHAR(200) DEFAULT NULL COMMENT '站内跳转（DATA_CAST 点击去对应图表，如 /admin/dashboard）',
+    view_count   INT          NOT NULL DEFAULT 0 COMMENT '浏览数',
+    featured     TINYINT      NOT NULL DEFAULT 0 COMMENT '置顶/精选：1=是 0=否',
+    status       TINYINT      NOT NULL DEFAULT 1 COMMENT '状态：1=上架 0=下架',
+    publish_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '发布时间',
+    deleted      TINYINT      NOT NULL DEFAULT 0 COMMENT '逻辑删除',
+    create_time  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id),
+    KEY idx_tenant_type (tenant_id, type),
+    KEY idx_tenant_cat (tenant_id, category),
+    KEY idx_publish (publish_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='资讯表';
+
+-- ============================================================
+-- 19. 报告下发记录表
+--   管理员把「学生就业报告」定向发给某范围学生时，每个接收学生落一行。
+--   市场行业报告走「发布即全体可见」的广播口径，不落此表（学生端按 category=MARKET 直接可见）。
+-- ============================================================
+DROP TABLE IF EXISTS report_delivery;
+CREATE TABLE report_delivery (
+    id          BIGINT   NOT NULL AUTO_INCREMENT COMMENT '下发记录ID',
+    tenant_id   BIGINT   NOT NULL COMMENT '所属租户ID',
+    report_id   BIGINT   NOT NULL COMMENT '报告ID（指向 report_record）',
+    user_id     BIGINT   NOT NULL COMMENT '接收学生 userId',
+    read_time   DATETIME DEFAULT NULL COMMENT '阅读时间；NULL=未读',
+    deleted     TINYINT  NOT NULL DEFAULT 0 COMMENT '逻辑删除',
+    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_report_user (report_id, user_id),
+    KEY idx_tenant_id (tenant_id),
+    KEY idx_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='报告下发记录表';
+
+-- ============================================================
 -- 初始化种子数据（由 scripts/gen-seed-data.js 确定性生成，勿手改）
 --
 -- 【职位数据的三个来源，看 source + publisher_id 两列就能区分】
@@ -396,36 +465,57 @@ INSERT INTO sys_tenant (id, name, status) VALUES
 (2, '示范大学', 1),
 (3, '停用学院', 0);  -- 已禁用租户：测试“租户停用后无法登录”
 
+-- ---------- 班级（学院内组织：专业-入学年级-班级）----------
+INSERT INTO sys_class (id, tenant_id, major, enroll_year, class_name, code, status) VALUES
+(1, 1, '软件工程', 2022, '1班', '软件工程-2022-1班', 1),
+(2, 1, '计算机科学与技术', 2022, '1班', '计算机科学与技术-2022-1班', 1),
+(3, 1, '数据科学与大数据技术', 2022, '1班', '数据科学与大数据技术-2022-1班', 1),
+(4, 1, '人工智能', 2022, '1班', '人工智能-2022-1班', 1),
+(5, 1, '信息安全', 2022, '1班', '信息安全-2022-1班', 1),
+(6, 1, '统计学', 2022, '1班', '统计学-2022-1班', 1),
+(7, 1, '物联网工程', 2022, '1班', '物联网工程-2022-1班', 1),
+(8, 1, '电子商务', 2023, '1班', '电子商务-2023-1班', 1),
+(9, 1, '计算机应用技术', 2023, '1班', '计算机应用技术-2023-1班', 1),
+(10, 1, '教育技术学', 2023, '1班', '教育技术学-2023-1班', 1),
+(11, 2, '软件工程', 2022, '1班', '软件工程-2022-1班', 1);
+
 -- ---------- 用户（密码均 admin123）----------
-INSERT INTO sys_user (id, tenant_id, username, password_hash, role, real_name, phone, email, status, deleted) VALUES
-(1, 1, 'admin', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'ADMIN', '系统管理员', '13800000001', 'admin@test.edu.cn', 1, 0),
-(2, 1, 'student', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '演示学生', '13800000002', 'student@stu.test.edu.cn', 1, 0),
-(3, 1, 'teacher', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'TEACHER', '演示教师', '13800000003', 'teacher@test.edu.cn', 1, 0),
-(4, 1, 'hr', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'HR', '演示HR', '13800000004', 'hr@yunpin.example.com', 1, 0),
-(5, 1, 'student01', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '陈嘉怡', '13811000001', 'chenjiayi@stu.test.edu.cn', 1, 0),
-(6, 1, 'student02', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '李昊然', '13811000002', 'lihaoran@stu.test.edu.cn', 1, 0),
-(7, 1, 'student03', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '王雨桐', '13811000003', 'wangyutong@stu.test.edu.cn', 1, 0),
-(8, 1, 'student04', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '张子墨', '13811000004', 'zhangzimo@stu.test.edu.cn', 1, 0),
-(9, 1, 'student05', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '刘思远', '13811000005', 'liusiyuan@stu.test.edu.cn', 1, 0),
-(10, 1, 'student06', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '杨欣然', '13811000006', 'yangxinran@stu.test.edu.cn', 1, 0),
-(11, 1, 'student07', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '赵一鸣', '13811000007', 'zhaoyiming@stu.test.edu.cn', 1, 0),
-(12, 1, 'student08', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '黄诗涵', '13811000008', 'huangshihan@stu.test.edu.cn', 1, 0),
-(13, 1, 'student09', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '周俊杰', '13811000009', 'zhoujunjie@stu.test.edu.cn', 1, 0),
-(14, 1, 'student10', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '吴雅静', '13811000010', 'wuyajing@stu.test.edu.cn', 1, 0),
-(15, 1, 'student11', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '徐浩宇', '13811000011', 'xuhaoyu@stu.test.edu.cn', 1, 0),
-(16, 1, 'student12', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '孙梦琪', '13811000012', 'sunmengqi@stu.test.edu.cn', 1, 0),
-(17, 1, 'teacher01', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'TEACHER', '王建国', '13822000001', 'wangjianguo@test.edu.cn', 1, 0),
-(18, 1, 'teacher02', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'TEACHER', '林晓芳', '13822000002', 'linxiaofang@test.edu.cn', 1, 0),
-(19, 1, 'hr01', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'HR', '郑倩', '13833000001', 'zhengqian@yunpin.example.com', 1, 0),
-(20, 1, 'hr02', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'HR', '高翔', '13833000002', 'gaoxiang@zhihui.example.com', 1, 0),
-(21, 1, 'student98', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '钱多多（已禁用）', '13844000001', 'qianduoduo@stu.test.edu.cn', 0, 0),
-(22, 1, 'student99', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '孔乙己（已删除）', '13844000002', 'kongyiji@stu.test.edu.cn', 1, 1),
-(23, 2, 'admin', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'ADMIN', '示范大学管理员', '13900000001', 'admin@demo.edu.cn', 1, 0),
-(24, 2, 'student', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '示范学生', '13900000002', 'student@demo.edu.cn', 1, 0),
-(25, 2, 'teacher', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'TEACHER', '示范教师', '13900000003', 'teacher@demo.edu.cn', 1, 0),
-(26, 1, 'hr03', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'HR', '孙浩', '13833000003', 'sunhao@yunpin.example.com', 1, 0),
-(27, 1, 'hr04', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'HR', '许静怡', '13833000004', 'xujingyi@zhihui.example.com', 1, 0),
-(28, 1, 'hr05', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'HR', '罗晨', '13833000005', 'luochen@hengxin.example.com', 1, 0);
+INSERT INTO sys_user (id, tenant_id, username, password_hash, role, real_name, phone, email, status, deleted, class_id) VALUES
+(1, 1, 'admin', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'ADMIN', '系统管理员', '13800000001', 'admin@test.edu.cn', 1, 0, NULL),
+(2, 1, 'student', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '演示学生', '13800000002', 'student@stu.test.edu.cn', 1, 0, 2),
+(3, 1, 'teacher', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'TEACHER', '演示教师', '13800000003', 'teacher@test.edu.cn', 1, 0, NULL),
+(4, 1, 'hr', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'HR', '演示HR', '13800000004', 'hr@yunpin.example.com', 1, 0, NULL),
+(5, 1, 'student01', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '陈嘉怡', '13811000001', 'chenjiayi@stu.test.edu.cn', 1, 0, 1),
+(6, 1, 'student02', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '李昊然', '13811000002', 'lihaoran@stu.test.edu.cn', 1, 0, 3),
+(7, 1, 'student03', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '王雨桐', '13811000003', 'wangyutong@stu.test.edu.cn', 1, 0, 4),
+(8, 1, 'student04', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '张子墨', '13811000004', 'zhangzimo@stu.test.edu.cn', 1, 0, 2),
+(9, 1, 'student05', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '刘思远', '13811000005', 'liusiyuan@stu.test.edu.cn', 1, 0, 5),
+(10, 1, 'student06', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '杨欣然', '13811000006', 'yangxinran@stu.test.edu.cn', 1, 0, 8),
+(11, 1, 'student07', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '赵一鸣', '13811000007', 'zhaoyiming@stu.test.edu.cn', 1, 0, 1),
+(12, 1, 'student08', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '黄诗涵', '13811000008', 'huangshihan@stu.test.edu.cn', 1, 0, 6),
+(13, 1, 'student09', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '周俊杰', '13811000009', 'zhoujunjie@stu.test.edu.cn', 1, 0, 9),
+(14, 1, 'student10', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '吴雅静', '13811000010', 'wuyajing@stu.test.edu.cn', 1, 0, 10),
+(15, 1, 'student11', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '徐浩宇', '13811000011', 'xuhaoyu@stu.test.edu.cn', 1, 0, 7),
+(16, 1, 'student12', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '孙梦琪', '13811000012', 'sunmengqi@stu.test.edu.cn', 1, 0, 1),
+(17, 1, 'teacher01', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'TEACHER', '王建国', '13822000001', 'wangjianguo@test.edu.cn', 1, 0, NULL),
+(18, 1, 'teacher02', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'TEACHER', '林晓芳', '13822000002', 'linxiaofang@test.edu.cn', 1, 0, NULL),
+(19, 1, 'hr01', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'HR', '郑倩', '13833000001', 'zhengqian@yunpin.example.com', 1, 0, NULL),
+(20, 1, 'hr02', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'HR', '高翔', '13833000002', 'gaoxiang@zhihui.example.com', 1, 0, NULL),
+(21, 1, 'student98', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '钱多多（已禁用）', '13844000001', 'qianduoduo@stu.test.edu.cn', 0, 0, NULL),
+(22, 1, 'student99', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '孔乙己（已删除）', '13844000002', 'kongyiji@stu.test.edu.cn', 1, 1, NULL),
+(23, 2, 'admin', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'ADMIN', '示范大学管理员', '13900000001', 'admin@demo.edu.cn', 1, 0, NULL),
+(24, 2, 'student', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'STUDENT', '示范学生', '13900000002', 'student@demo.edu.cn', 1, 0, 11),
+(25, 2, 'teacher', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'TEACHER', '示范教师', '13900000003', 'teacher@demo.edu.cn', 1, 0, NULL),
+(26, 1, 'hr03', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'HR', '孙浩', '13833000003', 'sunhao@yunpin.example.com', 1, 0, NULL),
+(27, 1, 'hr04', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'HR', '许静怡', '13833000004', 'xujingyi@zhihui.example.com', 1, 0, NULL),
+(28, 1, 'hr05', '$2a$10$cWguMXjjJh1vYVAE34YdaODzl0uCf/XQD2FOmXGfHxvBhr7VlG80q', 'HR', '罗晨', '13833000005', 'luochen@hengxin.example.com', 1, 0, NULL);
+
+-- ---------- 教师可见范围（班主任/专业老师/届老师）----------
+INSERT INTO teacher_scope (id, tenant_id, teacher_id, scope_type, scope_value) VALUES
+(1, 1, 17, 'CLASS', '1'),
+(2, 1, 18, 'MAJOR', '计算机科学与技术'),
+(3, 1, 3, 'GRADE', '2022'),
+(4, 2, 25, 'CLASS', '11');
 
 -- ---------- 学生画像（student12/孙梦琪 故意无画像，测试“请先完善画像”提示）----------
 INSERT INTO sys_student_profile (id, tenant_id, user_id, major, skills, expected_city, expected_industry, expected_salary_min, expected_salary_max, education_level) VALUES
@@ -1001,18 +1091,20 @@ INSERT INTO analysis_result (id, tenant_id, dimension, dimension_value, metric_n
 (301, 2, 'contact_city', '北京', 'contact_count', 1, 'MONTH', '2026-07', '2026-07-09 08:00:00'),
 (302, 2, 'contact_industry', '互联网/IT', 'contact_count', 3, 'MONTH', '2026-07', '2026-07-09 08:00:00');
 
--- ---------- 报告模板（content 为 NULL 时走内置默认模板；模板5已禁用）----------
-INSERT INTO report_template (id, tenant_id, name, industry, type, template_content, status, deleted, create_time) VALUES
-(1, 1, '就业市场月度分析报告', NULL, 'MONTHLY', NULL, 1, 0, '2026-06-20 10:00:00'),
-(2, 1, '互联网行业季度专项报告', '互联网/IT', 'QUARTERLY', NULL, 1, 0, '2026-06-22 15:30:00'),
-(3, 1, '年度就业质量白皮书', NULL, 'YEARLY', NULL, 1, 0, '2026-06-25 09:00:00'),
-(4, 1, '简版摘要报告（自定义模板）', NULL, 'MONTHLY', '<html><head><meta charset="UTF-8"/><style>body{font-family:SimSun,"Microsoft YaHei","WenQuanYi Zen Hei","Noto Sans CJK SC","PingFang SC",sans-serif;padding:24px;}</style></head><body><h1>${title}</h1><p>生成时间：${generateTime}</p><h2>智能摘要</h2><p>${aiSummary}</p><h2>热门技能 Top20</h2><table><#list skillHot as item><tr><td>${item.name}</td><td>${item.value}</td></tr></#list></table></body></html>', 1, 0, '2026-07-02 16:45:00'),
-(5, 1, '旧版月报模板（标签未闭合已停用）', NULL, 'MONTHLY', '<html><body><h1>${title}<table><tr><td>废弃', 0, 0, '2026-06-19 11:00:00'),
-(6, 2, '就业市场月度分析报告', NULL, 'MONTHLY', NULL, 1, 0, '2026-07-03 10:00:00');
+-- ---------- 报告记录（一条历史失败样例；成功记录请在页面上现场生成。报告已无模板概念，由 大类+范围 直接生成）----------
+INSERT INTO report_record (id, tenant_id, name, category, params, file_url, file_type, status, error_msg, create_time) VALUES
+(1, 1, '就业市场分析报告', 'MARKET', '{}', NULL, 'PDF', 'FAILED', '示例：一条历史失败记录（PDF 渲染失败）', '2026-06-28 14:12:00');
 
--- ---------- 报告记录（一条历史失败记录，对应模板5被停用的原因；成功记录请在页面上现场生成）----------
-INSERT INTO report_record (id, tenant_id, template_id, params, file_url, file_type, status, error_msg, create_time) VALUES
-(1, 1, 5, '{}', NULL, 'PDF', 'FAILED', 'PDF 渲染失败：模板 HTML 标签未闭合（tr/td/table）', '2026-06-28 14:12:00');
+-- ---------- 资讯（DATA_CAST 数据播报 / ARTICLE 精选文章 / EXTERNAL 外部资讯占位）----------
+INSERT INTO news (id, tenant_id, category, type, title, summary, content, cover_style, source, source_url, link_target, view_count, featured, status, publish_time) VALUES
+(1, 1, NULL, 'DATA_CAST', '本平台在库岗位达 114 个，数据分析已就绪', '涵盖 90 个采集岗位与 24 个站内职位，覆盖 10 座主要城市、8 大技术方向，看板与推荐均基于此。', NULL, 'blue', '平台数据播报', NULL, '/admin/dashboard', 152, 1, 1, '2026-07-09 08:10:00'),
+(2, 1, 'backend', 'DATA_CAST', 'Java 稳居技能热度榜首', '在全部岗位中，要求 Java 的职位数量最多，其后为 Python、MySQL。后端方向需求持续旺盛。', NULL, 'blue', '平台数据播报', NULL, '/admin/dashboard', 61, 0, 1, '2026-07-09 08:12:00'),
+(3, 1, NULL, 'DATA_CAST', '上海、北京、深圳岗位最集中', '按城市分布，上海岗位数领先，北京、深圳紧随其后；杭州、成都为新一线热门去向。', NULL, 'green', '平台数据播报', NULL, '/admin/dashboard', 195, 0, 1, '2026-07-09 08:14:00'),
+(4, 1, 'bigdata', 'DATA_CAST', '大数据方向平均薪资领先', '按行业统计，大数据 / 人工智能方向平均薪资高于全站均值，Spark、Flink 等技能溢价明显。', NULL, 'purple', '平台数据播报', NULL, '/admin/employment', 37, 0, 1, '2026-07-09 08:16:00'),
+(5, 1, NULL, 'DATA_CAST', '投递转化：73 份投递中已产生 3 个 OFFER', '站内投递共 73 份，其中面试阶段 19 份、录用 3 份；及时完善画像与简历有助于提升转化。', NULL, 'amber', '平台数据播报', NULL, '/admin/employment', 120, 0, 1, '2026-07-09 08:18:00'),
+(6, 1, 'backend', 'ARTICLE', '2026 后端开发就业观察：微服务与云原生成标配', '从平台岗位要求看，Spring Boot、微服务、容器化几乎成为后端岗位的默认门槛。', '<p>综合本平台采集到的后端岗位数据，Spring Boot、Spring Cloud、Redis、消息队列（Kafka/RocketMQ）出现频率显著上升。</p><p>建议在校生优先夯实 Java 基础与数据库，再向微服务、容器化（Docker/K8s）延伸，配合一到两个完整项目经历，将明显提升竞争力。</p>', 'blue', '就业指导中心', NULL, NULL, 219, 1, 1, '2026-07-06 10:00:00'),
+(7, 1, 'frontend', 'ARTICLE', '前端招聘趋势：工程化与框架深度并重', '企业更看重 Vue/React 的工程化实践与组件设计能力，而非仅会写页面。', '<p>平台前端岗位中，Vue、TypeScript、构建工具（Vite/Webpack）、组件化设计是高频关键词。</p><p>建议同学在掌握一个主流框架的基础上，理解其响应式原理与工程化配置，并积累可展示的项目。</p>', 'green', '就业指导中心', NULL, NULL, 307, 0, 1, '2026-07-05 14:30:00'),
+(8, 1, NULL, 'EXTERNAL', '示例：外部就业资讯（接入 Google News RSS 后在此展示）', '外部资讯仅展示标题与摘要，点击「阅读原文」跳转来源站点；封面用色块占位。', NULL, 'purple', '外部来源示例', 'https://news.google.com/', NULL, 103, 0, 1, '2026-07-08 09:00:00');
 
 -- ---------- 推送记录 ----------
 INSERT INTO push_record (id, tenant_id, user_id, type, title, content, is_read, create_time) VALUES

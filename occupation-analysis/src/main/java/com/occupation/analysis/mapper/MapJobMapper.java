@@ -27,4 +27,11 @@ public interface MapJobMapper {
             "WHERE title LIKE CONCAT('%', #{keyword}, '%') AND city IS NOT NULL AND city <> '' " +
             "GROUP BY city ORDER BY gatherCnt DESC LIMIT 40")
     List<Map<String, Object>> selectCityGatherByJobLike(@Param("keyword") String keyword);
+
+    /** 全量城市分布：岗位数 + 平均薪资（(min+max)/2 的均值） */
+    @Select("SELECT city AS cityName, COUNT(*) AS jobCount, " +
+            "ROUND(AVG((COALESCE(salary_min,0)+COALESCE(salary_max,0))/2)) AS avgSalary " +
+            "FROM job_detail WHERE city IS NOT NULL AND city <> '' " +
+            "GROUP BY city ORDER BY jobCount DESC")
+    List<Map<String, Object>> selectCityDistribution();
 }

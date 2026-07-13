@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-// 根组件 — 仅作路由容器（主题样式见 styles/theme.css）
+// 根组件 — 仅作路由容器（主题样式见 styles/tech-colors.css + theme-tech.css，在 main.js 引入）
 </script>
 
 <style>

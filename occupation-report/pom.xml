@@ -27,6 +27,12 @@
             <artifactId>occupation-analysis</artifactId>
         </dependency>
 
+        <!-- 跨模块：EMPLOYMENT 类报告调用 EmploymentReportService 聚合就业数据（recommend 不依赖 report，无环） -->
+        <dependency>
+            <groupId>com.occupation</groupId>
+            <artifactId>occupation-recommend</artifactId>
+        </dependency>
+
         <!-- Freemarker 模板引擎 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
