@@ -51,7 +51,7 @@ cd occupation-web-ui && npm run dev       # 前端 5173
 
 - 脚本位置：`occupation-common/src/main/resources/sql/init.sql`（DROP+CREATE 19 张表 + 种子数据，可重复执行）
 - **资讯表 `news`（2026-07-12 新增，首页资讯板块）**：`type` = DATA_CAST（数据播报，点击去图表 `link_target`）/ ARTICLE（精选文章，有 `content`）/ EXTERNAL（外部资讯，跳 `source_url`）；`category` = 技术方向（backend/frontend/…，null=通用）；封面用 `cover_style` 色块占位。后端在 **occupation-recommend**（`News`/`NewsService`/`NewsController`，`GET /api/news`、`/api/news/latest`、`/api/news/{id}`，任意登录角色可读）。增量脚本 `upgrade-2026-07-12-news.sql`。种子 8 条（5 播报 + 2 文章 + 1 外部占位）。**RSS 拉取(Google News)与管理端资讯 CRUD、数据播报自动生成 = 待做**
-- **首页改造已完成（2026-07-13，各角色 Bento 工作台）**：各角色首页从"整屏大地图落地页"改为**角色工作台**。学生 `views/student/StudentDashboard.vue`、教师 `views/teacher/TeacherDashboard.vue`、HR `views/hr/HrDashboard.vue`（Bento 网格：欢迎条 + 地图 hero + 角色 KPI + 主内容 + 资讯格子），**管理员**不单独做工作台（管理员是运维用户、不需要吸睛引导页）：`/admin` **重定向到 `/admin/dashboard`**（2026-07-14 改，原来 `path:''` 和 `dashboard` 两个路由都指 `Dashboard.vue`，菜单里「首页」「数据看板」两项指向同一页、像没做完；现只保留一个「数据看板」入口，`AdminHome` 路由已删）。共享组件 `components/home/`：`MapHeroTile.vue`（地图 hero 静态预览，**点击跳独立地图页 `/{role}/map`**）、`NewsTile.vue`（资讯格子）、`NewsDetailDialog.vue`。共享页 `views/common/`：`NewsPage.vue`（资讯全览，四端 `/{role}/news`）、`MapExplore.vue`（3D 地图页，四端 `/{role}/map`）。**旧 `views/Home/`（HomeIndex/JobNews/jobNewsData）已整目录删除。** 注意 `views/student/StudentHome.vue`（路由 `/student/jobs`，命名易误解，别和首页 `StudentDashboard.vue` 搞混）**2026-07-14 起是「职位信息」四标签中心**——见下方「学生职位信息中心」章节
+- **首页改造已完成（2026-07-13，各角色 Bento 工作台）**：各角色首页从"整屏大地图落地页"改为**角色工作台**。学生 `views/student/StudentDashboard.vue`、教师 `views/teacher/TeacherDashboard.vue`、HR `views/hr/HrDashboard.vue`（Bento 网格：欢迎条 + 地图 hero + 角色 KPI + 主内容 + 资讯格子），**管理员**不单独做工作台（管理员是运维用户、不需要吸睛引导页）：`/admin` **重定向到 `/admin/dashboard`**（2026-07-14 改，原来 `path:''` 和 `dashboard` 两个路由都指 `Dashboard.vue`，菜单里「首页」「数据看板」两项指向同一页、像没做完；现只保留一个数据分析入口，`AdminHome` 路由已删；该入口 2026-07-14 又与「就业分析」合并为「数据分析」标签中心，见下方「标签中心导航整合」）。共享组件 `components/home/`：`MapHeroTile.vue`（地图 hero 静态预览，**点击跳独立地图页 `/{role}/map`**）、`NewsTile.vue`（资讯格子）、`NewsDetailDialog.vue`。共享页 `views/common/`：`NewsPage.vue`（资讯全览，四端 `/{role}/news`）、`MapExplore.vue`（3D 地图页，四端 `/{role}/map`）。**旧 `views/Home/`（HomeIndex/JobNews/jobNewsData）已整目录删除。** 注意 `views/student/StudentHome.vue`（路由 `/student/jobs`，命名易误解，别和首页 `StudentDashboard.vue` 搞混）**2026-07-14 起是「职位信息」四标签中心**——见下方「学生职位信息中心」章节
 - **3D 地图已换 echarts-gl（2026-07-13，弃用自研 three.js）**：`MapExplore.vue` 用 **echarts-gl `geo3D` + `bar3D`/`scatter3D`**（柱状/光点两模式），装了 `echarts-gl`，中国底图从 Aliyun DataV geojson 外链注册。**图层**：`岗位数`/`平均薪资`（市场，全角色）+ `学生意向`/`投递去向`（学生侧，仅教师/ADMIN，按可见范围过滤）。后端接口：`GET /api/map/cityDistribution`（analysis，全量城市岗位数+平均薪资+坐标）、`GET /api/teacher/map/intent-cities`、`/application-cities`（recommend `TeacherMapService`，按 `TeacherScopeService` 范围过滤）；城市坐标走 `common/CityGeoUtil`。**旧 `components/visualization/China3DMap.vue` + `lib/chinaMap3d/` 已无引用（孤儿），待清理。** 地图默认展示全量分布、自动旋转、hover tooltip、visualMap 图例、城市排行侧栏。**echarts-gl 3D 视觉（柱高/配色/光照）待浏览器微调。**
 - **学院内组织结构（2026-07-12 新增）**：`sys_class`（班级：专业-入学年级-班级）、`sys_user.class_id`（学生班级归属，仅学生非空）、`teacher_scope`（教师可见范围：CLASS=班主任 / MAJOR=专业老师 / GRADE=届老师，一教师可多行）。种子：11 个班级 + 4 条教师范围，演示三种可见范围（班主任软工班 3 人 / 专业老师计科 2 人 / 届老师 2022 级 10 人——**均为当前租户内计数**，跨租户裸 SQL 会多算租户2的 2022 班而得 11，别被误导）。增量升级脚本 `upgrade-2026-07-12-class-org.sql`。**注意班级归属放 `sys_user` 不放选填的画像；MAJOR/GRADE 范围经 class 解析，`sys_class.major` 为组织权威专业，与 `sys_student_profile.major`（喂推荐）分工**
 - MySQL 容器**首次启动（数据卷为空）时自动执行**它
@@ -271,6 +271,22 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 - **前端「职位信息」四标签中心（2026-07-14）**：`views/student/StudentHome.vue`（路由 `/student/jobs`）从「职位推荐列表」改造成四标签中心——标题「职位信息」旁一排标签 `可投递岗位 / 市场参考 / 我的投递 / 我的收藏`，一次只显示一块，不用长滚即到市场参考。**顶部菜单「职位推荐」改名「职位信息」，删掉「我的投递」「我的收藏」两项（菜单 10→8 项）**。我的投递/我的收藏复用 `Applications.vue`/`Favorites.vue`（加 `embedded` 属性隐藏其自带大标题）。**路由协调**：`/student/applications`、`/student/favorites` 路由保留、都指向 `StudentHome.vue`，组件按路径自动选中对应标签（`/student/jobs?tab=market` = 市场参考）——Dashboard KPI 卡片、消息通知等老跳转照常生效；`MainLayout` 高亮把投递/收藏/职位详情统一归到「职位信息」。
 
 `CONTACT` 行为的推荐权重是 +2（与 `APPLY` 同级），已联系过的职位不再出现在推荐里。
+
+### 标签中心导航整合（2026-07-14，四处，同一套模式）
+
+为精简顶部横向菜单，把「同一类的多个平级页面」收进**标签中心**：标题旁一排分段标签切换，一次只显示一块。**共同套路**：被收纳的原页面加 `embedded` 属性隐藏自带大标题；原路由全部保留、都指向中心组件，中心按 `route.path`（必要时加 `?tab=`）自动选中标签，**老跳转/深链一律照常生效**；`MainLayout` 的 `activeIndex` 把并入的子路径高亮到中心的菜单项。
+
+| 中心（新组件） | 标签 | 合并的原页面 | 路由 | 菜单 |
+|---|---|---|---|---|
+| 学生「职位信息」`StudentHome.vue` | 可投递/市场参考/我的投递/我的收藏 | Applications/Favorites | `/student/jobs`(`?tab=market`)、`/student/applications`、`/student/favorites` | 「职位推荐」→「职位信息」，删投递/收藏 |
+| 学生「我的资料」`MyData.vue` | 个人画像/我的简历 | Profile/Resume | `/student/profile`、`/student/resume` | 「个人画像」「我的简历」→「我的资料」 |
+| 管理员「数据分析」`Analysis.vue` | 市场看板/就业分析 | Dashboard/Employment | `/admin/dashboard`、`/admin/employment` | 「数据看板」「就业分析」→「数据分析」 |
+| 管理员「组织管理」`OrgManage.vue` | 用户/班级/教师范围 | UserManage/ClassManage | `/admin/user`、`/admin/class`(`?tab=scopes`) | 「用户管理」「班级管理」→「组织管理」 |
+
+- **结果**：学生菜单 10→6 项（首页/职位信息/我的资料/我的报告/职业顾问/资讯 + 工具箱），管理员 8→6 项（数据分析/采集管理/报告中心/组织管理/资讯管理/工具箱）。
+- **两处技术细节**：①`Analysis.vue` 的两个子标签用 **`v-if` 只挂载当前标签**（图表在可见容器里初始化，规避 ECharts 在 `display:none` 里算出 0 宽度而错位/空白）；其余中心用 `v-show` 常驻挂载（保留表单编辑/列表分页等状态）。②`Analysis.vue` 顶部**共用一个「重算分析数据」按钮**（两看板数据同源 `analysis_result`），子组件 `defineExpose({ reload })` 供中心重算后刷新当前标签。③`OrgManage.vue` 把 `ClassManage` 原本的内部两标签（班级/教师范围）**拉平**成顶层标签：给 `ClassManage` 传 `section` 属性驱动显示、CSS 隐藏其内部 `.el-tabs__header`。
+- **`报告中心`（`ReportList.vue`）刻意不并入「数据分析」**：它是"生成/下载/发送报告文档"的动作型工作台，不是"看分析数据的第三个视图"，并入会破坏内聚、伤可发现性。
+- **顶部菜单溢出滚动条（`.top-menu-wrap` 那条 4px「下栏」）已移除**：菜单精简后一般不溢出，改为不显示滚动条（`scrollbar-width:none`）；但**保留 `overflow-x:auto` 作窄屏兜底**，避免窄窗口菜单被截断。
 
 ## 上一轮新增/改动的接口
 
