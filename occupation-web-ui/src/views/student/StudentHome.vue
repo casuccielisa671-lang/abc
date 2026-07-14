@@ -61,8 +61,8 @@ import { useEmploymentStore } from '@/store/employment'
 
 const empStore = useEmploymentStore()
 
-/** 取多一些：可投递岗位远少于采集岗位，取 20 条常常一条可投的都排不进来 */
-const TOP_N = 30
+/** 可投递 / 市场参考 两栏各自独立取前 25 名（后端 matchGrouped 按栏分别截取，互不抢名额） */
+const TOP_N = 25
 
 const router = useRouter()
 const list = ref([])

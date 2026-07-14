@@ -30,6 +30,18 @@ public interface JobMatchService {
     List<MatchJobVO> match(Long userId, int topN);
 
     /**
+     * 分栏推荐：可投递（HR 站内）与市场参考（采集）两栏各自独立取前 perCategory 名。
+     * <p>
+     * 与 {@link #match} 的区别：match 是单一混合榜单取 Top N，数量众多的市场参考职位
+     * 会把可投递职位挤出榜单；本方法让两栏互不抢名额，各自展示最匹配的若干条。
+     *
+     * @param userId      学生用户 ID
+     * @param perCategory 每栏返回条数（如 25）
+     * @return 可投递在前、市场参考在后的合并列表（前端按 applicable 分栏渲染）
+     */
+    List<MatchJobVO> matchGrouped(Long userId, int perCategory);
+
+    /**
      * 对单个职位打分（与 {@link #match} 同一套规则，不受「已投递则排除」的过滤影响）。
      * <p>
      * 供「AI 解读这条推荐」按需调用 —— 推荐列表一次 20 条，逐条调大模型既慢又贵，

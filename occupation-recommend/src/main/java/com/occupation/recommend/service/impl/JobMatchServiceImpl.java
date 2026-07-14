@@ -72,6 +72,39 @@ public class JobMatchServiceImpl implements JobMatchService {
 
     @Override
     public List<MatchJobVO> match(Long userId, int topN) {
+        // 混合榜单：所有候选按分降序取 Top N（推送 top5 等场景用），沿用意向城市初筛
+        return scoreAll(userId, false).stream()
+                .sorted(Comparator.comparingInt(MatchJobVO::getScore).reversed())
+                .limit(topN)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<MatchJobVO> matchGrouped(Long userId, int perCategory) {
+        // 可投递 / 市场参考 两栏各自独立取前 perCategory 名：
+        // 采集来的市场参考职位数量远多于 HR 站内职位，若共用一个榜单会把可投递挤出去。
+        // 用全量候选池（不按意向城市硬过滤，城市仅作打分项）：否则 mock 填满本市后
+        // 会停止「放开城市」，把外地的可投递职位一并挡在候选池外。
+        // 返回顺序：可投递在前、市场参考在后（前端仍按 applicable 分栏渲染）。
+        List<MatchJobVO> all = scoreAll(userId, true);
+        Comparator<MatchJobVO> byScore = Comparator.comparingInt(MatchJobVO::getScore).reversed();
+        List<MatchJobVO> result = new ArrayList<>();
+        result.addAll(all.stream()
+                .filter(v -> v.getJob() != null && v.getJob().isApplicable())
+                .sorted(byScore).limit(perCategory).collect(Collectors.toList()));
+        result.addAll(all.stream()
+                .filter(v -> v.getJob() != null && !v.getJob().isApplicable())
+                .sorted(byScore).limit(perCategory).collect(Collectors.toList()));
+        return result;
+    }
+
+    /**
+     * 打分（步骤 1-4），返回未排序的全部候选评分结果，供 match / matchGrouped 复用。
+     *
+     * @param fullPool true=全量候选池（分栏推荐用，城市仅作打分项，不硬过滤）；
+     *                 false=意向城市初筛、不足 20 条再放开（混合榜单 / 推送用）
+     */
+    private List<MatchJobVO> scoreAll(Long userId, boolean fullPool) {
         // 1. 学生画像
         SysStudentProfile profile = profileService.getByUserId(userId);
         if (profile == null) {
@@ -90,10 +123,15 @@ public class JobMatchServiceImpl implements JobMatchService {
                 .map(StudentBehavior::getJobId)
                 .collect(Collectors.toSet());
 
-        // 3. 候选职位：意向城市初筛；不足 20 条时放开城市重查
-        List<JobDetailVO> candidates = queryCandidates(profile.getExpectedCity());
-        if (candidates.size() < 20) {
+        // 3. 候选职位：分栏推荐取全量池（城市仅作打分项）；混合榜单按意向城市初筛、不足 20 条再放开
+        List<JobDetailVO> candidates;
+        if (fullPool) {
             candidates = queryCandidates(null);
+        } else {
+            candidates = queryCandidates(profile.getExpectedCity());
+            if (candidates.size() < 20) {
+                candidates = queryCandidates(null);
+            }
         }
 
         // 4. 逐条打分（跳过已投递/已忽略）
@@ -107,12 +145,7 @@ public class JobMatchServiceImpl implements JobMatchService {
 
         log.info("推荐打分完成: userId={}, 候选={}, 排除已投递/已忽略={}, 偏好技能={}",
                 userId, candidates.size(), excluded.size(), skillAffinity.size());
-
-        // 5. 降序取 Top N
-        return results.stream()
-                .sorted(Comparator.comparingInt(MatchJobVO::getScore).reversed())
-                .limit(topN)
-                .collect(Collectors.toList());
+        return results;
     }
 
     @Override

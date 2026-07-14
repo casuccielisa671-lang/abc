@@ -45,8 +45,9 @@ public class RecommendController {
     /** 个性化推荐列表（按匹配分降序，含匹配理由和缺失技能提示） */
     @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/recommend")
-    public Result<List<MatchJobVO>> recommend(@RequestParam(defaultValue = "20") int topN) {
-        return Result.ok(jobMatchService.match(UserContextHolder.getUserId(), topN));
+    public Result<List<MatchJobVO>> recommend(@RequestParam(defaultValue = "25") int topN) {
+        // 可投递 / 市场参考 两栏各自独立取前 topN 名，互不抢名额
+        return Result.ok(jobMatchService.matchGrouped(UserContextHolder.getUserId(), topN));
     }
 
     /** 职位详情（自动记录 VIEW 行为，用于活跃度统计与反馈闭环） */
