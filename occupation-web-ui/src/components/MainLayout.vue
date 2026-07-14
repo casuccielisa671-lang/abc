@@ -128,8 +128,7 @@ const flatMenuItems = computed(() => {
     STUDENT: [
       { index: '/student', title: '首页', icon: House },
       { index: '/student/jobs', title: '职位信息', icon: Promotion },
-      { index: '/student/profile', title: '个人画像', icon: User },
-      { index: '/student/resume', title: '我的简历', icon: Tickets },
+      { index: '/student/profile', title: '我的资料', icon: User },
       { index: '/student/reports', title: '我的报告', icon: Document },
       { index: '/student/advisor', title: '职业顾问', icon: ChatDotRound },
       { index: '/student/news', title: '资讯', icon: Notebook },
@@ -188,6 +187,10 @@ const activeIndex = computed(() => {
       || route.path === '/student/favorites'
       || route.path.startsWith('/student/job/')) {
     return '/student/jobs'
+  }
+  // 「我的简历」并入「我的资料」中心（菜单项为 /student/profile）
+  if (route.path === '/student/resume') {
+    return '/student/profile'
   }
   const leafItems = flatMenuItems.value.flatMap(item =>
     item.children ? [item, ...item.children] : [item]

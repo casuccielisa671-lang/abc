@@ -1,13 +1,17 @@
 <template>
   <div class="resume-page">
     <div class="page-head with-actions">
-      <div>
+      <div v-if="!embedded">
         <h2 class="page-title">我的简历</h2>
         <p class="page-sub">
           填写后 HR 才能在收到你的投递时看到简历。
           <span v-if="!form.exists && !loading">你还没有创建简历，先从「求职意向」写起。</span>
         </p>
       </div>
+      <p v-else class="page-sub embed-hint">
+        填写后 HR 才能在收到你的投递时看到简历。
+        <span v-if="!form.exists && !loading">你还没有创建简历，先从「求职意向」写起。</span>
+      </p>
       <div class="page-actions">
         <el-button :loading="reviewing" @click="handleReview">AI 诊断简历</el-button>
         <el-button type="primary" :loading="saving" @click="handleSave">保存简历</el-button>
@@ -206,6 +210,9 @@ import { ref, reactive, onMounted } from 'vue'
 import { getResume, saveResume, aiReviewResume, aiPolishResume } from '@/api/student'
 import SkillTags from '@/components/SkillTags.vue'
 import { ElMessage } from 'element-plus'
+
+// embedded=true 时隐藏自身大标题（保留 AI诊断/保存 按钮），供「我的资料」中心以标签页嵌入
+defineProps({ embedded: { type: Boolean, default: false } })
 
 const DEGREES = ['专科', '本科', '硕士', '博士']
 

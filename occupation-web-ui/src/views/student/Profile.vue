@@ -1,6 +1,6 @@
 <template>
   <div class="profile-page">
-    <div class="page-head">
+    <div class="page-head" v-if="!embedded">
       <h2 class="page-title">个人画像</h2>
       <p class="page-sub">完善画像后，系统将为你精准匹配职位</p>
     </div>
@@ -110,6 +110,9 @@ import { Plus } from '@element-plus/icons-vue'
 import { getProfile, saveProfile, getProfileStats } from '@/api/student'
 import { parseSkills } from '@/utils/skills'
 import { ElMessage, ElMessageBox } from 'element-plus'
+
+// embedded=true 时隐藏自身大标题，供「我的资料」中心以标签页嵌入
+defineProps({ embedded: { type: Boolean, default: false } })
 
 const loading = ref(false)
 const saving = ref(false)
