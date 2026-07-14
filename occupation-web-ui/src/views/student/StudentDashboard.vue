@@ -8,14 +8,17 @@
         <small>{{ profileSub }}</small>
       </div>
       <div class="prog">
-        <div class="ring" :style="{ '--p': completeness }">
+        <div class="ring" :class="{ full: completeness === 100 }" :style="{ '--p': completeness }">
           <span>{{ completeness }}%</span>
         </div>
         <div class="ptxt">
           <b>画像完善度 {{ completeness }}%</b>
-          <span>补齐后推荐更准</span>
+          <span>{{ completeness === 100 ? '已全部完善' : '补齐后推荐更准' }}</span>
         </div>
-        <el-button type="primary" @click="go('/student/profile')">去完善</el-button>
+        <el-button
+          :type="completeness === 100 ? 'success' : 'danger'"
+          @click="go('/student/profile')"
+        >{{ completeness === 100 ? '已完善' : '去完善' }}</el-button>
       </div>
     </section>
 
@@ -266,10 +269,13 @@ onMounted(() => {
 .emp-badge.seeking { background: var(--color-primary-lighter); color: var(--color-primary); }
 .emp-badge.idle { background: var(--color-bg-secondary); color: var(--color-text-tertiary); }
 .prog { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+/* 画像完善度：未满=红，满 100=绿 */
 .ring { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center;
-  background: conic-gradient(var(--color-primary) calc(var(--p) * 1%), var(--color-bg-tertiary) 0); }
+  background: conic-gradient(var(--color-danger) calc(var(--p) * 1%), var(--color-bg-tertiary) 0); }
+.ring.full { background: conic-gradient(var(--color-success) calc(var(--p) * 1%), var(--color-bg-tertiary) 0); }
 .ring span { width: 40px; height: 40px; border-radius: 50%; background: var(--color-surface);
-  display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--color-primary); }
+  display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--color-danger); }
+.ring.full span { color: var(--color-success); }
 .ptxt { font-size: 13px; color: var(--color-text-secondary); line-height: 1.4; }
 .ptxt b { display: block; color: var(--color-text-primary); }
 
