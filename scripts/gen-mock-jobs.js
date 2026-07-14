@@ -15,7 +15,7 @@ const fs = require('fs');
 const path = require('path');
 
 const OUT = path.join(__dirname, '..', 'occupation-crawler', 'src', 'main', 'resources', 'mock', 'mock-jobs.json');
-const COUNT = 60;
+const COUNT = 120;
 
 // ---------- 确定性随机（与 gen-seed-data.js 同一套，但独立种子）----------
 function mulberry32(a) {

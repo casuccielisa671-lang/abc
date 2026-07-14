@@ -39,12 +39,14 @@ public class StudentResumeController {
     private final ResumeAiService resumeAiService;
 
     /** 我的简历（未填写返回 exists=false 的空壳，前端引导填写） */
+    @PreAuthorize("hasRole('STUDENT')")
     @GetMapping
     public Result<ResumeVO> getMyResume() {
         return Result.ok(resumeService.getByUserId(UserContextHolder.getUserId()));
     }
 
     /** 保存/更新简历 */
+    @PreAuthorize("hasRole('STUDENT')")
     @PutMapping
     public Result<Void> saveResume(@RequestBody @Validated ResumeSaveDTO dto) {
         resumeService.save(UserContextHolder.getUserId(), dto);
@@ -57,6 +59,7 @@ public class StudentResumeController {
      * @param targetJobId 可选，对标某个职位诊断；不传则以市场热门技能为基准
      * @param refresh     true 强制重新调用大模型，false 命中缓存直接返回上次结果
      */
+    @PreAuthorize("hasRole('STUDENT')")
     @PostMapping("/ai-review")
     public Result<ResumeReviewVO> aiReview(@RequestParam(required = false) Long targetJobId,
                                            @RequestParam(defaultValue = "false") boolean refresh) {
@@ -64,6 +67,7 @@ public class StudentResumeController {
     }
 
     /** AI 润色一段简历文字。返回 {polished: "..."}，前端决定是否采纳 */
+    @PreAuthorize("hasRole('STUDENT')")
     @PostMapping("/ai-polish")
     public Result<Map<String, String>> aiPolish(@RequestBody @Validated ResumePolishDTO dto) {
         String polished = resumeAiService.polish(dto.getSection(), dto.getText());

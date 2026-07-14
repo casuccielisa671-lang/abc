@@ -3,11 +3,11 @@
 > 本文档记录项目当前的架构状态，由 AI 在每完成一个 Step 后自动更新。
 > 包含：模块状态、数据库 Schema、API 接口、部署组件。
 
-> **最后更新**: 2026-07-07（深度优化轮）
-> **状态**: 全模块框架就绪 — 数据管道(采集→清洗→统计)贯通 + report/recommend/api/auth 框架落地
+> **最后更新**: 2026-07-14（官方公开报告采集优化轮）
+> **状态**: 四端功能与工具箱已落地 — 数据管道(采集→清洗→统计)贯通 + 中等规模种子数据 + Docker 生产部署链路就绪
 > **⚠️ 重要**: 本轮起以 `docs/项目开发说明书.md` 为唯一权威开发指南（含架构、分工、待办清单）；
 > 技术栈已收敛：HDFS/Hive/HBase/Neo4j/ES 移出必做范围，Spark 以可插拔接口预留（AnalysisJobService），
-> 调度默认 Spring @Scheduled（XXL-Job 改为 xxl.job.enabled 开关，默认关闭）。
+> 调度默认 Spring @Scheduled；XXL-Job 不再作为当前必需组件。
 
 ---
 
@@ -17,13 +17,13 @@
 | --------------------------- | -------- | ---------------------------- |
 | occupation-common           | ✅ 已实现 | 统一响应 + 异常处理 + BaseEntity + 多租户 + 分页 + 13张表SQL + Kafka管道 |
 | occupation-auth             | ✅ 已实现 | JWT 签发/校验 + 登录接口 + JwtAuthenticationFilter + SecurityConfig |
-| occupation-crawler          | ✅ 已实现 | WebMagic 爬虫框架 + CrawlerTask/CrawlerLog + 模拟+真实采集 + XXL-Job Handler |
+| occupation-crawler          | ✅ 已实现 | WebMagic 爬虫框架 + CrawlerTask/CrawlerLog + MOCK/OFFICIAL_PUBLIC 岗位采集 + 完成状态自动回写；资讯拉取归属 recommend/news 模块 |
 | occupation-analysis         | ✅ 已实现 | Dashboard 5维度查询 + 职位分页查询 + Controller API |
 | occupation-report           | ✅ 框架落地 | 模板 CRUD + 生成引擎(六步) + AI 摘要(LLM+降级) + PDF/Word 导出器 + 下载接口 |
 | occupation-recommend        | ✅ 框架落地 | 画像 CRUD + 匹配算法(四维打分) + 推送 + 行为闭环 + 教师/HR 接口 + 每日推送调度 |
 | occupation-api              | ✅ 框架落地 | Token 签发(Redis) + 校验/限流拦截器 + 开放数据接口(职位/大盘/技能/行业) |
 | occupation-web              | ✅ 已运行 | Application + HealthController + 2 项测试通过 |
-| occupation-web-ui (Vue 3)   | ✅ 脚手搭好 | Vite + 路由 + 16 页面占位，待填具体页面 |
+| occupation-web-ui (Vue 3)   | ✅ 已实现 | 四角色页面 + 工具箱主界面/悬浮入口 + 资讯/报告/职位/画像等页面 |
 
 ---
 
@@ -34,7 +34,7 @@
 | 父 POM | `pom.xml` | ✅ SpringBoot 2.7.18，8 模块，版本锁定 |
 | 启动入口 | `occupation-web/.../Application.java` | ✅ @SpringBootApplication |
 | 应用配置 | `occupation-web/.../application.yml` | ✅ MySQL + Redis + Kafka + MyBatis-Plus |
-| Docker 编排 | `docker-compose.yml` | ✅ MySQL 8.0 + Redis 6.2 + Kafka + Zookeeper + Nginx |
+| Docker 编排 | `docker-compose.yml` / `docker-compose.prod.yml` | ✅ 开发环境 + 生产环境；生产镜像自动构建后端 JAR 与前端 dist |
 | Nginx 配置 | `nginx/nginx.conf` | ✅ API 代理 + 静态资源 |
 | SQL 脚本 | `occupation-common/.../sql/init.sql` | ✅ 13 张表 + 种子数据（测试学院 / admin） |
 | 多租户插件 | `occupation-common/.../config/MyBatisPlusConfig.java` | ✅ 分页 + tenant_id 自动注入 |
@@ -49,13 +49,15 @@
 | 爬虫基础框架 | `occupation-crawler/.../processor/JobPageProcessor.java` | ✅ 抽象基类，UA 轮换，随机延迟，重试3次 |
 | 采集管道 | `occupation-crawler/.../processor/JobPipeline.java` | ✅ WebMagic Pipeline → Kafka 发送 |
 | 模拟爬虫 | `occupation-crawler/.../processor/MockJobPageProcessor.java` | ✅ 本地 JSON 模拟采集链路 |
-| BOSS 采集器 | `occupation-crawler/.../processor/BossJobPageProcessor.java` | ✅ 列表页+详情页解析，薪资格式化 |
+| 官方公开采集器 | `occupation-crawler/.../processor/OfficialPublicJobProcessor.java` | ✅ robots.txt 校验 + 低频采集公开招聘公告 |
+| 资讯兼容采集器 | `OfficialReportProcessor` / `InfoQNewsProcessor` / `OsChinaNewsProcessor` / `NewsPageProcessor` | ✅ 历史兼容入口；新建资讯推荐通过 `AdminNewsController.pull-rss` 写入 news 表，不作为数据面板采集任务 |
 | 采集 Service | `occupation-crawler/.../service/impl/CrawlerServiceImpl.java` | ✅ 启停管理 + 多源路由 + 状态跟踪 |
 | 采集管理 API | `occupation-crawler/.../controller/CrawlerController.java` | ✅ CRUD + 启停 + 日志查询 |
 | 采集 Entity | `occupation-crawler/.../entity/CrawlerTask.java` + `CrawlerLog.java` | ✅ 映射 crawler_task / crawler_log |
-| XXL-Job 配置 | `occupation-crawler/.../config/XxlJobConfig.java` | ✅ 调度器自动注册 |
-| XXL-Job Handler | `occupation-crawler/.../job/CrawlerJobHandler.java` | ✅ 定时扫描 + 手动触发 + 全停 |
-| 模拟数据 | `occupation-crawler/.../mock/mock-jobs.json` | ✅ 20 条多行业职位测试数据 |
+| 资讯定时任务 | `occupation-crawler/.../job/NewsCrawlerJobHandler.java` | ✅ 历史兼容定时任务；前台行业资讯统一读取 `/api/news` |
+| 模拟数据 | `occupation-crawler/.../mock/mock-jobs.json` | ✅ 120 条多行业职位测试数据 |
+| 初始化脚本 | `scripts/reset-dev-db.ps1` | ✅ 重新生成数据并重建开发数据库 |
+| 部署说明 | `docs/部署与同步说明.md` | ✅ GitHub 同步、初始化、云服务器部署说明 |
 
 ---
 
@@ -147,8 +149,9 @@ com.occupation.<模块名>
 | sys_tenant | id=1, name="测试学院" |
 | sys_user | id=1, username="admin", password="admin123"（BCrypt），role=ADMIN |
 | student_resume | 12 份，覆盖租户1全部有画像的学生（userId 2、5~15） |
-| job_application | 73 条，五种状态铺开（SUBMITTED 24 / VIEWED 18 / INTERVIEW 19 / OFFER 3 / REJECTED 9），与 student_behavior 的 73 条 APPLY 一一对应 |
-| job_detail | 114 个职位：90 个采集（publisher_id 为空）+ 24 个站内（6 个 HR 各 4 个，分属 3 家公司） |
+| job_application | 87 条，五种状态铺开（SUBMITTED 41 / VIEWED 12 / INTERVIEW 18 / OFFER 9 / REJECTED 7），与 student_behavior 的 87 条 APPLY 一一对应 |
+| student_behavior | 414 条，覆盖 VIEW / FAVORITE / APPLY / IGNORE / CONTACT |
+| job_detail | 186 个职位：162 个采集（publisher_id 为空）+ 24 个站内（6 个 HR 各 4 个，分属 3 家公司） |
 | 边界用例 | `student12`(userId 16) 有账号、无画像、无简历，却投递了一个站内职位 —— 一次覆盖三个空态 |
 
 ---
@@ -235,17 +238,16 @@ com.occupation.<模块名>
 
 ## 六、部署组件状态
 
-| 组件       | 版本   | 本地可运行 | Docker 定义 |
-| ---------- | ------ | ---------- | ----------- |
-| MySQL      | 8.0    | ⏳         | ✅ 已完成 |
-| Redis      | 6.2    | ⏳         | ✅ 已完成 |
-| Kafka      | 7.5.0  | ⏳         | ✅ 已完成（Producer/Consumer 配置 + Topic 定义） |
-| Nginx      | 1.24   | ⏳         | ✅ 已完成 |
-| Zookeeper  | 7.5.0  | ⏳         | ✅ 已完成 |
-| HDFS       | 3.3    | ⏳         | P2 补充 |
-| Hive       | 3.1    | ⏳         | P2 补充 |
-| HBase      | 2.4    | ⏳         | P2 补充 |
-| Spark      | 3.4    | ⏳         | P2 补充 |
+| 组件       | 版本   | 用途 | Docker 定义 |
+| ---------- | ------ | ---- | ----------- |
+| MySQL      | 8.0    | 业务主库 + 分析结果 + 种子数据 | ✅ 开发/生产 |
+| Redis      | 6.2    | 缓存、开放 API Token、限流 | ✅ 开发/生产 |
+| Kafka      | 7.5.0  | 采集消息链路 raw/cleaned job data | ✅ 开发/生产 |
+| Zookeeper  | 7.5.0  | Kafka 协调 | ✅ 开发/生产 |
+| Nginx      | 1.24   | 前端静态资源 + API 反向代理 | ✅ 开发/生产 |
+| Spring Boot App | JDK 11 | 后端聚合服务 | ✅ 生产镜像自动 Maven 构建 |
+| Vue 前端 | Node 20 构建 | 四角色前端页面 | ✅ 生产镜像自动 npm 构建 |
+| HDFS/Hive/HBase/Neo4j/ES | 预留 | 当前非必需，避免本地和云服务器部署过重 | ❌ 暂不启用 |
 
 ---
 
@@ -261,9 +263,24 @@ com.occupation.<模块名>
 | 2026-07-07 | P1 Step 1.5 完成：JWT 签发/校验 + POST /api/auth/login + JwtAuthenticationFilter + SecurityConfig + BCrypt | Step 1.5 |
 | 2026-07-07 | P1 Step 1.6 完成：Kafka Spring 集成 — KafkaTopicConfig（raw-job-data/cleaned-job-data）+ Producer/Consumer 配置 + JobDataMessage + RawJobData 实体/Mapper + KafkaProducerService + KafkaConsumerService（@KafkaListener → 入库）| Step 1.6 |
 | 2026-07-07 | MVC 包结构调整：所有 7 个业务模块统一 8 层包结构 + package-info 说明 | 架构重构 |
-| 2026-07-07 | P1 Step 1.7 完成：WebMagic 爬虫框架集成 — JobPageProcessor 抽象基类（UA 池 + 随机延迟 + 重试）+ JobPipeline（Kafka 管道）+ MockJobPageProcessor（本地 JSON 模拟）+ 20 条测试数据 | Step 1.7 |
+| 2026-07-07 | P1 Step 1.7 完成：WebMagic 爬虫框架集成 — JobPageProcessor 抽象基类（UA 池 + 随机延迟 + 重试）+ JobPipeline（Kafka 管道）+ MockJobPageProcessor（本地 JSON 模拟）+ 多行业测试数据 | Step 1.7 |
 | 2026-07-07 | P1 Step 1.8 完成：BossJobPageProcessor 真实采集器 — 列表页解析（标题/公司/薪资/城市/学历/经验）+ 详情页解析（描述/技能标签）+ 分页翻页 + 反爬策略（5-15s 随机延迟）| Step 1.8 |
 | 2026-07-07 | P1 Step 1.9 完成：采集任务管理 API（CRUD + 启停 + 日志查询）+ XXL-Job 调度集成（定时扫描/手动触发/全停）| Step 1.9 |
 | 2026-07-07 | 骨架代码完成：8 Entity + 8 Mapper + 2 跨模块 Service 接口 + 4 DTO/VO + POM 依赖更新 + api_client 表 + Vue 3 脚手架 | 骨架 |
 | 2026-07-07 | P2 A组完成：AnalysisServiceImpl + JobDetailServiceImpl + AnalysisController（Dashboard + 职位查询 API） | P2 |
 | 2026-07-07 | **深度优化轮**：①基础设施修补（common 补 Redis/Security 依赖、JWT 白名单放行 /api/open+文档、@PreAuthorize 启用、UserContextHolder、PageResult、XXL-Job 条件装配、HealthControllerTest 修复）②analysis：JobDataCleanListener(Kafka 双消费组)+DataCleanService(清洗规则)+AnalysisJobService(5维度统计)+AnalysisScheduler+/rebuild+saveJob/getJobById/removeJob ③report：模板 CRUD+生成引擎+AiSummaryService(LLM+降级)+Pdf/WordExporter+下载 ④recommend：画像+JobMatchService(40/25/20/15打分)+推送+行为闭环+教师/HR 接口+RecommendScheduler ⑤api：OpenAuthService(Redis Token)+双拦截器(鉴权/限流)+OpenDataService ⑥auth：UserController 用户管理 ⑦新增 docs/项目开发说明书.md（权威指南）。全模块 mvn compile + 测试通过 | 深度优化 |
+### 2026-07-13 变更补充
+
+- 管理员采集新增 `OFFICIAL_PUBLIC` 官方公开招聘公告来源，复用 `crawler_task.url_pattern` 存储 `url=...&maxItems=...`，不新增数据库表结构。
+- `OFFICIAL_PUBLIC` 沿用现有 `robots.txt` 校验、单线程低频抓取、Kafka -> raw_job_data -> job_detail 清洗链路；仅解析公开列表标题和来源 URL，不抓取联系方式、附件或登录后内容。
+- 修复真实采集器解析出的岗位未写入 WebMagic `ResultItems` 的问题，确保 `JobPipeline` 能收到并发送到 Kafka。
+- HR 端 JD 优化从独立工具页迁移到职位管理发布/编辑弹窗，删除独立前端路由和页面，保留规则分析能力为 `occupation-web-ui/src/utils/jdOptimizer.js`。
+
+### 2026-07-14 变更补充
+
+- Mock 采集源调整为 120 条多行业职位；初始化种子控制在 186 个职位、414 条行为、87 条投递记录，兼顾分析丰富度与运行速度。
+- 真实采集任务改为事务提交后异步启动，并在 Spider 完成后自动回写 `crawler_log.end_time / record_count / status`，避免日志长期停留在 `RUNNING + 0`。
+- 外部资讯默认源从 Google News 改为开源中国 RSS，并在关键词无命中时回退最新资讯。
+- 生产部署改为后端/前端 Docker 镜像内自动构建；新增 `.dockerignore`、`Dockerfile.frontend`、`scripts/reset-dev-db.ps1` 和 `docs/部署与同步说明.md`，降低 GitHub 同步和云服务器部署误差。
+- 重新划清“数据采集”和“行业资讯”边界：数据采集任务默认只保留 MOCK 与 `OFFICIAL_PUBLIC` 岗位/公告采集，用于行业热度、城市分布等数据面板；行业资讯由 recommend/news 模块的 `/api/admin/news/pull-rss` 拉取并通过 `/api/news` 展示给四类角色。
+- 行业资讯增加空库基础资讯、分类兜底和 RSS 自动分类，避免某个方向筛选无数据时四端首页资讯卡片显示空白。

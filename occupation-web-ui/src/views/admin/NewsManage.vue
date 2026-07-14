@@ -20,7 +20,7 @@
         </div>
         <div class="actions">
           <el-button :loading="genLoading" @click="genDataCast">⚡ 生成数据播报</el-button>
-          <el-button :loading="rssLoading" @click="pullRss">🌐 拉取外部资讯</el-button>
+          <el-button :loading="rssLoading" @click="pullRss">拉取外部资讯</el-button>
           <el-button type="primary" @click="openDialog()">新建文章</el-button>
         </div>
       </div>
@@ -94,11 +94,11 @@
           <el-input v-model="form.sourceUrl" placeholder="https://..." />
         </el-form-item>
         <el-form-item label="来源">
-          <el-input v-model="form.source" placeholder="如 就业指导中心 / Google News" />
+          <el-input v-model="form.source" placeholder="如 就业指导中心 / 开源中国" />
         </el-form-item>
         <el-form-item label="封面色">
           <el-radio-group v-model="form.coverStyle">
-            <el-radio-button v-for="c in COVERS" :key="c" :label="c">{{ c }}</el-radio-button>
+            <el-radio-button v-for="c in COVERS" :key="c" :value="c">{{ c }}</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="精选置顶">
@@ -199,7 +199,7 @@ const rssLoading = ref(false)
 async function pullRss() {
   let query
   try {
-    const r = await ElMessageBox.prompt('输入检索关键词（拉取 Google News 中文资讯）', '拉取外部资讯', {
+    const r = await ElMessageBox.prompt('输入检索关键词（默认从开源中国 RSS 拉取）', '拉取外部资讯', {
       inputValue: 'IT就业', confirmButtonText: '拉取', cancelButtonText: '取消'
     })
     query = r.value
@@ -207,7 +207,7 @@ async function pullRss() {
   rssLoading.value = true
   try {
     const n = await pullRssNews(query, 8)
-    ElMessage[n > 0 ? 'success' : 'warning'](n > 0 ? `已拉取 ${n} 条外部资讯` : '未拉取到内容（服务器可能无法访问 Google）')
+    ElMessage[n > 0 ? 'success' : 'warning'](n > 0 ? `已拉取 ${n} 条外部资讯` : '未拉取到内容（默认 RSS 源暂不可访问或已重复）')
     load()
   } finally { rssLoading.value = false }
 }

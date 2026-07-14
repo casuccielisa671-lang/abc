@@ -23,7 +23,10 @@ const routes = [
       { path: 'class', name: 'ClassManage', component: () => import('@/views/admin/ClassManage.vue') },
       { path: 'news', name: 'AdminNews', component: () => import('@/views/common/NewsPage.vue') },
       { path: 'news-manage', name: 'NewsManage', component: () => import('@/views/admin/NewsManage.vue') },
-      { path: 'map', name: 'AdminMap', component: () => import('@/views/common/MapExplore.vue') }
+      { path: 'map', name: 'AdminMap', component: () => import('@/views/common/MapExplore.vue') },
+      { path: 'tools', name: 'AdminToolbox', component: () => import('@/views/admin/Toolbox.vue') },
+      { path: 'tools/export-center', name: 'ExportCenter', component: () => import('@/views/admin/tools/ExportCenter.vue') },
+      { path: 'tools/tenant-health', name: 'TenantHealth', component: () => import('@/views/admin/tools/TenantHealth.vue') }
     ]
   },
 
@@ -42,7 +45,12 @@ const routes = [
       { path: 'favorites', name: 'Favorites', component: () => import('@/views/student/Favorites.vue') },
       { path: 'reports', name: 'StudentReports', component: () => import('@/views/student/Reports.vue') },
       { path: 'news', name: 'StudentNews', component: () => import('@/views/common/NewsPage.vue') },
-      { path: 'map', name: 'StudentMap', component: () => import('@/views/common/MapExplore.vue') }
+      { path: 'map', name: 'StudentMap', component: () => import('@/views/common/MapExplore.vue') },
+      { path: 'tools', name: 'StudentToolbox', component: () => import('@/views/student/Toolbox.vue') },
+      { path: 'tools/compare-jobs', name: 'CompareJobs', component: () => import('@/views/student/tools/CompareJobs.vue') },
+      { path: 'tools/skill-roi', name: 'SkillRoi', component: () => import('@/views/student/tools/SkillRoi.vue') },
+      { path: 'tools/salary-calc', name: 'SalaryCalc', component: () => import('@/views/student/tools/SalaryCalc.vue') },
+      { path: 'tools/job-checklist', name: 'JobChecklist', component: () => import('@/views/student/tools/JobChecklist.vue') }
     ]
   },
 
@@ -55,7 +63,11 @@ const routes = [
       { path: 'students', name: 'Students', component: () => import('@/views/teacher/Students.vue') },
       { path: 'suggestions', name: 'Suggestions', component: () => import('@/views/teacher/Suggestions.vue') },
       { path: 'news', name: 'TeacherNews', component: () => import('@/views/common/NewsPage.vue') },
-      { path: 'map', name: 'TeacherMap', component: () => import('@/views/common/MapExplore.vue') }
+      { path: 'map', name: 'TeacherMap', component: () => import('@/views/common/MapExplore.vue') },
+      { path: 'tools', name: 'TeacherToolbox', component: () => import('@/views/teacher/Toolbox.vue') },
+      { path: 'tools/compare-classes', name: 'CompareClasses', component: () => import('@/views/teacher/tools/CompareClasses.vue') },
+      { path: 'tools/student-alerts', name: 'StudentAlerts', component: () => import('@/views/teacher/tools/StudentAlerts.vue') },
+      { path: 'tools/course-match', name: 'CourseMatch', component: () => import('@/views/teacher/tools/CourseMatch.vue') }
     ]
   },
 
@@ -69,7 +81,10 @@ const routes = [
       { path: 'applications', name: 'HrApplications', component: () => import('@/views/hr/Applications.vue') },
       { path: 'talents', name: 'Talents', component: () => import('@/views/hr/Talents.vue') },
       { path: 'news', name: 'HrNews', component: () => import('@/views/common/NewsPage.vue') },
-      { path: 'map', name: 'HrMap', component: () => import('@/views/common/MapExplore.vue') }
+      { path: 'map', name: 'HrMap', component: () => import('@/views/common/MapExplore.vue') },
+      { path: 'tools', name: 'HrToolbox', component: () => import('@/views/hr/Toolbox.vue') },
+      { path: 'tools/compare-talents', name: 'CompareTalents', component: () => import('@/views/hr/tools/CompareTalents.vue') },
+      { path: 'tools/salary-benchmark', name: 'SalaryBenchmark', component: () => import('@/views/hr/tools/SalaryBenchmark.vue') }
     ]
   },
 

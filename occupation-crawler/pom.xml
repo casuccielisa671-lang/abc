@@ -13,12 +13,18 @@
     <artifactId>occupation-crawler</artifactId>
     <packaging>jar</packaging>
     <name>occupation-crawler</name>
-    <description>数据采集模块 — 爬虫调度、采集任务管理、XXL-Job 集成</description>
+    <description>数据采集模块 — 爬虫调度、采集任务管理</description>
 
     <dependencies>
         <dependency>
             <groupId>com.occupation</groupId>
             <artifactId>occupation-common</artifactId>
+        </dependency>
+
+        <!-- 跨模块：直接操作 News 表（资讯爬虫入库） -->
+        <dependency>
+            <groupId>com.occupation</groupId>
+            <artifactId>occupation-recommend</artifactId>
         </dependency>
 
         <!-- WebMagic 爬虫框架 -->
@@ -33,11 +39,6 @@
             <version>0.10.1</version>
         </dependency>
 
-        <!-- XXL-Job -->
-        <dependency>
-            <groupId>com.xuxueli</groupId>
-            <artifactId>xxl-job-core</artifactId>
-        </dependency>
     </dependencies>
 
 </project>

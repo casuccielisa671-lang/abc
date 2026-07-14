@@ -43,12 +43,14 @@ public class RecommendController {
     private final PushService pushService;
 
     /** 个性化推荐列表（按匹配分降序，含匹配理由和缺失技能提示） */
+    @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/recommend")
     public Result<List<MatchJobVO>> recommend(@RequestParam(defaultValue = "20") int topN) {
         return Result.ok(jobMatchService.match(UserContextHolder.getUserId(), topN));
     }
 
     /** 职位详情（自动记录 VIEW 行为，用于活跃度统计与反馈闭环） */
+    @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/job/{jobId}")
     public Result<JobDetailVO> getJobDetail(@PathVariable Long jobId) {
         JobDetailVO job = jobDetailService.getJobById(jobId);
@@ -60,6 +62,7 @@ public class RecommendController {
     }
 
     /** 收藏职位 */
+    @PreAuthorize("hasRole('STUDENT')")
     @PostMapping("/job/{jobId}/favorite")
     public Result<Void> favorite(@PathVariable Long jobId) {
         behaviorService.record(UserContextHolder.getUserId(), jobId, BehaviorAction.FAVORITE);
@@ -67,6 +70,7 @@ public class RecommendController {
     }
 
     /** 取消收藏 */
+    @PreAuthorize("hasRole('STUDENT')")
     @DeleteMapping("/job/{jobId}/favorite")
     public Result<Void> unfavorite(@PathVariable Long jobId) {
         behaviorService.removeFavorite(UserContextHolder.getUserId(), jobId);
@@ -74,6 +78,7 @@ public class RecommendController {
     }
 
     /** 收藏列表（最近收藏在前） */
+    @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/favorites")
     public Result<List<JobDetailVO>> favorites() {
         List<Long> jobIds = behaviorService.listJobIdsByAction(UserContextHolder.getUserId(), BehaviorAction.FAVORITE);
@@ -88,6 +93,7 @@ public class RecommendController {
      * 学生以为投出去了，HR 端一条也看不到。前端已按 {@code applicable} 隐藏了投递按钮，
      * 这里是服务端的兜底。
      */
+    @PreAuthorize("hasRole('STUDENT')")
     @PostMapping("/job/{jobId}/apply")
     public Result<Void> apply(@PathVariable Long jobId) {
         Long userId = UserContextHolder.getUserId();
@@ -118,6 +124,7 @@ public class RecommendController {
      * <p>
      * 返回原岗位链接（若有），前端据此决定要不要打开新窗口。
      */
+    @PreAuthorize("hasRole('STUDENT')")
     @PostMapping("/job/{jobId}/contact")
     public Result<Map<String, String>> contact(@PathVariable Long jobId) {
         JobDetailVO job = jobDetailService.getJobById(jobId);
@@ -139,6 +146,7 @@ public class RecommendController {
     }
 
     /** 我的投递（含 HR 处理进度） */
+    @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/applications")
     public Result<List<MyApplicationVO>> myApplications() {
         List<JobApplication> apps = applicationService.listByUser(UserContextHolder.getUserId());

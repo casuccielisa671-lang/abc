@@ -22,6 +22,8 @@ public class NewsVO implements Serializable {
     private String title;
     private String summary;
     private String coverStyle;
+    /** 封面图片URL（有值时优先显示图片） */
+    private String coverImage;
     private String source;
     /** 外部原文链接（EXTERNAL） */
     private String sourceUrl;
@@ -39,6 +41,7 @@ public class NewsVO implements Serializable {
         vo.title = n.getTitle();
         vo.summary = n.getSummary();
         vo.coverStyle = n.getCoverStyle();
+        vo.coverImage = n.getCoverImage();
         vo.source = n.getSource();
         vo.sourceUrl = n.getSourceUrl();
         vo.linkTarget = n.getLinkTarget();

@@ -13,6 +13,7 @@ const path = require('path');
 
 // 用法：node scripts/gen-seed-data.js（重写 init.sql 的种子数据段，改完记得重新导入数据库）
 const INIT_SQL = path.join(__dirname, '..', 'occupation-common', 'src', 'main', 'resources', 'sql', 'init.sql');
+const NEWS_BULK_SQL = path.join(__dirname, '..', 'occupation-common', 'src', 'main', 'resources', 'sql', 'upgrade-2026-07-13-news-bulk.sql');
 
 // ---------- 确定性随机 ----------
 function mulberry32(a) {
@@ -31,6 +32,19 @@ const pickN = (arr, n) => { // 不重复取 n 个
   for (let i = 0; i < n && copy.length; i++) out.push(copy.splice(Math.floor(rnd() * copy.length), 1)[0]);
   return out;
 };
+
+function readBulkNewsRows() {
+  const sql = fs.readFileSync(NEWS_BULK_SQL, 'utf8');
+  const start = sql.indexOf('(9, 1,');
+  if (start < 0) {
+    throw new Error('Cannot find bulk news rows in upgrade-2026-07-13-news-bulk.sql');
+  }
+  const end = sql.lastIndexOf(';');
+  if (end < 0) {
+    throw new Error('Cannot find end of bulk news rows in upgrade-2026-07-13-news-bulk.sql');
+  }
+  return sql.slice(start, end).trim();
+}
 const esc = (s) => String(s).replace(/\\/g, '\\\\').replace(/'/g, "''");
 const pad = (n) => String(n).padStart(2, '0');
 const dt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
@@ -179,7 +193,7 @@ const BATCHES = [
 // ---------- 生成职位 ----------
 // 月份分布（发布量逐月上升，趋势图好看且符合春招→夏招节奏）
 const MONTH_PLAN = [ // [月, MOCK职位数]
-  [2, 8], [3, 10], [4, 13], [5, 16], [6, 21], [7, 22],
+  [2, 12], [3, 18], [4, 24], [5, 30], [6, 36], [7, 42],
 ];
 const jobs = [];        // {id,title,company,city,industry,salMin,salMax,edu,exp,skills,desc,publishDate,source,sourceUrl,createTime}
 let jobId = 0;
@@ -370,7 +384,7 @@ genBehaviorsFor(24, 2, T2_STUDENT);
 // 上面的打分是从全部职位里挑，站内职位只占 24/114，概率上会有职位一条投递都收不到，
 // 结果是某些 HR 登录后「收到的投递」是空的，双边闭环看不出效果。
 // 这里为每个 HR 职位补足投递：按「技能重合 + 城市一致」挑最匹配的学生，与推荐逻辑自洽。
-const APPLIES_PER_HR_JOB = 3;
+const APPLIES_PER_HR_JOB = 4;
 function hasBehavior(userId, jobId, action) {
   return behaviors.some(b => b.userId === userId && b.jobId === jobId && b.action === action);
 }
@@ -548,7 +562,7 @@ L.push('--');
 L.push('-- 【职位数据的三个来源，看 source + publisher_id 两列就能区分】');
 L.push('--   source=MOCK,       publisher_id=NULL → 采集来的（无主，不可站内投递）');
 L.push('--   source=HR_PUBLISH, publisher_id=NOT NULL → HR 在平台上发布的（可投递）');
-L.push('--   source=ZHAOPIN,    publisher_id=NULL → 真实爬虫采来的（无主）');
+L.push('--   source=OFFICIAL_PUBLIC, publisher_id=NULL → 官方公开招聘公告采来的（无主）');
 L.push('--');
 L.push('-- 【为什么种子里的 90 个职位 source 也写着 MOCK？】');
 L.push('--   它们模拟「系统已经运行了一段时间、采集任务跑过 5 次」的历史状态，');
@@ -777,15 +791,8 @@ L.push('-- ---------- 采集任务 ----------');
 L.push('INSERT INTO crawler_task (id, tenant_id, source_type, source_name, url_pattern, cron_expr, status, create_time) VALUES');
 L.push([
   `(1, 1, 'MOCK', '模拟采集-mock-jobs.json', 'mock-jobs.json', '0 0 2 * * ?', 0, '2026-06-18 10:00:00')`,
-  // 真实采集：url_pattern 存的是参数串而非 URL。CrawlerServiceImpl 解析它，交给
-  // ZhaopinJobPageProcessor.seedRequest 拼地址、解 301、逐段校验 robots.txt。
-  // jl 是智联的城市编码：653=杭州、530=北京。
-  // 原来第 2 条是 BOSS_ZHIPIN，已删除 —— Boss 的 robots.txt 明文禁止抓取职位列表页。
-  `(2, 1, 'ZHAOPIN', '智联招聘-杭州Java岗', 'kw=Java&jl=653&maxPages=2', '0 0 3 * * ?', 0, '2026-06-18 10:05:00')`,
-  `(3, 1, 'ZHAOPIN', '智联招聘-北京应届生岗', 'kw=应届生&jl=530&maxPages=2', NULL, 0, '2026-06-25 14:20:00')`,
-  // COMPANY_OFFICIAL 只有表结构没有实现，启动它会得到一条明确的「暂不支持」提示（而非 500）
-  `(4, 1, 'COMPANY_OFFICIAL', '合作企业官网-校招页（未实现）', 'https://campus.example.com/jobs/*', '0 0 4 * * 1', 0, '2026-07-01 09:00:00')`,
-  `(5, 2, 'MOCK', '模拟采集-示范大学', 'mock-jobs.json', NULL, 0, '2026-07-03 11:00:00')`,
+  `(2, 1, 'OFFICIAL_PUBLIC', '官方公开招聘公告示例', 'url=https://example.gov.cn/jobs/&maxItems=20', NULL, 0, '2026-06-25 14:20:00')`,
+  `(3, 2, 'MOCK', '模拟采集-示范大学', 'mock-jobs.json', NULL, 0, '2026-07-03 11:00:00')`,
 ].join(',\n') + ';');
 L.push('');
 L.push(`-- ---------- 采集日志（任务1 五次成功合计 ${mockJobCount} + 5 条待清洗/脏数据 = raw_job_data 总量）----------`);
@@ -957,10 +964,19 @@ L.push('');
 // ---------- 资讯（首页资讯板块）----------
 // type: DATA_CAST=数据播报(平台数据自动生成,可点进图表) / ARTICLE=精选文章(有正文) / EXTERNAL=外部资讯(跳原文)
 // cover_style: blue/green/purple/amber
+const appStatusCounts = applications.reduce((m, a) => {
+  m[a.status] = (m[a.status] || 0) + 1;
+  return m;
+}, {});
+const platformJobCount = jobs.length - mockJobCount;
+const industryCount = Object.keys(INDUSTRIES).length;
+const offerCount = appStatusCounts.OFFER || 0;
+const interviewCount = appStatusCounts.INTERVIEW || 0;
+
 const NEWS = [
   // [id, category, type, title, summary, content, cover, source, sourceUrl, linkTarget, featured, publishTime]
-  [1, null, 'DATA_CAST', '本平台在库岗位达 114 个，数据分析已就绪',
-    '涵盖 90 个采集岗位与 24 个站内职位，覆盖 10 座主要城市、8 大技术方向，看板与推荐均基于此。',
+  [1, null, 'DATA_CAST', `本平台在库岗位达 ${jobs.length} 个，数据分析已就绪`,
+    `涵盖 ${mockJobCount} 个采集岗位与 ${platformJobCount} 个站内职位，覆盖 ${CITIES.length} 座主要城市、${industryCount} 大技术方向，看板与推荐均基于此。`,
     null, 'blue', '平台数据播报', null, '/admin/dashboard', 1, '2026-07-09 08:10:00'],
   [2, 'backend', 'DATA_CAST', 'Java 稳居技能热度榜首',
     '在全部岗位中，要求 Java 的职位数量最多，其后为 Python、MySQL。后端方向需求持续旺盛。',
@@ -971,8 +987,8 @@ const NEWS = [
   [4, 'bigdata', 'DATA_CAST', '大数据方向平均薪资领先',
     '按行业统计，大数据 / 人工智能方向平均薪资高于全站均值，Spark、Flink 等技能溢价明显。',
     null, 'purple', '平台数据播报', null, '/admin/employment', 0, '2026-07-09 08:16:00'],
-  [5, null, 'DATA_CAST', '投递转化：73 份投递中已产生 3 个 OFFER',
-    '站内投递共 73 份，其中面试阶段 19 份、录用 3 份；及时完善画像与简历有助于提升转化。',
+  [5, null, 'DATA_CAST', `投递转化：${applications.length} 份投递中已产生 ${offerCount} 个 OFFER`,
+    `站内投递共 ${applications.length} 份，其中面试阶段 ${interviewCount} 份、录用 ${offerCount} 份；及时完善画像与简历有助于提升转化。`,
     null, 'amber', '平台数据播报', null, '/admin/employment', 0, '2026-07-09 08:18:00'],
   [6, 'backend', 'ARTICLE', '2026 后端开发就业观察：微服务与云原生成标配',
     '从平台岗位要求看，Spring Boot、微服务、容器化几乎成为后端岗位的默认门槛。',
@@ -982,9 +998,9 @@ const NEWS = [
     '企业更看重 Vue/React 的工程化实践与组件设计能力，而非仅会写页面。',
     '<p>平台前端岗位中，Vue、TypeScript、构建工具（Vite/Webpack）、组件化设计是高频关键词。</p><p>建议同学在掌握一个主流框架的基础上，理解其响应式原理与工程化配置，并积累可展示的项目。</p>',
     'green', '就业指导中心', null, null, 0, '2026-07-05 14:30:00'],
-  [8, null, 'EXTERNAL', '示例：外部就业资讯（接入 Google News RSS 后在此展示）',
+  [8, null, 'EXTERNAL', '示例：外部就业资讯（接入开源中国 RSS 后在此展示）',
     '外部资讯仅展示标题与摘要，点击「阅读原文」跳转来源站点；封面用色块占位。',
-    null, 'purple', '外部来源示例', 'https://news.google.com/', null, 0, '2026-07-08 09:00:00'],
+    null, 'purple', '开源中国', 'https://www.oschina.net/news', null, 0, '2026-07-08 09:00:00'],
 ];
 L.push('-- ---------- 资讯（DATA_CAST 数据播报 / ARTICLE 精选文章 / EXTERNAL 外部资讯占位）----------');
 L.push('INSERT INTO news (id, tenant_id, category, type, title, summary, content, cover_style, source, source_url, link_target, view_count, featured, status, publish_time) VALUES');
@@ -992,6 +1008,10 @@ L.push(NEWS.map(n => {
   const q = (v) => v == null ? 'NULL' : `'${esc(v)}'`;
   return `(${n[0]}, 1, ${q(n[1])}, '${n[2]}', ${q(n[3])}, ${q(n[4])}, ${q(n[5])}, '${n[6]}', ${q(n[7])}, ${q(n[8])}, ${q(n[9])}, ${ri(20, 320)}, ${n[10]}, 1, '${n[11]}')`;
 }).join(',\n') + ';');
+L.push('');
+L.push('-- ---------- 资讯扩充：200 条（5 分类 × 3 类型，全部附带 picsum.photos 封面图）----------');
+L.push('INSERT INTO news (id, tenant_id, category, type, title, summary, content, cover_style, cover_image, source, source_url, link_target, view_count, featured, status, publish_time) VALUES');
+L.push(readBulkNewsRows() + ';');
 L.push('');
 
 L.push('-- ---------- 推送记录 ----------');

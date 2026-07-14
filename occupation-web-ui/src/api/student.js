@@ -61,6 +61,11 @@ export function getRecommend(topN = 20) {
   return request.get('/student/recommend', { params: { topN } })
 }
 
+/** 工具箱岗位选择兜底数据源：推荐为空时从全量岗位库取可选岗位 */
+export function getToolJobs(params = {}) {
+  return request.get('/analysis/jobs', { params: { pageNum: 1, pageSize: 80, ...params } })
+}
+
 // ========== 职位 ==========
 export function getJobDetail(jobId) {
   return request.get(`/student/job/${jobId}`)
@@ -128,9 +133,9 @@ export function markReportRead(id) {
 }
 
 // ========== 资讯（首页资讯板块 / 资讯页） ==========
-/** 首页资讯格子：最新若干条（置顶优先） */
-export function getLatestNews(limit = 6) {
-  return request.get('/news/latest', { params: { limit } })
+/** 首页资讯格子：最新若干条（置顶优先），可按技术方向筛选 */
+export function getLatestNews(limit = 6, category) {
+  return request.get('/news/latest', { params: { limit, category } })
 }
 /** 资讯分页列表（技术方向 category / 类型 type 可选筛选） */
 export function getNewsPage(params) {
@@ -149,6 +154,11 @@ export function getTeacherStudents(params) {
 /** 班级概览统计（学生总数 / 已填画像 / 总浏览 / 总投递，按教师可见范围计） */
 export function getTeacherOverview() {
   return request.get('/teacher/overview')
+}
+
+/** 教师可见范围内的班级列表（工具箱班级对比下拉用） */
+export function getTeacherClasses() {
+  return request.get('/teacher/classes')
 }
 
 /** 地图图层：学生求职意向城市分布（按教师可见范围） */
@@ -225,3 +235,31 @@ export function deleteHrJob(id) {
 export function getTalents(params) {
   return request.get('/hr/talents', { params })
 }
+
+// ========== 工具箱 ==========
+
+// --- 学生端工具箱 ---
+export function compareJobs(jobIds) {
+  return request.post('/student/tools/compare-jobs', jobIds)
+}
+export function skillRoi(skill) {
+  return request.get('/student/tools/skill-roi', { params: { skill } })
+}
+export function salaryCalc(params) {
+  return request.get('/student/tools/salary-calc', { params })
+}
+export function jobChecklist(jobId) {
+  return request.get('/student/tools/job-checklist', { params: { jobId } })
+}
+
+// --- 教师端工具箱 ---
+export function compareClasses(classIds) {
+  return request.post('/teacher/tools/compare-classes', classIds)
+}
+export function studentAlerts(params) {
+  return request.get('/teacher/tools/student-alerts', { params })
+}
+export function courseMatch(courseName) {
+  return request.get('/teacher/tools/course-match', { params: { courseName } })
+}
+

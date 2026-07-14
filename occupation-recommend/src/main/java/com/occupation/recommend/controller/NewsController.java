@@ -35,10 +35,11 @@ public class NewsController {
         return Result.ok(PageResult.of(p.getTotal(), p.getCurrent(), p.getSize(), list));
     }
 
-    /** 首页资讯格子：最新若干条（置顶优先） */
+    /** 首页资讯格子：最新若干条（置顶优先），可按技术方向筛选 */
     @GetMapping("/latest")
-    public Result<List<NewsVO>> latest(@RequestParam(defaultValue = "6") int limit) {
-        return Result.ok(newsService.latest(limit).stream().map(NewsVO::of).collect(Collectors.toList()));
+    public Result<List<NewsVO>> latest(@RequestParam(defaultValue = "6") int limit,
+                                       @RequestParam(required = false) String category) {
+        return Result.ok(newsService.latest(limit, category).stream().map(NewsVO::of).collect(Collectors.toList()));
     }
 
     /** 资讯详情（含正文，浏览数 +1） */

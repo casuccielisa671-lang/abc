@@ -35,6 +35,9 @@ public class News extends BaseEntity {
     /** 封面色块样式：blue/green/purple/amber */
     private String coverStyle;
 
+    /** 封面图片URL（有值时优先显示图片，否则使用 coverStyle 色块） */
+    private String coverImage;
+
     /** 来源：平台数据播报 / RSS源名 / 作者 */
     private String source;
 

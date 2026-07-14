@@ -4,23 +4,17 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.occupation.analysis.service.DataCleanService;
 import com.occupation.common.config.KafkaTopicConfig;
+import com.occupation.common.dto.JobDataMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 /**
- * 职位数据清洗监听器 — 数据管道第二环
- * <p>
- * 与 common 模块的 KafkaConsumerService（负责原始数据归档到 raw_job_data）
- * 使用不同的 groupId 并行消费同一 Topic：
- * <pre>
- * 爬虫 → Kafka(raw-job-data) ─┬→ data-cleaner-group  → raw_job_data（原始归档，common）
- *                             └→ job-clean-group     → job_detail （清洗入库，本类）
- * </pre>
- * 好处：清洗逻辑故障不影响原始数据落地，可随时用存量补偿任务重放。
+ * 职位数据清洗监听器。
  *
- * @author occupation-team
+ * <p>兼容 Kafka JsonDeserializer 反序列化出来的对象和历史字符串消息，
+ * 避免出现 raw_job_data 已落库但 job_detail 未清洗的环境差异。</p>
  */
 @Slf4j
 @Component
@@ -32,16 +26,30 @@ public class JobDataCleanListener {
     @KafkaListener(topics = KafkaTopicConfig.TOPIC_RAW_JOB_DATA,
                    groupId = "job-clean-group",
                    concurrency = "2")
-    public void onMessage(String messageJson) {
+    public void onMessage(Object payload) {
         try {
-            JSONObject msg = JSON.parseObject(messageJson);
+            JobDataMessage message = toMessage(payload);
             dataCleanService.cleanAndSave(
-                    msg.getString("rawContent"),
-                    msg.getString("source"),
-                    msg.getString("sourceUrl"));
+                    message.getRawContent(),
+                    message.getSource(),
+                    message.getSourceUrl());
         } catch (Exception e) {
-            // 只记录不抛出：单条脏数据不应阻塞消费位点
-            log.error("清洗消息处理失败: {}", messageJson, e);
+            log.error("清洗消息处理失败: {}", payload, e);
         }
+    }
+
+    private JobDataMessage toMessage(Object payload) {
+        if (payload instanceof JobDataMessage) {
+            return (JobDataMessage) payload;
+        }
+        if (payload instanceof String) {
+            JSONObject msg = JSON.parseObject((String) payload);
+            return JobDataMessage.builder()
+                    .rawContent(msg.getString("rawContent"))
+                    .source(msg.getString("source"))
+                    .sourceUrl(msg.getString("sourceUrl"))
+                    .build();
+        }
+        return JSON.parseObject(JSON.toJSONString(payload), JobDataMessage.class);
     }
 }

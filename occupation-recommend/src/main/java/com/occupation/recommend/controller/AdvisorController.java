@@ -35,6 +35,7 @@ public class AdvisorController {
     private final CareerAdvisorService advisorService;
 
     /** 与 AI 职业顾问对话一轮 */
+    @PreAuthorize("hasRole('STUDENT')")
     @PostMapping("/chat")
     public Result<AdvisorReplyVO> chat(@RequestBody @Validated AdvisorChatDTO dto) {
         List<AiMessage> history = dto.getMessages().stream()
@@ -48,6 +49,7 @@ public class AdvisorController {
      * <p>
      * 按需单条生成：推荐列表一次 20 条，逐条调大模型既慢又贵。
      */
+    @PreAuthorize("hasRole('STUDENT')")
     @PostMapping("/explain/{jobId}")
     public Result<AdvisorReplyVO> explain(@PathVariable Long jobId) {
         return Result.ok(advisorService.explainMatch(UserContextHolder.getUserId(), jobId));

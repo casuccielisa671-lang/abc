@@ -38,4 +38,7 @@ public class SysStudentProfile extends BaseEntity {
 
     /** 学历：专科/本科/硕士/博士 */
     private String educationLevel;
+
+    /** 证件照URL */
+    private String avatarUrl;
 }

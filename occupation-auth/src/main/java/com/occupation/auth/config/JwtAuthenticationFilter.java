@@ -51,6 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/api/health",
             "/api/health/error",
             "/api/open/",
+            "/api/news",
             "/doc.html",
             "/v3/api-docs",
             "/webjars/",
@@ -62,14 +63,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        // 白名单放行
+        // 尝试从请求中提取并解析 Token（无论是否白名单）
+        String token = extractToken(request);
+        DecodedJWT jwt = (StringUtils.hasText(token)) ? jwtUtil.verifyAndParse(token) : null;
+
+        // 白名单路径：有 Token 就设置租户上下文（保证 MetaObjectHandler 等组件可用），
+        // 没 Token 也正常放行（匿名访问）。
         if (isWhiteListed(request.getServletPath())) {
-            filterChain.doFilter(request, response);
+            if (jwt != null) {
+                try {
+                    TenantContextHolder.setTenantId(jwtUtil.getTenantId(jwt));
+                    UserContextHolder.set(jwtUtil.getUserId(jwt), jwtUtil.getRole(jwt));
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    jwtUtil.getUserId(jwt), null,
+                                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + jwtUtil.getRole(jwt))));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } catch (Exception e) {
+                    log.debug("白名单路径 Token 解析失败，继续匿名访问: {}", e.getMessage());
+                }
+            }
+            try {
+                filterChain.doFilter(request, response);
+            } finally {
+                TenantContextHolder.clear();
+                UserContextHolder.clear();
+                SecurityContextHolder.clearContext();
+            }
             return;
         }
 
-        // 提取 Token
-        String token = extractToken(request);
+        // 非白名单路径：必须提供有效 Token
         if (!StringUtils.hasText(token)) {
             log.warn("缺少 Token: {}", request.getServletPath());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -78,8 +102,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 校验 Token
-        DecodedJWT jwt = jwtUtil.verifyAndParse(token);
         if (jwt == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");

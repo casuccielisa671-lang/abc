@@ -16,7 +16,9 @@
         <el-tab-pane name="mine">
           <template #label>我的 AI 报告</template>
           <el-table :data="records" v-loading="loading" stripe>
-            <el-table-column prop="id" label="ID" width="70" />
+            <el-table-column label="ID" width="70">
+              <template #default="{ $index }">{{ reportNo($index) }}</template>
+            </el-table-column>
             <el-table-column prop="name" label="报告名称" min-width="220">
               <template #default="{ row }">{{ row.name || '—' }}</template>
             </el-table-column>
@@ -52,7 +54,9 @@
             <el-badge :value="unreadCount" :hidden="!unreadCount" class="tab-badge">收到的报告</el-badge>
           </template>
           <el-table :data="received" v-loading="rLoading" stripe>
-            <el-table-column prop="id" label="ID" width="70" />
+            <el-table-column label="ID" width="70">
+              <template #default="{ $index }">{{ receivedNo($index) }}</template>
+            </el-table-column>
             <el-table-column label="报告名称" min-width="220">
               <template #default="{ row }">
                 <el-badge is-dot :hidden="row.read" class="dot">{{ row.name || '—' }}</el-badge>
@@ -175,6 +179,8 @@ const rPage = ref(1)
 const rSize = ref(10)
 const rTotal = ref(0)
 const unreadCount = computed(() => received.value.filter(r => !r.read).length)
+const reportNo = index => (page.value - 1) * size.value + index + 1
+const receivedNo = index => (rPage.value - 1) * rSize.value + index + 1
 
 async function loadReceived() {
   rLoading.value = true

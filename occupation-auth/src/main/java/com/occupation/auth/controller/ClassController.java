@@ -29,6 +29,7 @@ public class ClassController {
     private final ClassService classService;
 
     /** 班级列表（含在册学生数） */
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public Result<List<ClassVO>> list() {
         Map<Long, Long> counts = classService.studentCountByClass();
@@ -39,6 +40,7 @@ public class ClassController {
     }
 
     /** 新增/编辑班级（id 为空=新增） */
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public Result<SysClass> save(@RequestBody SysClass clazz) {
         // 租户由多租户插件在插入时填充，不信任客户端传入
@@ -47,6 +49,7 @@ public class ClassController {
     }
 
     /** 删除班级（仍有学生归属时拒绝） */
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         classService.deleteClass(id);
@@ -54,6 +57,7 @@ public class ClassController {
     }
 
     /** 把一批学生分配到该班级 */
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/students")
     public Result<Void> assignStudents(@PathVariable Long id, @RequestBody List<Long> userIds) {
         classService.assignStudents(id, userIds);
@@ -61,6 +65,7 @@ public class ClassController {
     }
 
     /** 筛选项：当前租户的专业 / 入学年级 */
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/filters")
     public Result<Map<String, Object>> filters() {
         Map<String, Object> data = new java.util.LinkedHashMap<>();

@@ -48,6 +48,9 @@ public class StudentProfileServiceImpl implements StudentProfileService {
         profile.setExpectedSalaryMin(dto.getExpectedSalaryMin());
         profile.setExpectedSalaryMax(dto.getExpectedSalaryMax());
         profile.setEducationLevel(dto.getEducationLevel());
+        if (dto.getAvatarUrl() != null) {
+            profile.setAvatarUrl(dto.getAvatarUrl());
+        }
 
         if (isNew) {
             profileMapper.insert(profile);

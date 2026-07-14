@@ -9,8 +9,6 @@
         <el-button type="primary" @click="openGenerateDialog">生成新报告</el-button>
       </div>
     </div>
-
-    <!-- #3 两类报告的生成依据说明 -->
     <el-alert type="info" :closable="false" show-icon class="basis">
       <template #title>两类报告的数据来源</template>
       <div class="basis-body">
@@ -25,7 +23,9 @@
 
     <el-card>
       <el-table :data="records" v-loading="loading" stripe>
-        <el-table-column prop="id" label="ID" width="70" />
+        <el-table-column label="ID" width="70">
+          <template #default="{ $index }">{{ displayId($index) }}</template>
+        </el-table-column>
         <el-table-column prop="name" label="报告名称" min-width="240">
           <template #default="{ row }">{{ row.name || '—' }}</template>
         </el-table-column>
@@ -74,8 +74,6 @@
         @current-change="loadRecords"
       />
     </el-card>
-
-    <!-- 生成报告对话框 -->
     <el-dialog v-model="generateVisible" title="生成新报告" width="500px">
       <el-form ref="genFormRef" :model="genForm" label-width="100px">
         <el-form-item label="报告大类" prop="category">
@@ -84,8 +82,6 @@
             <el-option label="学生就业数据报告（按专业/年级/班级）" value="EMPLOYMENT" />
           </el-select>
         </el-form-item>
-
-        <!-- 学生就业报告：选择范围（不选=全校；班级优先，否则按专业/年级） -->
         <template v-if="genForm.category === 'EMPLOYMENT'">
           <el-form-item label="报告范围">
             <span class="hint">不选任何项 = 全校；可选具体班级，或按专业 / 入学年级</span>
@@ -121,8 +117,6 @@
         <el-button type="primary" :loading="generating" @click="handleGenerate">生成</el-button>
       </template>
     </el-dialog>
-
-    <!-- 发送就业报告给某范围学生 -->
     <el-dialog v-model="deliverVisible" title="发送报告给学生" width="480px">
       <p class="deliver-name">《{{ deliverRow?.name }}》</p>
       <el-form label-width="90px">
@@ -175,6 +169,7 @@ const loading = ref(false)
 const page = ref(1)
 const size = ref(10)
 const total = ref(0)
+const displayId = index => (page.value - 1) * size.value + index + 1
 
 async function loadRecords() {
   loading.value = true
@@ -201,25 +196,18 @@ async function handleDownload(row) {
   try { await saveBlob(downloadReport(row.id), `${row.name || 'report'}.${ext}`) } catch { /* 拦截器已提示 */ }
 }
 
-// ---- 生成报告 ----
 const generateVisible = ref(false)
 const generating = ref(false)
 const genFormRef = ref(null)
 const genForm = reactive({ category: 'MARKET', fileType: 'PDF', major: null, enrollYear: null, classId: null })
 
-// 就业类报告的范围候选
 const scopeClasses = ref([])
 const scopeMajors = ref([])
 const scopeYears = ref([])
 let scopeLoaded = false
 
-function resetScope() {
-  genForm.major = null
-  genForm.enrollYear = null
-  genForm.classId = null
-}
+function resetScope() { genForm.major = null; genForm.enrollYear = null; genForm.classId = null }
 function onClassPick() {
-  // 班级优先：选了班级就清掉专业/年级（后端也是班级优先）
   if (genForm.classId) { genForm.major = null; genForm.enrollYear = null }
 }
 async function loadScopeOptions() {
@@ -255,14 +243,12 @@ async function handleGenerate() {
     generateVisible.value = false
     loadRecords()
   } catch {
-    // 生成是同步的，失败原因已由拦截器提示，同时会落一条 FAILED 记录
     loadRecords()
   } finally {
     generating.value = false
   }
 }
 
-// ---- 发送报告给学生 ----
 const deliverVisible = ref(false)
 const delivering = ref(false)
 const deliverRow = ref(null)
@@ -272,7 +258,7 @@ async function openDeliver(row) {
   deliverRow.value = row
   deliverForm.targetType = 'ALL'
   deliverForm.targetValue = null
-  await loadScopeOptions()   // 复用生成对话框的范围候选
+  await loadScopeOptions()
   deliverVisible.value = true
 }
 
@@ -294,15 +280,9 @@ async function handleDeliver() {
   }
 }
 
-function statusTag(status) {
-  return { SUCCESS: 'success', FAILED: 'danger', GENERATING: 'warning', PENDING: 'info' }[status] || 'info'
-}
-function statusLabel(status) {
-  return { SUCCESS: '已完成', FAILED: '失败', GENERATING: '生成中', PENDING: '排队中' }[status] || status
-}
-function categoryLabel(category) {
-  return { MARKET: '市场行业', EMPLOYMENT: '学生就业' }[category] || '市场行业'
-}
+const statusTag = status => ({ SUCCESS: 'success', FAILED: 'danger', GENERATING: 'warning', PENDING: 'info' }[status] || 'info')
+const statusLabel = status => ({ SUCCESS: '已完成', FAILED: '失败', GENERATING: '生成中', PENDING: '排队中' }[status] || status)
+const categoryLabel = category => ({ MARKET: '市场行业', EMPLOYMENT: '学生就业' }[category] || '市场行业')
 
 onMounted(loadRecords)
 </script>

@@ -31,4 +31,7 @@ public class ProfileSaveDTO implements Serializable {
 
     /** 专科/本科/硕士/博士 */
     private String educationLevel;
+
+    /** 证件照URL（上传后由后端填充） */
+    private String avatarUrl;
 }

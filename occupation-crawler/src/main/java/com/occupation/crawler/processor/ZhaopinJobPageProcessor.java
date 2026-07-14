@@ -119,6 +119,7 @@ public class ZhaopinJobPageProcessor extends JobPageProcessor {
         }
         log.info("智联采集: {} 解析 {}/{} 条", url, parsed, positions.size());
 
+        flushJobs(page);
         addNextPage(page, url);
     }
 

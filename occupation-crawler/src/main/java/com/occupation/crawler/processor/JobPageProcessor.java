@@ -79,6 +79,10 @@ public abstract class JobPageProcessor implements PageProcessor {
         this.collectedJobs.add(job);
     }
 
+    protected void flushJobs(Page page) {
+        page.putField("jobs", drainCollectedJobs());
+    }
+
     // ---- 反爬辅助 ----
 
     private static final String[] UA_POOL = {

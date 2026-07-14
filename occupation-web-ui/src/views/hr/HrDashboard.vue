@@ -2,7 +2,7 @@
   <div class="role-home">
     <section class="welcome">
       <div class="hi">
-        你好，{{ displayName }} 👋
+        你好，{{ displayName }}
         <small>招聘工作台 · 仅统计你发布的职位与收到的投递</small>
       </div>
       <el-button type="primary" @click="go('/hr/jobs')">职位管理</el-button>
@@ -51,10 +51,10 @@
       <div class="tile t-quick">
         <div class="tile-h"><span class="t">快捷入口</span></div>
         <div class="quick-grid">
-          <div class="qa" @click="go('/hr/jobs')"><span class="qi">📋</span>职位管理</div>
-          <div class="qa" @click="go('/hr/applications')"><span class="qi">📨</span>收到投递</div>
-          <div class="qa" @click="go('/hr/talents')"><span class="qi">🧑‍💼</span>人才浏览</div>
-          <div class="qa" @click="go('/hr/jobs')"><span class="qi">➕</span>发布职位</div>
+          <div class="qa" @click="go('/hr/jobs')">职位管理</div>
+          <div class="qa" @click="go('/hr/applications')">收到投递</div>
+          <div class="qa" @click="go('/hr/talents')">人才浏览</div>
+          <div class="qa" @click="go('/hr/jobs')">发布职位</div>
         </div>
       </div>
 
@@ -145,10 +145,9 @@ onMounted(() => {
 
 /* 快捷入口 */
 .quick-grid { flex: 1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.qa { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-radius: 11px;
+.qa { display: flex; align-items: center; justify-content: center; border-radius: 11px;
   background: var(--color-bg-secondary); border: 1px solid var(--color-border); cursor: pointer; font-size: 13px; font-weight: 600; transition: all .15s; }
 .qa:hover { border-color: var(--color-primary); color: var(--color-primary); transform: translateY(-1px); }
-.qi { font-size: 20px; }
 
 @media (max-width: 900px) {
   .bento { grid-template-columns: repeat(2, 1fr); }

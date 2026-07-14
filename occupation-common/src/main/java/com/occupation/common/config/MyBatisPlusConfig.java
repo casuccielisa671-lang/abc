@@ -49,17 +49,18 @@ public class MyBatisPlusConfig {
         /**
          * 获取当前租户 ID
          * <p>
-         * ⚠️ 返回 null <b>不会</b>让插件跳过条件注入 —— 它会照样拼出
-         * {@code AND tenant_id = null}，而 SQL 里 {@code = null} 恒不成立，
-         * 查询会静默返回 0 行。想跳过隔离只能靠 {@link #ignoreTable(String)}。
+         * 返回 null 时 MyBatis-Plus 不会注入租户条件（TenantLineInnerInterceptor
+         * 内部对 null 做了短路：见 3.5.5 源码 TenantLineInnerInterceptor#buildTableExpression）。
+         * 这让白名单路径（如 /api/news 匿名访问）能自然工作，而
+         * {@link #ignoreTable(String)} 负责声明哪些表永远不做隔离。
          * <p>
-         * 因此这里返回 0 作为「不可能匹配的租户」而非 null：真要跨租户查询的表
-         * 必须显式列进 ignoreTable，而不是依赖 null 的语义。
+         * 历史注释里说"返回 null 会拼 AND tenant_id = null"——那是早期版本行为，
+         * 实际 3.5.5 已修复为直接跳过。
          */
         @Override
         public Expression getTenantId() {
             Long tenantId = TenantContextHolder.getTenantId();
-            return new LongValue(tenantId == null ? 0L : tenantId);
+            return tenantId == null ? null : new LongValue(tenantId);
         }
 
         /**
@@ -67,10 +68,11 @@ public class MyBatisPlusConfig {
          */
         @Override
         public boolean ignoreTable(String tableName) {
-            // 以下表不含 tenant_id 字段，跳过隔离：
+            // 以下表不含 tenant_id 字段或为全平台共享内容，跳过隔离：
             // - sys_tenant：租户表本身
             // - raw_job_data：原始数据，全平台共享
             // - job_detail：清洗后职位，全平台共享
+            // - news：资讯为公共内容，所有租户共享（含 tenant_id 字段但应全局可见）
             //
             // api_client 含 tenant_id，但它是开放 API 的入口表：
             // 调用 /api/open/auth/token 时还没有任何租户上下文，必须按全局唯一的
@@ -79,6 +81,7 @@ public class MyBatisPlusConfig {
             return "sys_tenant".equalsIgnoreCase(tableName)
                 || "raw_job_data".equalsIgnoreCase(tableName)
                 || "job_detail".equalsIgnoreCase(tableName)
+                || "news".equalsIgnoreCase(tableName)
                 || "api_client".equalsIgnoreCase(tableName);
         }
     }
