@@ -71,7 +71,7 @@ import { useAppStore } from '@/store/app'
 import NotificationBell from '@/components/NotificationBell.vue'
 import {
   DataAnalysis, Setting, Document, User, House,
-  Reading, Star, TrendCharts, Management,
+  Reading, TrendCharts, Management,
   Tickets, ChatDotRound, Promotion, Notebook
 } from '@element-plus/icons-vue'
 
@@ -127,11 +127,9 @@ const flatMenuItems = computed(() => {
     ],
     STUDENT: [
       { index: '/student', title: '首页', icon: House },
-      { index: '/student/jobs', title: '职位推荐', icon: Promotion },
+      { index: '/student/jobs', title: '职位信息', icon: Promotion },
       { index: '/student/profile', title: '个人画像', icon: User },
       { index: '/student/resume', title: '我的简历', icon: Tickets },
-      { index: '/student/applications', title: '我的投递', icon: Promotion },
-      { index: '/student/favorites', title: '我的收藏', icon: Star },
       { index: '/student/reports', title: '我的报告', icon: Document },
       { index: '/student/advisor', title: '职业顾问', icon: ChatDotRound },
       { index: '/student/news', title: '资讯', icon: Notebook },
@@ -183,8 +181,14 @@ const flatMenuItems = computed(() => {
   return menus[userStore.role] || []
 })
 
-/** 路由高亮：精确匹配优先，其次最长前缀（如职位详情归到职位推荐） */
+/** 路由高亮：精确匹配优先，其次最长前缀（如职位详情归到职位信息） */
 const activeIndex = computed(() => {
+  // 「我的投递/我的收藏/职位详情」都并入「职位信息」中心，统一高亮该菜单
+  if (route.path === '/student/applications'
+      || route.path === '/student/favorites'
+      || route.path.startsWith('/student/job/')) {
+    return '/student/jobs'
+  }
   const leafItems = flatMenuItems.value.flatMap(item =>
     item.children ? [item, ...item.children] : [item]
   )

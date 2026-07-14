@@ -1,6 +1,6 @@
 <template>
   <div class="my-applications">
-    <div class="page-head">
+    <div class="page-head" v-if="!embedded">
       <h2 class="page-title">我的投递</h2>
       <p class="page-sub">只有企业在本平台发布的职位可以投递；采集来的职位仅供参考</p>
     </div>
@@ -82,7 +82,7 @@
 
       <el-empty
         v-if="!loading && !list.length"
-        description="你还没有投递过职位。到「职位推荐」里找标着「可投递」的岗位试试"
+        description="你还没有投递过职位。到「可投递岗位」里找喜欢的岗位试试"
       />
     </el-card>
   </div>
@@ -95,6 +95,9 @@ import { getMyApplications, acceptOffer } from '@/api/student'
 import { useEmploymentStore } from '@/store/employment'
 import { toList } from '@/utils/list'
 import { salaryRange, formatTime } from '@/utils/format'
+
+// embedded=true 时隐藏自身大标题，供「职位信息」中心以标签页嵌入
+defineProps({ embedded: { type: Boolean, default: false } })
 
 /** 与后端 ApplicationStatus 枚举一一对应 */
 const STATUSES = [

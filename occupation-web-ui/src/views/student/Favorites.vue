@@ -1,12 +1,12 @@
 <template>
   <div class="favorites-page">
-    <div class="page-head">
+    <div class="page-head" v-if="!embedded">
       <h2 class="page-title">我的收藏</h2>
       <p class="page-sub">收藏的职位会保留在这里，方便随时回顾对比</p>
     </div>
 
     <div v-loading="loading">
-      <el-empty v-if="!loading && list.length === 0" description="暂无收藏，去推荐页看看吧" />
+      <el-empty v-if="!loading && list.length === 0" description="暂无收藏，去「可投递岗位」或「市场参考」看看吧" />
 
       <div class="job-grid">
         <div v-for="job in list" :key="job.id" class="job-card"
@@ -41,6 +41,9 @@ import { getFavorites, unfavoriteJob } from '@/api/student'
 import { toList } from '@/utils/list'
 import { salaryRange } from '@/utils/format'
 import { ElMessage } from 'element-plus'
+
+// embedded=true 时隐藏自身大标题，供「职位信息」中心以标签页嵌入
+defineProps({ embedded: { type: Boolean, default: false } })
 
 const list = ref([])
 const loading = ref(false)
