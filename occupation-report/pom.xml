@@ -50,6 +50,12 @@
             <groupId>org.xhtmlrenderer</groupId>
             <artifactId>flying-saucer-pdf-itext5</artifactId>
         </dependency>
+
+        <!-- flexmark — AI 报告 Markdown 解析（标题/粗体/列表/代码块） -->
+        <dependency>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-all</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

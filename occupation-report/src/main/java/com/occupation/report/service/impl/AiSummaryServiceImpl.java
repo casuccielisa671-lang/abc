@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * AI 摘要实现 — 调用 {@link AiChatClient} + 规则降级
  * <p>
@@ -25,10 +27,18 @@ import org.springframework.stereotype.Service;
 public class AiSummaryServiceImpl implements AiSummaryService {
 
     /** 角色设定与输出约束分离到 system，用户消息只放数据 —— 模型更不容易跑题 */
-    private static final String SYSTEM_PROMPT =
-            "你是高校就业指导中心的资深数据分析师，面向学生和教师解读就业市场数据。"
-            + "要求：① 结论先行，先给判断再给依据；② 必须引用给定数据中的具体数字，不得编造未提供的数据；"
-            + "③ 不使用 Markdown 标题与列表符号，输出连贯段落；④ 全文 300 字以内。";
+    private static final String SYSTEM_PROMPT = String.join("\n",
+            "你是高校就业指导中心的资深数据分析师，面向学生和教师解读就业市场数据。",
+            "要求：",
+            "① 结论先行，先给判断再给依据；",
+            "② 必须引用给定数据中的具体数字，不得编造未提供的数据；",
+            "③ 不使用 Markdown 标题与列表符号，输出连贯段落；",
+            "④ 全文 600-800 字；",
+            "⑤ 按以下四大板块组织：",
+            "  a. 整体趋势判断：引用同比/环比变化，指出市场是扩张还是收缩",
+            "  b. 行业与城市热点分析：哪些行业/城市需求旺盛，哪些在降温",
+            "  c. 技能需求变化：哪些技能需求上升、哪些下降，指出「值得关注的信号」",
+            "  d. 对学生/教师的建议：基于数据给出 2-3 条具体可执行的建议");
 
     private final AiChatClient aiChatClient;
 
@@ -45,16 +55,52 @@ public class AiSummaryServiceImpl implements AiSummaryService {
         }
     }
 
-    /** 构造 Prompt：注入 Top 数据，要求输出面向学生/教师的就业形势解读 */
+    /** 构造 Prompt：注入 Top 数据 + 薪资分布 + 月度趋势，要求输出面向学生/教师的就业形势解读 */
     private String buildPrompt(DashboardVO dashboard) {
         StringBuilder sb = new StringBuilder();
-        sb.append("以下是本校就业服务平台采集到的岗位市场统计数据，请据此写一段就业形势解读，")
-          .append("包含：整体趋势判断、值得关注的行业与技能、对在校学生的 1~2 条学习建议。\n\n");
+        sb.append("以下是本校就业服务平台采集到的岗位市场统计数据，请据此写一段就业形势解读。\n\n");
         appendTop(sb, "行业岗位数 Top", dashboard.getIndustryTop(), 5);
         appendTop(sb, "城市岗位分布 Top", dashboard.getCityDist(), 5);
         appendTop(sb, "热门技能 Top", dashboard.getSkillHot(), 10);
         appendTop(sb, "学历需求分布", dashboard.getEducationDist(), 5);
+        appendSalary(sb, dashboard);
+        appendTrend(sb, dashboard);
+        sb.append("\n请按四大板块（整体趋势判断 → 行业与城市热点分析 → 技能需求变化 → 对学生/教师的建议）组织内容，")
+          .append("引用同比/环比变化，指出「值得关注的信号」。全文 600-800 字。");
         return sb.toString();
+    }
+
+    private void appendSalary(StringBuilder sb, DashboardVO dashboard) {
+        if (dashboard.getTrend() == null || dashboard.getTrend().isEmpty()) {
+            return;
+        }
+        // 取最近两期趋势数据，计算薪资变化
+        List<DashboardVO.TrendItem> trends = dashboard.getTrend();
+        DashboardVO.TrendItem latest = trends.get(trends.size() - 1);
+        sb.append("\n薪资水平：最近一期（").append(latest.getPeriod()).append("）")
+          .append("平均薪资 ").append(latest.getAvgSalary()).append(" 元/月，")
+          .append("岗位数 ").append(latest.getJobCount()).append(" 个。");
+        if (trends.size() >= 2) {
+            DashboardVO.TrendItem prev = trends.get(trends.size() - 2);
+            sb.append("上期（").append(prev.getPeriod()).append("）")
+              .append("平均薪资 ").append(prev.getAvgSalary()).append(" 元/月，")
+              .append("岗位数 ").append(prev.getJobCount()).append(" 个。");
+        }
+        sb.append('\n');
+    }
+
+    private void appendTrend(StringBuilder sb, DashboardVO dashboard) {
+        if (dashboard.getTrend() == null || dashboard.getTrend().size() < 2) {
+            return;
+        }
+        sb.append("\n月度趋势对比（最近 6 期）：\n");
+        List<DashboardVO.TrendItem> trends = dashboard.getTrend();
+        int start = Math.max(0, trends.size() - 6);
+        for (int i = start; i < trends.size(); i++) {
+            DashboardVO.TrendItem t = trends.get(i);
+            sb.append(t.getPeriod()).append("：岗位 ").append(t.getJobCount())
+              .append("，均薪 ").append(t.getAvgSalary()).append('\n');
+        }
     }
 
     private void appendTop(StringBuilder sb, String title, java.util.List<DashboardVO.DimensionItem> items, int limit) {

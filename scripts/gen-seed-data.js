@@ -791,7 +791,7 @@ L.push('-- ---------- 采集任务 ----------');
 L.push('INSERT INTO crawler_task (id, tenant_id, source_type, source_name, url_pattern, cron_expr, status, create_time) VALUES');
 L.push([
   `(1, 1, 'MOCK', '模拟采集-mock-jobs.json', 'mock-jobs.json', '0 0 2 * * ?', 0, '2026-06-18 10:00:00')`,
-  `(2, 1, 'OFFICIAL_PUBLIC', '官方公开招聘公告示例', 'url=https://example.gov.cn/jobs/&maxItems=20', NULL, 0, '2026-06-25 14:20:00')`,
+    `(2, 1, 'OFFICIAL_PUBLIC', '人社部高校毕业生就业服务平台', 'http://job.mohrss.gov.cn/cjobs/lkysudi?pageNo=1&GJ=&job=计算机', NULL, 0, '2026-06-25 14:20:00')`,
   `(3, 2, 'MOCK', '模拟采集-示范大学', 'mock-jobs.json', NULL, 0, '2026-07-03 11:00:00')`,
 ].join(',\n') + ';');
 L.push('');

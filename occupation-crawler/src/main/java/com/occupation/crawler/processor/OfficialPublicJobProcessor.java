@@ -20,10 +20,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 官方公开招聘公告采集器。
+ * 人社部等官方公开岗位信息采集器。
  *
- * <p>定位：抓取政府/高校/公共就业服务等公开页面中的招聘公告链接，作为平台演示和分析数据集补充。
- * 为了稳妥合规，本处理器只解析公开列表页的链接标题，不进入附件、不采集联系方式、不绕过登录或验证码。</p>
+ * <p>这个页面经常改版，所以同时支持表格行、列表项、卡片式布局，避免页面小改版后直接采不到数据。</p>
  */
 @Slf4j
 public class OfficialPublicJobProcessor extends JobPageProcessor {
@@ -31,11 +30,23 @@ public class OfficialPublicJobProcessor extends JobPageProcessor {
     private static final String SOURCE = "OFFICIAL_PUBLIC";
     private static final String MOHRSS_JOB_HOST = "job.mohrss.gov.cn";
     private static final String MOHRSS_JOB_PATH = "/cjobs/lkysudi";
+    private static final String[] MOHRSS_ROW_SELECTORS = {
+            ".list_list ul.list_show",
+            ".list_list tr",
+            ".list_list li",
+            "table tbody tr",
+            "tbody tr",
+            ".job-list li",
+            ".list li",
+            ".item"
+    };
     private static final Pattern PAGE_NO_PATTERN = Pattern.compile("([?&]pageNo=)(\\d+)");
     private static final Pattern CITY_PATTERN = Pattern.compile(
             "(北京|上海|天津|重庆|杭州|广州|深圳|南京|苏州|成都|武汉|西安|长沙|郑州|济南|青岛|宁波|厦门|合肥|福州|南昌|昆明|贵阳|南宁|海口|太原|石家庄|沈阳|大连|长春|哈尔滨)");
+    private static final Pattern SALARY_PATTERN = Pattern.compile(
+            "(\\d+(?:\\.\\d+)?)\\s*([万千kK]?)\\s*[-~至]\\s*(\\d+(?:\\.\\d+)?)\\s*([万千kK]?)");
     private static final String[] TITLE_KEYWORDS = {
-            "招聘", "招录", "招考", "人才", "岗位", "事业单位", "教师", "工程师", "实习"
+            "招聘", "招录", "人才", "岗位", "事业单位", "教师", "工程师", "实习"
     };
     private static final String[] SKILL_KEYWORDS = {
             "Java", "Python", "前端", "后端", "数据", "大数据", "人工智能", "算法", "运维", "网络", "安全", "测试"
@@ -49,10 +60,11 @@ public class OfficialPublicJobProcessor extends JobPageProcessor {
 
     public OfficialPublicJobProcessor(String seedUrl, String sourceName, int maxItems) {
         super(SOURCE);
-        this.seedUrl = seedUrl;
-        this.sourceName = sourceName == null || sourceName.trim().isEmpty() ? "官方公开招聘公告" : sourceName.trim();
+        this.seedUrl = seedUrl == null ? "" : seedUrl.trim();
+        this.sourceName = sourceName == null || sourceName.trim().isEmpty()
+                ? "官方公开招聘公告" : sourceName.trim();
         this.maxItems = Math.max(1, maxItems);
-        this.domain = resolveDomain(seedUrl);
+        this.domain = resolveDomain(this.seedUrl);
     }
 
     @Override
@@ -62,19 +74,22 @@ public class OfficialPublicJobProcessor extends JobPageProcessor {
 
     @Override
     protected int randomSleep() {
-        return 8000 + (int) (Math.random() * 5000);
+        return 3000 + (int) (Math.random() * 3000);
     }
 
     @Override
     public Site getSite() {
-        return super.getSite().setDomain(domain).setSleepTime(randomSleep()).setRetryTimes(2);
+        return super.getSite()
+                .setDomain(domain)
+                .setSleepTime(randomSleep())
+                .setRetryTimes(2);
     }
 
     @Override
     public void process(Page page) {
         String url = page.getUrl().toString();
         if (!RobotsRules.isAllowed(url)) {
-            log.warn("robots.txt 不允许抓取官方公开页，已跳过: {}", url);
+            log.warn("robots.txt 不允许抓取官方公开页面，已跳过: {}", url);
             return;
         }
 
@@ -84,6 +99,78 @@ public class OfficialPublicJobProcessor extends JobPageProcessor {
             return;
         }
 
+        parseGenericLinks(page, doc, url);
+    }
+
+    private void parseMohrssJobList(Page page, Document doc, String url) {
+        List<Element> rows = collectMohrssRows(doc);
+        int parsed = 0;
+
+        if (rows.isEmpty()) {
+            log.warn("人社部列表页没有匹配到可解析的行结构: {}", url);
+        }
+
+        for (Element row : rows) {
+            if (emittedCount >= maxItems) {
+                break;
+            }
+            MohrssRow item = extractMohrssRow(row, url);
+            if (item == null) {
+                continue;
+            }
+            String sourceUrl = item.href.isEmpty()
+                    ? url + "#row-" + (emittedCount + 1)
+                    : item.href;
+            addJob(buildMessage(sourceUrl,
+                    toMohrssRawJson(item.title, item.company, item.city, item.salaryText, sourceUrl)));
+            parsed++;
+            emittedCount++;
+        }
+
+        if (parsed == 0) {
+            parsed += fallbackByLinkScan(page, doc, url);
+        }
+
+        String nextUrl = nextMohrssPageUrl(doc, url);
+        if (emittedCount < maxItems && nextUrl != null && RobotsRules.isAllowed(nextUrl)) {
+            page.addTargetRequest(nextUrl);
+        }
+
+        flushJobs(page);
+        log.info("人社部公开岗位采集完成: url={}, parsed={}, emitted={}/{}",
+                url, parsed, emittedCount, maxItems);
+    }
+
+    private int fallbackByLinkScan(Page page, Document doc, String url) {
+        Elements links = doc.select("a[href]");
+        int parsed = 0;
+        Set<String> seen = new LinkedHashSet<>();
+
+        for (Element link : links) {
+            if (emittedCount >= maxItems) {
+                break;
+            }
+            String title = normalize(link.text());
+            String href = link.absUrl("href");
+            if (title.isEmpty() || href.isEmpty() || !seen.add(href)) {
+                continue;
+            }
+            if (!isRecruitmentTitle(title) && !containsAny(title, CITY_PATTERN, TITLE_KEYWORDS)) {
+                continue;
+            }
+
+            addJob(buildMessage(href, toGenericRawJson(title, href)));
+            parsed++;
+            emittedCount++;
+        }
+
+        if (parsed > 0) {
+            log.info("人社部列表页启用链接兜底解析，补采 {} 条", parsed);
+        }
+        return parsed;
+    }
+
+    private void parseGenericLinks(Page page, Document doc, String url) {
         Elements links = doc.select("a[href]");
         int parsed = 0;
         Set<String> seenUrls = new LinkedHashSet<>();
@@ -97,62 +184,130 @@ public class OfficialPublicJobProcessor extends JobPageProcessor {
             if (!isRecruitmentTitle(title) || href.isEmpty() || !seenUrls.add(href)) {
                 continue;
             }
-            JobDataMessage message = buildMessage(href, toRawJson(title, href));
-            addJob(message);
+            addJob(buildMessage(href, toGenericRawJson(title, href)));
             parsed++;
         }
+
         flushJobs(page);
-        log.info("官方公开招聘公告采集完成: seed={}, parsed={}", seedUrl, parsed);
+        log.info("官方公开页面采集完成: seed={}, parsed={}", seedUrl, parsed);
     }
 
-    /**
-     * 人社部高校毕业生就业服务平台岗位列表页：
-     * http://job.mohrss.gov.cn/cjobs/lkysudi?pageNo=1&GJ=&job=计算机
-     *
-     * <p>该页面不是“招聘公告标题列表”，而是岗位表格。每一行依次包含：
-     * 岗位名称、岗位月薪、单位名称、地区。因此这里单独解析表格行，
-     * 再转成下游清洗服务已经支持的标准职位 JSON。</p>
-     */
-    private void parseMohrssJobList(Page page, Document doc, String url) {
-        Elements rows = doc.select(".list_list ul.list_show");
-        int parsed = 0;
-
-        for (Element row : rows) {
-            if (emittedCount >= maxItems) {
-                break;
+    private List<Element> collectMohrssRows(Document doc) {
+        for (String selector : MOHRSS_ROW_SELECTORS) {
+            Elements rows = doc.select(selector);
+            if (!rows.isEmpty()) {
+                return rows;
             }
-            Elements cells = row.select("li");
-            if (cells.size() < 4) {
-                continue;
-            }
+        }
+        return new ArrayList<>();
+    }
 
-            Element titleLink = cells.get(0).selectFirst("a[href]");
-            String title = normalize(titleLink != null ? titleLink.text() : cells.get(0).text());
-            String href = titleLink == null ? "" : titleLink.absUrl("href");
-            String salaryText = cellValue(cells.get(1));
-            String company = cellValue(cells.get(2));
-            String city = cellValue(cells.get(3));
-
-            if (title.isEmpty() || company.isEmpty()) {
-                continue;
-            }
-
-            String sourceUrl = href.isEmpty() ? url + "#row-" + (emittedCount + 1) : href;
-            JobDataMessage message = buildMessage(sourceUrl,
-                    toMohrssRawJson(title, company, city, salaryText, sourceUrl));
-            addJob(message);
-            parsed++;
-            emittedCount++;
+    private MohrssRow extractMohrssRow(Element row, String fallbackUrl) {
+        String rowText = normalize(row.text());
+        if (rowText.isEmpty()) {
+            return null;
         }
 
-        String nextUrl = nextMohrssPageUrl(doc, url);
-        if (emittedCount < maxItems && nextUrl != null && RobotsRules.isAllowed(nextUrl)) {
-            page.addTargetRequest(nextUrl);
+        Element titleLink = row.selectFirst("a[href]");
+        String href = titleLink == null ? "" : titleLink.absUrl("href");
+        String title = titleLink == null ? "" : normalize(titleLink.text());
+
+        List<String> cells = new ArrayList<>();
+        Elements cellElements = row.select("td, li, span, p");
+        for (Element cell : cellElements) {
+            String text = normalize(cell.text());
+            if (!text.isEmpty()) {
+                cells.add(text);
+            }
         }
 
-        flushJobs(page);
-        log.info("人社部公开岗位列表采集完成: url={}, parsed={}, emitted={}/{}",
-                url, parsed, emittedCount, maxItems);
+        if (title.isEmpty()) {
+            title = guessTitle(cells, rowText);
+        }
+        if (title.isEmpty()) {
+            return null;
+        }
+
+        String salaryText = guessSalary(cells, rowText);
+        String company = guessCompany(cells, rowText);
+        String city = guessCity(cells, rowText);
+
+        if (company.isEmpty()) {
+            company = sourceName;
+        }
+        if (city.isEmpty()) {
+            city = "全国";
+        }
+        if (salaryText.isEmpty()) {
+            salaryText = "面议";
+        }
+        if (href.isEmpty()) {
+            href = fallbackUrl + "#row-" + Math.abs(rowText.hashCode());
+        }
+
+        return new MohrssRow(title, company, city, salaryText, href);
+    }
+
+    private String guessTitle(List<String> cells, String rowText) {
+        for (String cell : cells) {
+            if (isRecruitmentTitle(cell)) {
+                return trimTitle(cell);
+            }
+        }
+        for (String keyword : TITLE_KEYWORDS) {
+            if (rowText.contains(keyword)) {
+                return trimTitle(rowText);
+            }
+        }
+        return "";
+    }
+
+    private String trimTitle(String text) {
+        String cleaned = normalize(text);
+        return cleaned.length() > 80 ? cleaned.substring(0, 80) : cleaned;
+    }
+
+    private String guessSalary(List<String> cells, String rowText) {
+        for (String cell : cells) {
+            String salary = guessSalaryFromText(cell);
+            if (!salary.isEmpty()) {
+                return salary;
+            }
+        }
+        return guessSalaryFromText(rowText);
+    }
+
+    private String guessSalaryFromText(String text) {
+        Matcher matcher = SALARY_PATTERN.matcher(text == null ? "" : text);
+        return matcher.find() ? matcher.group() : "";
+    }
+
+    private String guessCompany(List<String> cells, String rowText) {
+        for (String cell : cells) {
+            if (cell.length() >= 2 && !isRecruitmentTitle(cell) && guessSalaryFromText(cell).isEmpty()) {
+                if (!looksLikeCity(cell)) {
+                    return cell;
+                }
+            }
+        }
+        if (rowText.length() > 8) {
+            return rowText;
+        }
+        return "";
+    }
+
+    private String guessCity(List<String> cells, String rowText) {
+        for (String cell : cells) {
+            String city = extractCity(cell);
+            if (!"其他".equals(city)) {
+                return city;
+            }
+        }
+        return extractCity(rowText);
+    }
+
+    private boolean looksLikeCity(String text) {
+        return CITY_PATTERN.matcher(text).find();
     }
 
     private String toMohrssRawJson(String title, String company, String city, String salaryText, String href) {
@@ -167,13 +322,12 @@ public class OfficialPublicJobProcessor extends JobPageProcessor {
         raw.put("education", extractEducation(title));
         raw.put("experience", "不限");
         raw.put("skills", extractSkills(title));
-        raw.put("description", "来源于人社部高校毕业生就业服务平台公开岗位列表；岗位月薪："
-                + salaryText + "；地区：" + city + "；原文链接：" + href);
+        raw.put("description", "来源于人社部公开岗位页面，岗位月薪：" + salaryText + "，地区：" + city + "，原文链接：" + href);
         raw.put("publishDate", LocalDate.now().toString());
         return raw.toJSONString();
     }
 
-    private String toRawJson(String title, String href) {
+    private String toGenericRawJson(String title, String href) {
         JSONObject raw = new JSONObject(true);
         raw.put("title", title);
         raw.put("company", sourceName);
@@ -190,7 +344,7 @@ public class OfficialPublicJobProcessor extends JobPageProcessor {
     }
 
     private boolean isRecruitmentTitle(String title) {
-        if (title.length() < 6) {
+        if (title == null || title.length() < 4) {
             return false;
         }
         for (String keyword : TITLE_KEYWORDS) {
@@ -201,8 +355,8 @@ public class OfficialPublicJobProcessor extends JobPageProcessor {
         return false;
     }
 
-    private String extractCity(String title) {
-        Matcher matcher = CITY_PATTERN.matcher(title);
+    private String extractCity(String text) {
+        Matcher matcher = CITY_PATTERN.matcher(text == null ? "" : text);
         return matcher.find() ? matcher.group(1) : "其他";
     }
 
@@ -234,7 +388,7 @@ public class OfficialPublicJobProcessor extends JobPageProcessor {
                 || title.contains("制造")) {
             return "智能制造";
         }
-        return "公共就业服务";
+        return "公共服务";
     }
 
     private int[] parseSalaryRange(String salaryText) {
@@ -244,7 +398,7 @@ public class OfficialPublicJobProcessor extends JobPageProcessor {
             try {
                 values.add(Integer.parseInt(matcher.group()));
             } catch (NumberFormatException ignored) {
-                // 跳过异常数字片段，保留默认 0 值。
+                // 保持默认 0
             }
         }
         if (values.isEmpty()) {
@@ -255,9 +409,19 @@ public class OfficialPublicJobProcessor extends JobPageProcessor {
         return new int[]{Math.min(min, max), Math.max(min, max)};
     }
 
-    private String cellValue(Element cell) {
-        String title = normalize(cell.attr("title"));
-        return title.isEmpty() ? normalize(cell.text()) : title;
+    private boolean containsAny(String text, Pattern pattern, String[] keywords) {
+        if (text == null) {
+            return false;
+        }
+        if (pattern.matcher(text).find()) {
+            return true;
+        }
+        for (String keyword : keywords) {
+            if (text.contains(keyword)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isMohrssJobList(String url) {
@@ -278,7 +442,7 @@ public class OfficialPublicJobProcessor extends JobPageProcessor {
         }
         Matcher matcher = PAGE_NO_PATTERN.matcher(url);
         if (matcher.find()) {
-            return matcher.replaceFirst("$1" + (current + 1));
+            return url.substring(0, matcher.start(2)) + (current + 1) + url.substring(matcher.end(2));
         }
         return url + (url.contains("?") ? "&" : "?") + "pageNo=" + (current + 1);
     }
@@ -303,6 +467,22 @@ public class OfficialPublicJobProcessor extends JobPageProcessor {
             return new URL(url).getHost();
         } catch (Exception e) {
             return "";
+        }
+    }
+
+    private static final class MohrssRow {
+        private final String title;
+        private final String company;
+        private final String city;
+        private final String salaryText;
+        private final String href;
+
+        private MohrssRow(String title, String company, String city, String salaryText, String href) {
+            this.title = title;
+            this.company = company;
+            this.city = city;
+            this.salaryText = salaryText;
+            this.href = href;
         }
     }
 }

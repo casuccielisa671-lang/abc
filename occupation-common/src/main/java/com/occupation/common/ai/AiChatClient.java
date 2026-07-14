@@ -109,14 +109,28 @@ public class AiChatClient {
      * 全局温度按报告/诊断类调低（要稳定可复现），对话类需要更自然的措辞，按需调高。
      */
     public String chat(List<AiMessage> messages, double temperature) {
-        return chat(messages, false, temperature);
+        return chat(messages, false, temperature, null);
+    }
+
+    /**
+     * 多轮对话，同时覆盖采样温度与 max_tokens。
+     * <p>
+     * 用于长报告生成：全局 max_tokens 是 3000（保护多数调用方），报告类需要 4000-5000 时走这个重载。
+     * <b>仅在业务确实需要更长输出时调用</b>，避免无意义地烧 token。
+     */
+    public String chat(List<AiMessage> messages, double temperature, int maxTokens) {
+        return chat(messages, false, temperature, maxTokens);
     }
 
     private String chat(List<AiMessage> messages, boolean jsonMode, Double temperature) {
+        return chat(messages, jsonMode, temperature, null);
+    }
+
+    private String chat(List<AiMessage> messages, boolean jsonMode, Double temperature, Integer maxTokens) {
         if (!props.usable()) {
             throw new AiUnavailableException("AI 未启用或未配置 api-key");
         }
-        String body = buildRequestBody(messages, jsonMode, temperature);
+        String body = buildRequestBody(messages, jsonMode, temperature, maxTokens);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -155,6 +169,10 @@ public class AiChatClient {
     }
 
     private String buildRequestBody(List<AiMessage> messages, boolean jsonMode, Double temperature) {
+        return buildRequestBody(messages, jsonMode, temperature, null);
+    }
+
+    private String buildRequestBody(List<AiMessage> messages, boolean jsonMode, Double temperature, Integer maxTokens) {
         JSONArray arr = new JSONArray();
         for (AiMessage m : messages) {
             JSONObject o = new JSONObject();
@@ -166,7 +184,7 @@ public class AiChatClient {
         body.put("model", props.getModel());
         body.put("messages", arr);
         body.put("temperature", temperature == null ? props.getTemperature() : temperature);
-        body.put("max_tokens", props.getMaxTokens());
+        body.put("max_tokens", maxTokens == null ? props.getMaxTokens() : maxTokens);
         if (jsonMode) {
             JSONObject fmt = new JSONObject();
             fmt.put("type", "json_object");

@@ -57,6 +57,11 @@ export function rebuildAnalysis() {
   return request.post('/analysis/rebuild')
 }
 
+/** 清洗 raw_job_data 存量数据并重算 Dashboard 聚合结果 */
+export function runAnalysisPipeline() {
+  return request.post('/analysis/pipeline')
+}
+
 // ========== 用户管理 ==========
 export function getUsers(params) {
   return request.get('/admin/users', { params })

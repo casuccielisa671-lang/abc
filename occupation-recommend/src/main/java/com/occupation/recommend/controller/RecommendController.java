@@ -8,6 +8,7 @@ import com.occupation.common.result.Result;
 import com.occupation.recommend.entity.BehaviorAction;
 import com.occupation.recommend.entity.JobApplication;
 import com.occupation.recommend.service.BehaviorService;
+import com.occupation.recommend.service.HybridRecommendService;
 import com.occupation.recommend.service.JobApplicationService;
 import com.occupation.recommend.service.JobMatchService;
 import com.occupation.recommend.service.PushService;
@@ -36,17 +37,18 @@ import java.util.stream.Collectors;
 @PreAuthorize("hasRole('STUDENT')")
 public class RecommendController {
 
+    private final HybridRecommendService hybridRecommendService;
     private final JobMatchService jobMatchService;
     private final JobDetailService jobDetailService;
     private final BehaviorService behaviorService;
     private final JobApplicationService applicationService;
     private final PushService pushService;
 
-    /** 个性化推荐列表（按匹配分降序，含匹配理由和缺失技能提示） */
+    /** 个性化推荐列表（混合推荐：规则打分 + 语义匹配 + 协同过滤 + 内容推荐） */
     @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/recommend")
     public Result<List<MatchJobVO>> recommend(@RequestParam(defaultValue = "20") int topN) {
-        return Result.ok(jobMatchService.match(UserContextHolder.getUserId(), topN));
+        return Result.ok(hybridRecommendService.recommend(UserContextHolder.getUserId(), topN));
     }
 
     /** 职位详情（自动记录 VIEW 行为，用于活跃度统计与反馈闭环） */

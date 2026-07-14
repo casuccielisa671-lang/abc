@@ -1,6 +1,7 @@
 package com.occupation.crawler.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.occupation.common.result.Result;
 import com.occupation.crawler.dto.CrawlerTaskCreateDTO;
@@ -16,7 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -57,6 +60,7 @@ public class CrawlerController {
     public Result<Page<CrawlerTaskVO>> listTasks(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
+        markStaleRunningLogs();
         Page<CrawlerTask> pageParam = new Page<>(page, size);
         Page<CrawlerTask> result = crawlerTaskMapper.selectPage(pageParam,
                 new LambdaQueryWrapper<CrawlerTask>().orderByDesc(CrawlerTask::getCreateTime));
@@ -130,8 +134,9 @@ public class CrawlerController {
      */
     @PutMapping("/task/{id}/stop")
     public Result<Void> stopTask(@PathVariable Long id) {
-        if (!crawlerService.isRunning(id)) {
-            return Result.error(400, "任务未在运行");
+        CrawlerTask task = crawlerTaskMapper.selectById(id);
+        if (task == null) {
+            return Result.error(404, "任务不存在");
         }
         crawlerService.stopCrawl(id);
         return Result.ok();
@@ -153,6 +158,7 @@ public class CrawlerController {
             @RequestParam(required = false) Long taskId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
+        markStaleRunningLogs();
         LambdaQueryWrapper<CrawlerLog> wrapper = new LambdaQueryWrapper<CrawlerLog>()
                 .orderByDesc(CrawlerLog::getCreateTime);
         if (taskId != null) {
@@ -165,6 +171,35 @@ public class CrawlerController {
         Page<CrawlerLogVO> voPage = new Page<>(page, size, result.getTotal());
         voPage.setRecords(result.getRecords().stream().map(CrawlerLogVO::from).collect(Collectors.toList()));
         return Result.ok(voPage);
+    }
+
+    private void markStaleRunningLogs() {
+        LocalDateTime threshold = LocalDateTime.now().minusMinutes(3);
+        List<CrawlerLog> staleLogs = crawlerLogMapper.selectList(new LambdaQueryWrapper<CrawlerLog>()
+                .select(CrawlerLog::getTaskId)
+                .eq(CrawlerLog::getStatus, "RUNNING")
+                .isNull(CrawlerLog::getEndTime)
+                .lt(CrawlerLog::getStartTime, threshold));
+        if (staleLogs.isEmpty()) {
+            return;
+        }
+
+        CrawlerLog stale = new CrawlerLog();
+        stale.setStatus("FAILED");
+        stale.setEndTime(LocalDateTime.now());
+        stale.setErrorMsg("采集任务超过 3 分钟仍未回写完成状态，已自动标记失败。请重新点击“立即采集一次”测试。");
+        crawlerLogMapper.update(stale, new LambdaUpdateWrapper<CrawlerLog>()
+                .eq(CrawlerLog::getStatus, "RUNNING")
+                .isNull(CrawlerLog::getEndTime)
+                .lt(CrawlerLog::getStartTime, threshold));
+
+        Set<Long> taskIds = staleLogs.stream().map(CrawlerLog::getTaskId).collect(Collectors.toSet());
+        for (Long staleTaskId : taskIds) {
+            CrawlerTask task = new CrawlerTask();
+            task.setId(staleTaskId);
+            task.setStatus(0);
+            crawlerTaskMapper.updateById(task);
+        }
     }
 
     /**

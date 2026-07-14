@@ -16,6 +16,7 @@
     "echarts-gl": "^2.1.0",
     "element-plus": "^2.5.0",
     "keli-heatmap.js": "^2.0.18",
+    "marked": "^12.0.2",
     "pinia": "^2.1.0",
     "three": "^0.170.0",
     "vue": "^3.4.0",

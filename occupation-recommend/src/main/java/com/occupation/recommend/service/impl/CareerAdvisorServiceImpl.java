@@ -59,7 +59,9 @@ public class CareerAdvisorServiceImpl implements CareerAdvisorService {
             "2. 数据里没有的信息，直言不知道，不要猜测薪资、公司内情或录取概率。",
             "3. 不承诺内推、不评价具体公司好坏、不讨论与求职无关的话题（礼貌婉拒并拉回正题）。",
             "4. 给建议要具体到可执行：说清「学什么、按什么顺序、怎么验证学会了」。",
-            "5. 口语化、简洁，控制在 300 字以内；不要用 markdown 标题，最多用短横线列点。");
+            "5. 口语化、简洁，控制在 500 字以内；不要用 markdown 标题，最多用短横线列点。",
+            "6. 回答结构：先给结论，再分点展开，最后给出下一步行动。",
+            "7. 当学生问「我该学什么」时，必须给出具体的学习路径：技术栈 → 项目 → 证明方式（如证书、作品集）。");
 
     private static final String EXPLAIN_SYSTEM = String.join("\n",
             "你是就业指导老师，向学生解释系统为什么把某个职位推荐给他。",
@@ -112,7 +114,7 @@ public class CareerAdvisorServiceImpl implements CareerAdvisorService {
 
     // ================== 上下文构造 ==================
 
-    /** 学生档案 + 市场数据。这段是回答质量的分水岭 */
+    /** 学生档案 + 市场数据 + 匹配职位。这段是回答质量的分水岭 */
     private String buildContext(Long userId) {
         StringBuilder sb = new StringBuilder();
 
@@ -140,6 +142,25 @@ public class CareerAdvisorServiceImpl implements CareerAdvisorService {
         } else {
             sb.append("简历求职意向：").append(nvl(resume.getJobIntention())).append('\n');
             sb.append("简历自我评价：").append(truncate(nvl(resume.getSelfIntro()), 200)).append('\n');
+        }
+
+        // 匹配分最高的 3 个职位及缺失技能
+        try {
+            List<MatchJobVO> matches = jobMatchService.match(userId, 3);
+            if (!matches.isEmpty()) {
+                sb.append("\n【匹配度最高的 3 个职位】\n");
+                for (int i = 0; i < matches.size(); i++) {
+                    MatchJobVO m = matches.get(i);
+                    sb.append(i + 1).append(". ").append(m.getJob().getTitle())
+                      .append(" @ ").append(m.getJob().getCompany())
+                      .append("（匹配分 ").append(m.getScore()).append("）\n");
+                    if (m.getMissingSkills() != null && !m.getMissingSkills().isEmpty()) {
+                        sb.append("   缺失技能：").append(String.join("、", m.getMissingSkills())).append("\n");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("获取匹配职位失败，跳过: {}", e.getMessage());
         }
 
         appendMarket(sb);

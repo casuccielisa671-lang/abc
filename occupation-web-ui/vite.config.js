@@ -10,11 +10,19 @@ export default defineConfig({
     }
   },
   server: {
-    port: 5173,
+    port: 5177,
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
-        changeOrigin: true
+        changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
+            console.log('[Vite Proxy]', req.method, req.url, '->', proxyReq.path)
+          })
+          proxy.on('error', (err, req) => {
+            console.error('[Vite Proxy Error]', req.url, err.message)
+          })
+        }
       },
       '/amap-tile': {
         target: 'https://webst01.is.autonavi.com',

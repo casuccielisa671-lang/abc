@@ -15,7 +15,7 @@
     <el-alert type="info" :closable="false" show-icon class="verify-tip">
       <template #title>如何判断采集是否真实有效？</template>
       <div>
-        “官方公开招聘公告”会写入岗位采集链路，可在岗位数据中核对 sourceUrl。
+        “官方公开招聘公告”会写入岗位采集链路，可在岗位数据中核对 sourceUrl；点击“立即采集一次”可不等 Cron 直接测试。采集完成后到「数据看板」点击“清洗并刷新面板”即可反馈到图表。
         行业资讯是用户知识补充内容，属于独立资讯模块，请在「资讯管理」中拉取外部资讯。
         MOCK 只用于演示和本地初始化，不代表外部真实数据。
       </div>
@@ -41,10 +41,10 @@
         <el-table-column label="创建时间" width="170">
           <template #default="{ row }">{{ formatTime(row.createTime) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="210" fixed="right">
+        <el-table-column label="操作" width="260" fixed="right">
           <template #default="{ row }">
             <el-button v-if="row.status !== 1" text type="primary" size="small" @click="handleStart(row.id)">
-              启动
+              立即采集一次
             </el-button>
             <el-button v-else text type="warning" size="small" @click="handleStop(row.id)">停止</el-button>
             <el-button text type="primary" size="small" @click="openDialog(row)">编辑</el-button>
@@ -102,6 +102,7 @@
           <el-select v-model="form.sourceType" style="width:100%">
             <el-option label="MOCK（本地样例，不访问外网）" value="MOCK" />
             <el-option label="官方公开招聘公告（写入岗位库）" value="OFFICIAL_PUBLIC" />
+            <el-option label="Stack Overflow 开发者调查 CSV" value="STACK_OVERFLOW_SURVEY" />
             <el-option label="智联招聘（不推荐，易受限制）" value="ZHAOPIN" />
           </el-select>
         </el-form-item>
@@ -138,16 +139,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import {
-  createCrawlerTask,
-  deleteCrawlerTask,
-  getCrawlerLogs,
-  getCrawlerTask,
-  getCrawlerTasks,
-  startCrawlerTask,
-  stopCrawlerTask,
-  updateCrawlerTask
-} from '@/api/admin'
+import { createCrawlerTask, deleteCrawlerTask, getCrawlerLogs, getCrawlerTask, getCrawlerTasks, startCrawlerTask, stopCrawlerTask, updateCrawlerTask } from '@/api/admin'
 import { toList, toTotal } from '@/utils/list'
 import { formatTime } from '@/utils/format'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -182,8 +174,9 @@ const rules = {
 
 const urlPatternHint = computed(() => ({
   MOCK: '填写 mock 数据文件名，如 mock-jobs.json',
-  OFFICIAL_PUBLIC: '填写官方公开招聘公告列表页，如 url=https://example.gov.cn/jobs/&maxItems=30',
-  ZHAOPIN: '填写参数串，如 kw=Java&jl=653&maxPages=2'
+    OFFICIAL_PUBLIC: '可直接填写公开岗位列表页，如人社部 http://job.mohrss.gov.cn/cjobs/lkysudi?pageNo=1&GJ=&job=计算机',
+    STACK_OVERFLOW_SURVEY: '填写公开 CSV 地址，如 survey_results_public.csv',
+    ZHAOPIN: '填写参数串，如 kw=Java&jl=653&maxPages=2'
 }[form.sourceType] || ''))
 
 async function loadTasks() {
@@ -211,7 +204,7 @@ async function loadLogs() {
 async function handleStart(id) {
   try {
     await startCrawlerTask(id)
-    ElMessage.success('任务已启动')
+    ElMessage.success('已开始立即采集，本次结果稍后可在采集日志查看')
     await Promise.all([loadTasks(), loadLogs()])
   } catch { /* handled by interceptor */ }
 }
@@ -272,8 +265,9 @@ async function handleSave() {
 function sourceLabel(type) {
   return {
     MOCK: 'MOCK',
-    OFFICIAL_PUBLIC: '官方招聘公告',
-    ZHAOPIN: '智联招聘',
+      OFFICIAL_PUBLIC: '官方招聘公告',
+      STACK_OVERFLOW_SURVEY: 'Stack Overflow 调查',
+      ZHAOPIN: '智联招聘',
     NEWS_INFOQ: 'InfoQ 资讯',
     NEWS_OSCHINA: '开源中国资讯',
     BOSS_ZHIPIN: 'BOSS 直聘（已停用）',

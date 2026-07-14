@@ -45,6 +45,24 @@ export function aiPolishResume(section, text) {
   return request.post('/student/resume/ai-polish', { section, text }, { timeout: 90000 })
 }
 
+/**
+ * AI 多轮润色聊天 — 支持持续提要求（如"再精简一点""突出技术栈"）。
+ * 前端维护完整对话历史，每次把历史 + 本轮消息一起传过去。
+ * @param {string} section 板块名
+ * @param {string} originalText 原文
+ * @param {Array<{role:string,content:string}>} messages 对话历史（不含 system prompt）
+ * @param {string} userMessage 本轮用户输入
+ * @returns {Promise<{reply:string}>}
+ */
+export function aiPolishChat(section, originalText, messages, userMessage) {
+  return request.post('/student/resume/ai-polish-chat', {
+    section,
+    originalText,
+    messages,
+    userMessage
+  }, { timeout: 90000 })
+}
+
 // ========== AI 职业顾问 ==========
 /** 服务端无状态，每次把完整对话历史传回去。role 只能是 user/assistant */
 export function advisorChat(messages) {

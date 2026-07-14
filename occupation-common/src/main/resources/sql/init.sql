@@ -553,7 +553,7 @@ INSERT INTO student_resume (id, tenant_id, user_id, contact_phone, contact_email
 -- ---------- 采集任务 ----------
 INSERT INTO crawler_task (id, tenant_id, source_type, source_name, url_pattern, cron_expr, status, create_time) VALUES
 (1, 1, 'MOCK', '模拟采集-mock-jobs.json', 'mock-jobs.json', '0 0 2 * * ?', 0, '2026-06-18 10:00:00'),
-(2, 1, 'OFFICIAL_PUBLIC', '官方公开招聘公告示例', 'url=https://example.gov.cn/jobs/&maxItems=20', NULL, 0, '2026-06-25 14:20:00'),
+(2, 1, 'OFFICIAL_PUBLIC', '人社部高校毕业生就业服务平台', 'http://job.mohrss.gov.cn/cjobs/lkysudi?pageNo=1&GJ=&job=计算机', NULL, 0, '2026-06-25 14:20:00'),
 (3, 2, 'MOCK', '模拟采集-示范大学', 'mock-jobs.json', NULL, 0, '2026-07-03 11:00:00');
 
 -- ---------- 采集日志（任务1 五次成功合计 162 + 5 条待清洗/脏数据 = raw_job_data 总量）----------
@@ -2018,4 +2018,3 @@ INSERT INTO sys_alert (id, tenant_id, type, level, content, is_read, create_time
 (4, 1, 'DB_POOL', 'WARN', '数据库连接池使用率达 85%（17/20），高峰期请留意慢查询', 0, '2026-07-08 15:22:00'),
 (5, 1, 'SYSTEM', 'INFO', '统计分析任务完成：本次重算写入 104 条结果（industry/city/education/skill/trend 五个维度）', 0, '2026-07-09 08:00:00'),
 (6, 2, 'SYSTEM', 'INFO', '系统初始化完成，欢迎使用职业能力大数据服务平台', 0, '2026-07-03 11:00:00');
-

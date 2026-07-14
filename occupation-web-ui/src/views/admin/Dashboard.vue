@@ -3,11 +3,11 @@
     <div class="page-head with-actions">
       <div>
         <h2 class="page-title">数据看板</h2>
-        <p class="page-sub">数据每日凌晨 2:00 自动更新</p>
+        <p class="page-sub">数据每日凌晨 2:00 自动更新；采集新数据后可手动刷新面板</p>
       </div>
       <div class="page-actions">
         <el-button type="primary" :loading="rebuilding" @click="handleRebuild">
-          手动重算分析数据
+          清洗并刷新面板
         </el-button>
       </div>
     </div>
@@ -64,7 +64,7 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
-import { getDashboard, rebuildAnalysis } from '@/api/admin'
+import { getDashboard, runAnalysisPipeline } from '@/api/admin'
 import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
 import { useAppStore } from '@/store/app'
@@ -227,8 +227,8 @@ async function loadDashboard() {
 async function handleRebuild() {
   rebuilding.value = true
   try {
-    const count = await rebuildAnalysis()
-    ElMessage.success(`重算完成，共更新 ${count} 条分析结果`)
+    const result = await runAnalysisPipeline()
+    ElMessage.success(`刷新完成：清洗 ${result.cleaned || 0} 条，更新 ${result.analyzed || 0} 条分析结果`)
     await loadDashboard()
   } catch {
     // 拦截器已提示

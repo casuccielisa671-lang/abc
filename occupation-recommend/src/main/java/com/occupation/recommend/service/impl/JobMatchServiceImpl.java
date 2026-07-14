@@ -10,8 +10,10 @@ import com.occupation.recommend.entity.StudentBehavior;
 import com.occupation.recommend.entity.SysStudentProfile;
 import com.occupation.recommend.service.BehaviorService;
 import com.occupation.recommend.service.JobMatchService;
+import com.occupation.recommend.service.SemanticMatchService;
 import com.occupation.recommend.service.StudentProfileService;
 import com.occupation.recommend.vo.MatchJobVO;
+import com.occupation.recommend.vo.SemanticMatchVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,14 +22,15 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * 职位匹配实现 — 规则打分 + 行为反馈加权
+ * 职位匹配实现 — 规则打分 + 语义匹配 + 行为反馈加权
  * <p>
  * 跨模块协作：调用 analysis 模块的 JobDetailService 拿候选职位（先按意向城市初筛，
  * 数量不足时放开城市限制），再逐条打分排序。
  * <p>
- * 打分由两部分组成：
+ * 打分由三部分组成：
  * <ol>
  *   <li><b>基础规则分 0~100</b>：技能 40 + 城市 25 + 薪资 20 + 学历 15；</li>
+ *   <li><b>语义匹配 +0~15</b>：调用 DeepSeek 做 JD-简历语义相似度计算，弥补字符串匹配的不足；</li>
  *   <li><b>行为加权 -10~+10</b>：从学生历史 APPLY / FAVORITE / IGNORE 记录反推技能偏好，
  *       与候选职位的技能求交后加减分。已投递、已忽略的职位不再出现在推荐里。</li>
  * </ol>
@@ -43,6 +46,7 @@ public class JobMatchServiceImpl implements JobMatchService {
     private final StudentProfileService profileService;
     private final JobDetailService jobDetailService;
     private final BehaviorService behaviorService;
+    private final SemanticMatchService semanticMatchService;
 
     /** 候选集大小：先取 200 条再精排，避免全表打分 */
     private static final int CANDIDATE_SIZE = 200;
@@ -189,7 +193,7 @@ public class JobMatchServiceImpl implements JobMatchService {
         return jobDetailService.queryJobs(query).getRecords();
     }
 
-    /** 单个职位打分：基础规则（技能 40 + 城市 25 + 薪资 20 + 学历 15）+ 行为加权 ±10 */
+    /** 单个职位打分：基础规则（技能 40 + 城市 25 + 薪资 20 + 学历 15）+ 语义匹配（+15）+ 行为加权 ±10 */
     private MatchJobVO score(SysStudentProfile profile, List<String> mySkills, JobDetailVO job,
                              Map<String, Integer> skillAffinity) {
         int score = 0;
@@ -238,6 +242,23 @@ public class JobMatchServiceImpl implements JobMatchService {
             }
         }
 
+        // —— 语义匹配（+15 分）：AI 语义相似度，弥补字符串匹配的不足 ——
+        int semanticBonus = 0;
+        try {
+            String jdText = buildJdText(job);
+            String resumeText = buildResumeText(profile, mySkills);
+            SemanticMatchVO semantic = semanticMatchService.match(
+                    profile.getUserId(), job.getId(), jdText, resumeText);
+            if (semantic.isAiGenerated() && semantic.getSimilarity() != null) {
+                semanticBonus = (int) Math.round(15.0 * semantic.getSimilarity() / 100.0);
+                if (semanticBonus > 0) {
+                    reasons.add("AI 语义匹配 +" + semanticBonus);
+                }
+            }
+        } catch (Exception e) {
+            log.debug("语义匹配跳过（AI 不可用或异常）: {}", e.getMessage());
+        }
+
         // —— 行为反馈加权（±10 分） ——
         int bonus = behaviorBonus(jobSkills, skillAffinity);
         if (bonus > 0) {
@@ -245,7 +266,7 @@ public class JobMatchServiceImpl implements JobMatchService {
         } else if (bonus < 0) {
             reasons.add("与你忽略过的职位技能相近");
         }
-        score = clamp(score + bonus, 0, 100);
+        score = clamp(score + semanticBonus + bonus, 0, 100);
 
         MatchJobVO vo = new MatchJobVO();
         vo.setJob(job);
@@ -253,6 +274,34 @@ public class JobMatchServiceImpl implements JobMatchService {
         vo.setMatchReason(String.join("、", reasons));
         vo.setMissingSkills(missing);
         return vo;
+    }
+
+    /** 构建 JD 描述文本，供语义匹配使用 */
+    private String buildJdText(JobDetailVO job) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("岗位：").append(nvl(job.getTitle())).append('\n');
+        sb.append("公司：").append(nvl(job.getCompany())).append('\n');
+        sb.append("城市：").append(nvl(job.getCity())).append('\n');
+        sb.append("学历要求：").append(nvl(job.getEducation())).append('\n');
+        sb.append("薪资：").append(job.getSalaryMin()).append('-').append(job.getSalaryMax()).append('\n');
+        sb.append("技能要求：").append(String.join("、", SkillUtils.parse(job.getSkills()))).append('\n');
+        sb.append("岗位描述：").append(nvl(job.getDescription()));
+        return sb.toString();
+    }
+
+    /** 构建简历文本，供语义匹配使用 */
+    private String buildResumeText(SysStudentProfile profile, List<String> mySkills) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("专业：").append(nvl(profile.getMajor())).append('\n');
+        sb.append("学历：").append(nvl(profile.getEducationLevel())).append('\n');
+        sb.append("意向城市：").append(nvl(profile.getExpectedCity())).append('\n');
+        sb.append("意向行业：").append(nvl(profile.getExpectedIndustry())).append('\n');
+        sb.append("掌握技能：").append(String.join("、", mySkills));
+        return sb.toString();
+    }
+
+    private static String nvl(String s) {
+        return s == null || s.isEmpty() ? "不限" : s;
     }
 
     /** 候选职位技能与偏好求交，裁剪到 ±MAX_BEHAVIOR_BONUS */
