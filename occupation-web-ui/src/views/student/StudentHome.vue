@@ -14,6 +14,11 @@
           <span v-else-if="t.key === 'market' && reference.length" class="seg-badge">{{ reference.length }}</span>
         </button>
       </div>
+      <el-input
+        v-model="query" clearable class="hub-search"
+        placeholder="搜索职位名 / 公司 / 城市"
+        :prefix-icon="Search"
+      />
     </div>
 
     <!-- 可投递岗位 -->
@@ -57,12 +62,12 @@
 
     <!-- 我的投递（复用原页面，隐藏其大标题） -->
     <div v-if="activeTab === 'applications'" class="tab-panel">
-      <MyApplications embedded />
+      <MyApplications embedded :filter="query" />
     </div>
 
     <!-- 我的收藏 -->
     <div v-if="activeTab === 'favorites'" class="tab-panel">
-      <MyFavorites embedded />
+      <MyFavorites embedded :filter="query" />
     </div>
   </div>
 </template>
@@ -75,6 +80,7 @@ import JobCard from '@/components/JobCard.vue'
 import MyApplications from '@/views/student/Applications.vue'
 import MyFavorites from '@/views/student/Favorites.vue'
 import { toList } from '@/utils/list'
+import { Search } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useEmploymentStore } from '@/store/employment'
 
@@ -95,9 +101,17 @@ const list = ref([])
 const loading = ref(false)
 const loaded = ref(false)
 const contacting = ref(null)
+const query = ref('')   // 搜索关键词，即时过滤当前标签（职位名/公司/城市）
 
-const applicable = computed(() => list.value.filter(i => i.job?.applicable))
-const reference = computed(() => list.value.filter(i => !i.job?.applicable))
+/** 关键词命中：空则全放行；否则职位名/公司/城市任一含关键词（不区分大小写） */
+function jobMatch(job) {
+  const q = query.value.trim().toLowerCase()
+  if (!q) return true
+  return [job?.title, job?.company, job?.city].some(v => (v || '').toLowerCase().includes(q))
+}
+
+const applicable = computed(() => list.value.filter(i => i.job?.applicable && jobMatch(i.job)))
+const reference = computed(() => list.value.filter(i => !i.job?.applicable && jobMatch(i.job)))
 
 /**
  * 当前标签由路由决定，保证 Dashboard 卡片、消息通知等老链接照常落到正确标签：
@@ -186,6 +200,10 @@ onMounted(() => { empStore.refresh() })
   margin-bottom: 18px;
 }
 .hub-head .page-title { margin: 0; }
+.hub-search { margin-left: auto; max-width: 260px; }
+@media (max-width: 700px) {
+  .hub-search { margin-left: 0; max-width: none; width: 100%; }
+}
 
 /* 分段标签栏 */
 .seg {

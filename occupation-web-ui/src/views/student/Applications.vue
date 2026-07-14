@@ -39,7 +39,7 @@
     </div>
 
     <el-card :style="list.length ? 'margin-top:16px' : ''">
-      <el-table :data="list" v-loading="loading" stripe>
+      <el-table :data="shownList" v-loading="loading" stripe>
         <el-table-column label="职位" min-width="180">
           <template #default="{ row }">
             <span v-if="row.jobTitle">{{ row.jobTitle }}</span>
@@ -81,8 +81,8 @@
       </el-table>
 
       <el-empty
-        v-if="!loading && !list.length"
-        description="你还没有投递过职位。到「可投递岗位」里找喜欢的岗位试试"
+        v-if="!loading && !shownList.length"
+        :description="list.length ? '没有匹配的投递' : '你还没有投递过职位。到「可投递岗位」里找喜欢的岗位试试'"
       />
     </el-card>
   </div>
@@ -97,7 +97,10 @@ import { toList } from '@/utils/list'
 import { salaryRange, formatTime } from '@/utils/format'
 
 // embedded=true 时隐藏自身大标题，供「职位信息」中心以标签页嵌入
-defineProps({ embedded: { type: Boolean, default: false } })
+const props = defineProps({
+  embedded: { type: Boolean, default: false },
+  filter: { type: String, default: '' }   // 「职位信息」中心传入的搜索关键词，过滤表格
+})
 
 /** 与后端 ApplicationStatus 枚举一一对应 */
 const STATUSES = [
@@ -111,6 +114,14 @@ const STATUSES = [
 
 const empStore = useEmploymentStore()
 const list = ref([])
+
+/** 表格按关键词过滤（职位/公司/城市）；统计卡、面试卡、就业横幅仍用全量 list */
+const shownList = computed(() => {
+  const q = (props.filter || '').trim().toLowerCase()
+  if (!q) return list.value
+  return list.value.filter(a =>
+    [a.jobTitle, a.company, a.jobCity].some(v => (v || '').toLowerCase().includes(q)))
+})
 const loading = ref(false)
 const accepting = ref(null)
 

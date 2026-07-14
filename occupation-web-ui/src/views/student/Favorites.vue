@@ -6,10 +6,13 @@
     </div>
 
     <div v-loading="loading">
-      <el-empty v-if="!loading && list.length === 0" description="暂无收藏，去「可投递岗位」或「市场参考」看看吧" />
+      <el-empty
+        v-if="!loading && shownList.length === 0"
+        :description="list.length ? '没有匹配的收藏' : '暂无收藏，去「可投递岗位」或「市场参考」看看吧'"
+      />
 
       <div class="job-grid">
-        <div v-for="job in list" :key="job.id" class="job-card"
+        <div v-for="job in shownList" :key="job.id" class="job-card"
           @click="$router.push(`/student/job/${job.id}`)">
           <div class="job-head">
             <div>
@@ -36,16 +39,27 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { getFavorites, unfavoriteJob } from '@/api/student'
 import { toList } from '@/utils/list'
 import { salaryRange } from '@/utils/format'
 import { ElMessage } from 'element-plus'
 
 // embedded=true 时隐藏自身大标题，供「职位信息」中心以标签页嵌入
-defineProps({ embedded: { type: Boolean, default: false } })
+const props = defineProps({
+  embedded: { type: Boolean, default: false },
+  filter: { type: String, default: '' }   // 「职位信息」中心传入的搜索关键词
+})
 
 const list = ref([])
+
+/** 按关键词过滤收藏（职位/公司/城市） */
+const shownList = computed(() => {
+  const q = (props.filter || '').trim().toLowerCase()
+  if (!q) return list.value
+  return list.value.filter(j =>
+    [j.title, j.company, j.city].some(v => (v || '').toLowerCase().includes(q)))
+})
 const loading = ref(false)
 
 async function loadFavorites() {
