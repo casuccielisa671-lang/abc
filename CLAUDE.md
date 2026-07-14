@@ -411,7 +411,7 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 
 - **技能字段解析统一走 `SkillUtils`**（common/utils）：库里标准格式是 JSON 数组 `["Java","MySQL"]`，但存在逗号/顿号分隔的旧数据。前端对应 `utils/skills.js`
 - **技能词库提取**（`SkillDictionary`，analysis 模块）：从职位标题+描述中补全技能标签。ASCII 技能用 lookaround 手写词边界，否则 `Django` 会命中 `Go`、`JavaScript` 会命中 `Java`（`\b` 处理不了 `C++`/`C#` 结尾的符号）。中文技能直接子串匹配。有 9 个单测守着，**改词库前先跑 `SkillDictionaryTest`**
-- **推荐打分 = 基础规则 0~100 + 行为加权 ±10**：技能 40 / 城市 25 / 薪资 20 / 学历 15，再按历史 APPLY(+2) / FAVORITE(+1) / IGNORE(-2) 反推技能偏好加减分；已投递、已忽略的职位不再出现在推荐里。最终分裁剪回 0~100。**学生首页取数走 `matchGrouped`（可投递/市场参考各取前 25、全量池），`match()`（混合 Top N）仅供推送——详见「学生职位信息中心」章节**
+- **推荐打分 = 基础规则 0~100 + 行为加权 ±10**：技能 35 / 行业 20 / 城市 20 / 薪资 15 / 学历 10（**2026-07-14 加入意向行业**：原来画像的意向行业收集了却没参与打分，现按行业一致 +20 并把其余权重从 40/25/20/15 调成 35/20/20/15/10，总分仍 100），再按历史 APPLY(+2) / FAVORITE(+1) / IGNORE(-2) 反推技能偏好加减分；已投递、已忽略的职位不再出现在推荐里。最终分裁剪回 0~100。**学生首页取数走 `matchGrouped`（可投递/市场参考各取前 25、全量池），`match()`（混合 Top N）仅供推送——详见「学生职位信息中心」章节**
 - **教学建议是真算的**：`TeachingSuggestionServiceImpl` 对比 `analysis_result`(dimension=skill) 的市场热度与学生画像的掌握率，输出「市场热但掌握率 <30%」的技能，每条附岗位数与掌握人数作证据。`marketDemand` 是**相对热度**（该技能岗位数 ÷ 最热技能岗位数），所以排第一的恒为 100
 - **批量查询避免 N+1**：`BehaviorService.countByActionGroupedByUser` / `UserService.mapByIds` / `JobDetailService.listByIds` 都是一次取回。加新的「列表 + 关联信息」接口时沿用这个模式
 - **限流是 Redis ZSET 滑动窗口 + Lua**（`RateLimitInterceptor`）：剔除→计数→写入必须原子完成，否则并发下超发。固定窗口计数在窗口边界会瞬间放过 2 倍流量

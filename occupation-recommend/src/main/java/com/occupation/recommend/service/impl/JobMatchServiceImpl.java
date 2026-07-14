@@ -222,31 +222,37 @@ public class JobMatchServiceImpl implements JobMatchService {
         return jobDetailService.queryJobs(query).getRecords();
     }
 
-    /** 单个职位打分：基础规则（技能 40 + 城市 25 + 薪资 20 + 学历 15）+ 行为加权 ±10 */
+    /** 单个职位打分：基础规则（技能 35 + 行业 20 + 城市 20 + 薪资 15 + 学历 10）+ 行为加权 ±10 */
     private MatchJobVO score(SysStudentProfile profile, List<String> mySkills, JobDetailVO job,
                              Map<String, Integer> skillAffinity) {
         int score = 0;
         List<String> reasons = new ArrayList<>();
 
-        // —— 技能匹配（40 分）：职位要求技能被学生覆盖的比例 ——
+        // —— 技能匹配（35 分）：职位要求技能被学生覆盖的比例 ——
         List<String> jobSkills = SkillUtils.parse(job.getSkills());
         List<String> missing = new ArrayList<>();
         if (!jobSkills.isEmpty()) {
             long hit = jobSkills.stream().filter(s -> SkillUtils.containsIgnoreCase(mySkills, s)).count();
             missing = jobSkills.stream().filter(s -> !SkillUtils.containsIgnoreCase(mySkills, s))
                                .collect(Collectors.toList());
-            int skillScore = (int) Math.round(40.0 * hit / jobSkills.size());
+            int skillScore = (int) Math.round(35.0 * hit / jobSkills.size());
             score += skillScore;
             reasons.add(String.format("技能匹配 %d/%d", hit, jobSkills.size()));
         }
 
-        // —— 城市匹配（25 分） ——
+        // —— 意向行业匹配（20 分）：画像意向行业与职位行业一致 ——
+        if (profile.getExpectedIndustry() != null && profile.getExpectedIndustry().equals(job.getIndustry())) {
+            score += 20;
+            reasons.add("行业一致");
+        }
+
+        // —— 城市匹配（20 分） ——
         if (profile.getExpectedCity() != null && profile.getExpectedCity().equals(job.getCity())) {
-            score += 25;
+            score += 20;
             reasons.add("城市一致");
         }
 
-        // —— 薪资匹配（20 分）：区间有交集给满分 ——
+        // —— 薪资匹配（15 分）：区间有交集给满分 ——
         if (profile.getExpectedSalaryMin() != null && job.getSalaryMax() != null
                 && job.getSalaryMin() != null) {
             int expectMax = profile.getExpectedSalaryMax() == null
@@ -254,20 +260,20 @@ public class JobMatchServiceImpl implements JobMatchService {
             boolean overlap = profile.getExpectedSalaryMin() <= job.getSalaryMax()
                     && expectMax >= job.getSalaryMin();
             if (overlap) {
-                score += 20;
+                score += 15;
                 reasons.add("薪资符合预期");
             }
         }
 
-        // —— 学历匹配（15 分）：学生学历 ≥ 职位要求满分，低一档 5 分 ——
+        // —— 学历匹配（10 分）：学生学历 ≥ 职位要求满分，低一档 3 分 ——
         Integer myEdu = EDU_LEVEL.get(profile.getEducationLevel());
         Integer jobEdu = EDU_LEVEL.get(job.getEducation());
         if (myEdu != null && jobEdu != null) {
             if (myEdu >= jobEdu) {
-                score += 15;
+                score += 10;
                 reasons.add("学历符合");
             } else if (jobEdu - myEdu == 1) {
-                score += 5;
+                score += 3;
             }
         }
 
