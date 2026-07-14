@@ -43,6 +43,7 @@ cd occupation-web-ui && npm run dev       # 前端 5173
 - **原来那个「Mock 模拟采集」按钮已删**（2026-07-10）。它与「对一条 `source_type=MOCK` 的任务点启动」完全等价，却每点一次就用 `System.currentTimeMillis()` 当主键新插一条一次性 `crawler_task`、跑完不清理——实测点五次就留下五条垃圾任务。现在唯一入口是 `PUT /api/admin/crawler/task/{id}/start`
 - **MOCK 采集不访问外网**：`MockJobPageProcessor` 读的是 classpath 下的 `occupation-crawler/src/main/resources/mock/mock-jobs.json`（100 条），`source_url` 是 `https://mock.local/job/001` 这类不存在的地址。它不走 WebMagic 的 `Spider`，直接同步循环读文件；只有智联走真正的爬虫框架
 - **MOCK 采集改为同步清洗入库（2026-07-14，绕开 Kafka）**：原 MOCK 把数据投 Kafka，由 `JobDataCleanListener` 异步清洗进 `job_detail`。该异步链路在部分环境不消费（`raw_job_data` 堆积 `status=RAW`、`job_detail` 始终为 0），表现为「采集成功但学生端长时间看不到市场参考」。现 `CrawlerServiceImpl` 的 MOCK 分支改为 `MockJobPageProcessor.collectAll()` + 逐条 `DataCleanService.cleanAndSave` **同步入库**（crawler 显式依赖 analysis）：采集调用返回时职位已在 `job_detail`，刷新即见、零延迟。去重仍按 `source_url`。**真实爬虫（智联）不变，仍走 Kafka 异步。** 所以「Kafka 没起 MOCK 就静默失败」的旧说法对 MOCK 已不成立
+- **MOCK 采集加了进度弹窗 + 返回真实条数（2026-07-14）**：MOCK 同步瞬时完成，点「启动」几乎无反馈。现 `CrawlerTask.vue` 对 `sourceType==='MOCK'` 弹进度弹窗（进度条 ~1.2s 最小展示，结束显示「本次采集 N 条职位」），真实爬虫（异步、点完还在后台跑）不走此流程、保持原「任务已启动」。连带把 start 接口 `PUT /task/{id}/start` 的返回从任务 id（`Result<Long>`）改成**本次采集条数**（`Result<Integer>`，取 `startCrawl` 的 `CrawlerLog.recordCount`）供前端展示。注意「N 条」是**采集读取条数**（MOCK 恒 100），不是净新增——重复启动因 `source_url` 去重实际入库 0，文案用「采集」不用「新增」
 - **`mock-jobs.json`（100 条）开箱不在库**（2026-07-14 起）：种子里没有采集职位，点一次「启动」这 100 条才进 `job_detail`（自主联系）。之后再点因 `source_url` 去重不会重复入库（`raw_job_data` 会涨，那是原始归档，不去重）。由 `scripts/gen-mock-jobs.js` 确定性生成（100 条，18 家独立市场公司、11 行业含平台没有的医疗/新能源/企业服务、全 10 城）；想改数量/多样性改这个脚本重跑
 - **职位完全重复项已消除（2026-07-14）**：init.sql 曾有 7 组、mock-jobs.json 曾有 2 组「标题+公司+城市」三者全同的重复职位（生成器随机撞车/条目重复所致）。已**直接改 init.sql 与 mock-jobs.json**（把重复的那一份改成不同公司，保留行 id 与全部投递/行为引用、统计与分析数据不变）去重。**注意：两个生成器 `gen-seed-data.js`/`gen-mock-jobs.js` 尚未加去重逻辑**，若重新生成会再次产生重复——本分支 init.sql 已与生成器脱钩（crawler_task 也不同步），**不建议再跑生成器重新生成**，日常 `down -v` 直接读 init.sql 已是干净的
 - 爬虫默认 MOCK 数据源；`BossJobPageProcessor` / `ZhaopinJobPageProcessor` 是真实爬虫实现但默认不启用（站点改版即失效 + 服务条款风险，勿依赖）
@@ -176,6 +177,17 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 - **HTTP 层收发结构化数组**，序列化只在 `ResumeServiceImpl` 里发生一次。前端 **不要** `JSON.stringify`（画像的 `skills` 就是那么踩的坑）
 - 未填写时 `GET /api/student/resume` 返回 `{exists:false, educations:[], …}` 空壳而不是 `null`，前端不必判空
 - 种子里 12 份简历，覆盖租户1全部有画像的学生。「未填写简历」的空态由 `student12`（userId 16）覆盖 —— 他没画像、没简历，却投了一个站内职位
+
+### 证件照 / 头像（avatar，2026-07-14 完善）
+
+证件照存 `sys_student_profile.avatar_url`，**个人画像是唯一上传入口**；简历、HR 投递人详情只**读取展示**、来源同一份（学生只在画像里传/改）。文件存磁盘 `data/avatars/年月/随机UUID.ext`（不进 DB、不进 jar，已 gitignore）。
+
+- **单一数据源自动打通**：`ResumeVO` 加了 `avatarUrl`，`ResumeServiceImpl.getByUserId` 从画像取 avatar 填入 → 简历页、HR `applicantDetail`（`vo.setResume(resumeService.getByUserId(applicantId))`）、AI（不读 avatar）**一处改全通**。前端：`Resume.vue` 只读展示 + 提示「在个人画像中修改」；`ApplicantDrawer.vue`（HR 投递人详情）顶部身份区显示证件照；`StudentDashboard.vue` 画像完整度把证件照计入（6→7 字段）。
+- **三个真踩过的坑（都已修）**：
+  1. **静态图被鉴权拦住**：`<img src="/api/avatars/…">` 加载**不带 JWT**，而该路径要鉴权 → 401 显示不出来。已把 `/api/avatars/**` 加进**两处白名单**（`SecurityConfig.permitAll` + `JwtAuthenticationFilter.WHITE_LIST`，见「无鉴权接口要两处放行」）。文件名随机 UUID 不可枚举，公开可读安全。
+  2. **上传直接 500**：`MultipartFile.transferTo(相对路径 File)` 对相对路径按 **servlet 临时目录**解析，与前面 `Files.createDirectories` 建的目录对不上 → `FileNotFound`。改用 `Files.copy(file.getInputStream(), targetPath)`（与 createDirectories 同一套路径解析）。
+  3. **删除清不掉 DB**：`updateById` 默认 `FieldStrategy` **跳过 null 字段**，所以「把 avatar_url 设 null 再 save」清不掉列。新增 `StudentProfileService.clearAvatar` 用 `LambdaUpdateWrapper.set(avatarUrl, null)` **显式置空**。
+- **不堆积**：每次上传新 UUID 文件；**上传新头像时删掉被替换的旧文件**（每人最多 1 张）；新增 `DELETE /api/student/profile/avatar`（删磁盘文件 + `clearAvatar` 清 DB），`Profile.vue` 的「删除」改调它（原来只清前端字段、文件与 DB 都不动）。
 
 ### HR 可见性边界（改动了原来的「全脱敏」设计）
 
