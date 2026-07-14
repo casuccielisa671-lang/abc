@@ -111,8 +111,7 @@ const flatMenuItems = computed(() => {
       { index: '/admin/dashboard', title: '数据分析', icon: DataAnalysis },
       { index: '/admin/crawler', title: '采集管理', icon: Setting },
       { index: '/admin/report-list', title: '报告中心', icon: Document },
-      { index: '/admin/user', title: '用户管理', icon: User },
-      { index: '/admin/class', title: '班级管理', icon: Reading },
+      { index: '/admin/user', title: '组织管理', icon: User },
       { index: '/admin/news-manage', title: '资讯管理', icon: Notebook },
       {
         index: '/admin/tools',
@@ -194,6 +193,10 @@ const activeIndex = computed(() => {
   // 「就业分析」并入「数据分析」中心（菜单项为 /admin/dashboard）
   if (route.path === '/admin/employment') {
     return '/admin/dashboard'
+  }
+  // 「班级管理」并入「组织管理」中心（菜单项为 /admin/user）
+  if (route.path === '/admin/class') {
+    return '/admin/user'
   }
   const leafItems = flatMenuItems.value.flatMap(item =>
     item.children ? [item, ...item.children] : [item]
