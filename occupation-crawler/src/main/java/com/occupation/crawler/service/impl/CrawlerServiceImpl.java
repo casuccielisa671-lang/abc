@@ -20,6 +20,8 @@ import com.occupation.crawler.processor.OsChinaNewsProcessor;
 import com.occupation.crawler.processor.RobotsRules;
 import com.occupation.crawler.processor.ZhaopinJobPageProcessor;
 import com.occupation.crawler.service.CrawlerService;
+import com.occupation.analysis.service.DataCleanService;
+import com.occupation.common.dto.JobDataMessage;
 import com.occupation.recommend.entity.News;
 import com.occupation.recommend.mapper.NewsMapper;
 import lombok.RequiredArgsConstructor;
@@ -60,6 +62,7 @@ public class CrawlerServiceImpl implements CrawlerService {
     private final CrawlerLogMapper crawlerLogMapper;
     private final JobPipeline jobPipeline;
     private final NewsMapper newsMapper;
+    private final DataCleanService dataCleanService;
 
     private final Map<Long, Spider> runningSpiders = new ConcurrentHashMap<>();
     private final Map<Long, Long> runningLogIds = new ConcurrentHashMap<>();
@@ -74,7 +77,15 @@ public class CrawlerServiceImpl implements CrawlerService {
 
         if (processor instanceof MockJobPageProcessor) {
             MockJobPageProcessor mockProcessor = (MockJobPageProcessor) processor;
-            mockProcessor.processAll(jobPipeline);
+            // MOCK 数据同步清洗入库：绕开 Kafka 异步链路，采集完成时职位已在 job_detail，刷新即可见。
+            // 去重仍按 source_url（cleanAndSave 内），重复启动不会新增。
+            List<JobDataMessage> jobs = mockProcessor.collectAll();
+            int saved = 0;
+            for (JobDataMessage job : jobs) {
+                if (dataCleanService.cleanAndSave(job.getRawContent(), job.getSource(), job.getSourceUrl())) {
+                    saved++;
+                }
+            }
             crawlerLog.setEndTime(LocalDateTime.now());
             crawlerLog.setRecordCount(mockProcessor.getCollectedCount());
             crawlerLog.setStatus("SUCCESS");
@@ -82,7 +93,8 @@ public class CrawlerServiceImpl implements CrawlerService {
 
             task.setStatus(0);
             crawlerTaskMapper.updateById(task);
-            log.info("Mock 采集完成 taskId={}, count={}", task.getId(), mockProcessor.getCollectedCount());
+            log.info("Mock 采集完成(同步入库) taskId={}, 采集={}, 新入库={}",
+                    task.getId(), mockProcessor.getCollectedCount(), saved);
             return crawlerLog;
         }
 

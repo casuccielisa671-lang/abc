@@ -27,6 +27,12 @@
             <artifactId>occupation-recommend</artifactId>
         </dependency>
 
+        <!-- 跨模块：MOCK 采集同步清洗入库（DataCleanService） -->
+        <dependency>
+            <groupId>com.occupation</groupId>
+            <artifactId>occupation-analysis</artifactId>
+        </dependency>
+
         <!-- WebMagic 爬虫框架 -->
         <dependency>
             <groupId>us.codecraft</groupId>
