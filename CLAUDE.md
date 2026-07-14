@@ -38,18 +38,20 @@ cd occupation-web-ui && npm run dev       # 前端 5173
 - **HR 职位归属**：90 个 `HR_PUBLISH` 职位分摊给 12 个 HR（`hr`/`hr01`~`hr11`，每人 7~8 个），**一司一 HR、共 12 家公司**（覆盖 8 大行业，`gen-seed-data.js` 的 `HR_COMPANIES` 里 `[公司名, 主行业, HR的userId]`）。各账号登录后「职位管理」看到的列表各不相同 —— 验证「只看我发布的」是否生效的最快方式。每个 HR 都收到 **≥5 条投递**，五种处理状态都有样本，HR 端与「就业分析」的漏斗开箱就有形状
 - 登录页有角色选择标签，但仅作入口提示；实际进入哪个端由**账号自身的 role** 决定（选错会提示并按实际角色进入）
 - MySQL：root/root，库名 `occupation`
-- **可投递职位是 init.sql 直接预置**（90 条，开箱即有）；**采集(自主联系)职位靠「采集管理 → 选中任务 → 启动」生成**（走 Kafka 清洗链路，Kafka 没起就静默失败）；看板数据靠「手动重算分析数据」——种子已含分析结果，重跑只会增量/覆盖
+- **可投递职位是 init.sql 直接预置**（90 条，开箱即有）；**采集(自主联系)职位靠「采集管理 → 选中任务 → 启动」生成**（**MOCK 现为同步入库，见下方 2026-07-14 说明**；真实爬虫如智联仍走 Kafka 异步清洗）；看板数据靠「手动重算分析数据」——种子已含分析结果，重跑只会增量/覆盖
 - **种子数据（2026-07-14 版）**：**90 个职位全部 HR_PUBLISH 可投递**、12 个 HR / 12 家公司、13 份画像、12 份简历、329 条行为（**无 CONTACT**）、63 条投递（五种状态铺开）。**开箱无采集(MOCK)职位**——自主联系数据靠点采集从 `mock-jobs.json`（100 条，`mock.local`）进库。点一次「启动」全部入库，再点因 `source_url` 去重不会增加
 - **原来那个「Mock 模拟采集」按钮已删**（2026-07-10）。它与「对一条 `source_type=MOCK` 的任务点启动」完全等价，却每点一次就用 `System.currentTimeMillis()` 当主键新插一条一次性 `crawler_task`、跑完不清理——实测点五次就留下五条垃圾任务。现在唯一入口是 `PUT /api/admin/crawler/task/{id}/start`
 - **MOCK 采集不访问外网**：`MockJobPageProcessor` 读的是 classpath 下的 `occupation-crawler/src/main/resources/mock/mock-jobs.json`（100 条），`source_url` 是 `https://mock.local/job/001` 这类不存在的地址。它不走 WebMagic 的 `Spider`，直接同步循环读文件；只有智联走真正的爬虫框架
+- **MOCK 采集改为同步清洗入库（2026-07-14，绕开 Kafka）**：原 MOCK 把数据投 Kafka，由 `JobDataCleanListener` 异步清洗进 `job_detail`。该异步链路在部分环境不消费（`raw_job_data` 堆积 `status=RAW`、`job_detail` 始终为 0），表现为「采集成功但学生端长时间看不到市场参考」。现 `CrawlerServiceImpl` 的 MOCK 分支改为 `MockJobPageProcessor.collectAll()` + 逐条 `DataCleanService.cleanAndSave` **同步入库**（crawler 显式依赖 analysis）：采集调用返回时职位已在 `job_detail`，刷新即见、零延迟。去重仍按 `source_url`。**真实爬虫（智联）不变，仍走 Kafka 异步。** 所以「Kafka 没起 MOCK 就静默失败」的旧说法对 MOCK 已不成立
 - **`mock-jobs.json`（100 条）开箱不在库**（2026-07-14 起）：种子里没有采集职位，点一次「启动」这 100 条才进 `job_detail`（自主联系）。之后再点因 `source_url` 去重不会重复入库（`raw_job_data` 会涨，那是原始归档，不去重）。由 `scripts/gen-mock-jobs.js` 确定性生成（100 条，18 家独立市场公司、11 行业含平台没有的医疗/新能源/企业服务、全 10 城）；想改数量/多样性改这个脚本重跑
+- **职位完全重复项已消除（2026-07-14）**：init.sql 曾有 7 组、mock-jobs.json 曾有 2 组「标题+公司+城市」三者全同的重复职位（生成器随机撞车/条目重复所致）。已**直接改 init.sql 与 mock-jobs.json**（把重复的那一份改成不同公司，保留行 id 与全部投递/行为引用、统计与分析数据不变）去重。**注意：两个生成器 `gen-seed-data.js`/`gen-mock-jobs.js` 尚未加去重逻辑**，若重新生成会再次产生重复——本分支 init.sql 已与生成器脱钩（crawler_task 也不同步），**不建议再跑生成器重新生成**，日常 `down -v` 直接读 init.sql 已是干净的
 - 爬虫默认 MOCK 数据源；`BossJobPageProcessor` / `ZhaopinJobPageProcessor` 是真实爬虫实现但默认不启用（站点改版即失效 + 服务条款风险，勿依赖）
 
 ## 数据库协作流程（以 init.sql 为唯一事实来源）
 
 - 脚本位置：`occupation-common/src/main/resources/sql/init.sql`（DROP+CREATE 19 张表 + 种子数据，可重复执行）
 - **资讯表 `news`（2026-07-12 新增，首页资讯板块）**：`type` = DATA_CAST（数据播报，点击去图表 `link_target`）/ ARTICLE（精选文章，有 `content`）/ EXTERNAL（外部资讯，跳 `source_url`）；`category` = 技术方向（backend/frontend/…，null=通用）；封面用 `cover_style` 色块占位。后端在 **occupation-recommend**（`News`/`NewsService`/`NewsController`，`GET /api/news`、`/api/news/latest`、`/api/news/{id}`，任意登录角色可读）。增量脚本 `upgrade-2026-07-12-news.sql`。种子 8 条（5 播报 + 2 文章 + 1 外部占位）。**RSS 拉取(Google News)与管理端资讯 CRUD、数据播报自动生成 = 待做**
-- **首页改造已完成（2026-07-13，各角色 Bento 工作台）**：各角色首页从"整屏大地图落地页"改为**角色工作台**。学生 `views/student/StudentDashboard.vue`、教师 `views/teacher/TeacherDashboard.vue`、HR `views/hr/HrDashboard.vue`（Bento 网格：欢迎条 + 地图 hero + 角色 KPI + 主内容 + 资讯格子），**管理员**不单独做工作台（管理员是运维用户、不需要吸睛引导页）：`/admin` **重定向到 `/admin/dashboard`**（2026-07-14 改，原来 `path:''` 和 `dashboard` 两个路由都指 `Dashboard.vue`，菜单里「首页」「数据看板」两项指向同一页、像没做完；现只保留一个「数据看板」入口，`AdminHome` 路由已删）。共享组件 `components/home/`：`MapHeroTile.vue`（地图 hero 静态预览，**点击跳独立地图页 `/{role}/map`**）、`NewsTile.vue`（资讯格子）、`NewsDetailDialog.vue`。共享页 `views/common/`：`NewsPage.vue`（资讯全览，四端 `/{role}/news`）、`MapExplore.vue`（3D 地图页，四端 `/{role}/map`）。**旧 `views/Home/`（HomeIndex/JobNews/jobNewsData）已整目录删除。** 注意 `views/student/StudentHome.vue` 是**职位推荐列表**（路由 `/student/jobs`），命名易误解，别和首页 `StudentDashboard.vue` 搞混
+- **首页改造已完成（2026-07-13，各角色 Bento 工作台）**：各角色首页从"整屏大地图落地页"改为**角色工作台**。学生 `views/student/StudentDashboard.vue`、教师 `views/teacher/TeacherDashboard.vue`、HR `views/hr/HrDashboard.vue`（Bento 网格：欢迎条 + 地图 hero + 角色 KPI + 主内容 + 资讯格子），**管理员**不单独做工作台（管理员是运维用户、不需要吸睛引导页）：`/admin` **重定向到 `/admin/dashboard`**（2026-07-14 改，原来 `path:''` 和 `dashboard` 两个路由都指 `Dashboard.vue`，菜单里「首页」「数据看板」两项指向同一页、像没做完；现只保留一个「数据看板」入口，`AdminHome` 路由已删）。共享组件 `components/home/`：`MapHeroTile.vue`（地图 hero 静态预览，**点击跳独立地图页 `/{role}/map`**）、`NewsTile.vue`（资讯格子）、`NewsDetailDialog.vue`。共享页 `views/common/`：`NewsPage.vue`（资讯全览，四端 `/{role}/news`）、`MapExplore.vue`（3D 地图页，四端 `/{role}/map`）。**旧 `views/Home/`（HomeIndex/JobNews/jobNewsData）已整目录删除。** 注意 `views/student/StudentHome.vue`（路由 `/student/jobs`，命名易误解，别和首页 `StudentDashboard.vue` 搞混）**2026-07-14 起是「职位信息」四标签中心**——见下方「学生职位信息中心」章节
 - **3D 地图已换 echarts-gl（2026-07-13，弃用自研 three.js）**：`MapExplore.vue` 用 **echarts-gl `geo3D` + `bar3D`/`scatter3D`**（柱状/光点两模式），装了 `echarts-gl`，中国底图从 Aliyun DataV geojson 外链注册。**图层**：`岗位数`/`平均薪资`（市场，全角色）+ `学生意向`/`投递去向`（学生侧，仅教师/ADMIN，按可见范围过滤）。后端接口：`GET /api/map/cityDistribution`（analysis，全量城市岗位数+平均薪资+坐标）、`GET /api/teacher/map/intent-cities`、`/application-cities`（recommend `TeacherMapService`，按 `TeacherScopeService` 范围过滤）；城市坐标走 `common/CityGeoUtil`。**旧 `components/visualization/China3DMap.vue` + `lib/chinaMap3d/` 已无引用（孤儿），待清理。** 地图默认展示全量分布、自动旋转、hover tooltip、visualMap 图例、城市排行侧栏。**echarts-gl 3D 视觉（柱高/配色/光照）待浏览器微调。**
 - **学院内组织结构（2026-07-12 新增）**：`sys_class`（班级：专业-入学年级-班级）、`sys_user.class_id`（学生班级归属，仅学生非空）、`teacher_scope`（教师可见范围：CLASS=班主任 / MAJOR=专业老师 / GRADE=届老师，一教师可多行）。种子：11 个班级 + 4 条教师范围，演示三种可见范围（班主任软工班 3 人 / 专业老师计科 2 人 / 届老师 2022 级 10 人——**均为当前租户内计数**，跨租户裸 SQL 会多算租户2的 2022 班而得 11，别被误导）。增量升级脚本 `upgrade-2026-07-12-class-org.sql`。**注意班级归属放 `sys_user` 不放选填的画像；MAJOR/GRADE 范围经 class 解析，`sys_class.major` 为组织权威专业，与 `sys_student_profile.major`（喂推荐）分工**
 - MySQL 容器**首次启动（数据卷为空）时自动执行**它
@@ -261,11 +263,14 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 - `crawler_task.url_pattern` 对 ZHAOPIN 存的是**参数串**而非 URL：`kw=Java&jl=653&maxPages=2`（`jl` 是智联城市编码，653=杭州）
 - robots 校验不通过时**不抛异常**，而是把日志标成 FAILED 后返回。`startCrawl` 带 `@Transactional(rollbackFor = Exception.class)`，抛 `BizException`（RuntimeException）会把刚写的 FAILED 日志一起回滚
 
-### 学生首页分两栏
+### 学生「职位信息」中心（可投递 / 市场参考两栏）
 
-「可投递岗位」和「市场参考」两栏。**没有改推荐打分**——只是展示层按 `applicable` 分组。改打分的话，匹配分的语义就变了，教师端和 AI 顾问引用的数字也跟着变。
+**推荐打分本身没改**（技能/城市/薪资/学历规则分 + 行为加权，语义不变，教师端和 AI 顾问引用的数字不受影响）。变的是「取哪些、怎么展示」：
 
-`CONTACT` 行为的推荐权重是 +2（与 `APPLY` 同级），已联系过的职位不再出现在推荐里。**现有数据里一条 `CONTACT` 都没有，所以加它对既有推荐结果零影响**——改造前后 20 条推荐的职位 ID 与分数完全一致，有脚本验过。
+- **两栏各自独立取前 25（2026-07-14，后端 `matchGrouped`）**：原来是单一混合榜单 `match(userId, topN)` 取 Top N，前端再按 `applicable` 拆两栏——采集来的「市场参考」职位数量多、匹配分高，会把「可投递」挤出榜单；且意向城市被 mock 填满超 20 条后算法停止「放开城市」，连外地可投递也被挡在候选池外，表现为「加了市场参考后可投递骤减」。现 `JobMatchServiceImpl.matchGrouped(userId, perCategory)`：**用全量候选池打分（城市仅作打分项、不硬过滤），按可投递/市场参考分两组各取前 25，互不抢名额**。`RecommendController` 的 `GET /api/student/recommend` 改用它（默认 25）。**`match()` 保持不变**（混合榜单，供 `RecommendScheduler` 推送 top5）。
+- **前端「职位信息」四标签中心（2026-07-14）**：`views/student/StudentHome.vue`（路由 `/student/jobs`）从「职位推荐列表」改造成四标签中心——标题「职位信息」旁一排标签 `可投递岗位 / 市场参考 / 我的投递 / 我的收藏`，一次只显示一块，不用长滚即到市场参考。**顶部菜单「职位推荐」改名「职位信息」，删掉「我的投递」「我的收藏」两项（菜单 10→8 项）**。我的投递/我的收藏复用 `Applications.vue`/`Favorites.vue`（加 `embedded` 属性隐藏其自带大标题）。**路由协调**：`/student/applications`、`/student/favorites` 路由保留、都指向 `StudentHome.vue`，组件按路径自动选中对应标签（`/student/jobs?tab=market` = 市场参考）——Dashboard KPI 卡片、消息通知等老跳转照常生效；`MainLayout` 高亮把投递/收藏/职位详情统一归到「职位信息」。
+
+`CONTACT` 行为的推荐权重是 +2（与 `APPLY` 同级），已联系过的职位不再出现在推荐里。
 
 ## 上一轮新增/改动的接口
 
@@ -390,7 +395,7 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 
 - **技能字段解析统一走 `SkillUtils`**（common/utils）：库里标准格式是 JSON 数组 `["Java","MySQL"]`，但存在逗号/顿号分隔的旧数据。前端对应 `utils/skills.js`
 - **技能词库提取**（`SkillDictionary`，analysis 模块）：从职位标题+描述中补全技能标签。ASCII 技能用 lookaround 手写词边界，否则 `Django` 会命中 `Go`、`JavaScript` 会命中 `Java`（`\b` 处理不了 `C++`/`C#` 结尾的符号）。中文技能直接子串匹配。有 9 个单测守着，**改词库前先跑 `SkillDictionaryTest`**
-- **推荐打分 = 基础规则 0~100 + 行为加权 ±10**：技能 40 / 城市 25 / 薪资 20 / 学历 15，再按历史 APPLY(+2) / FAVORITE(+1) / IGNORE(-2) 反推技能偏好加减分；已投递、已忽略的职位不再出现在推荐里。最终分裁剪回 0~100
+- **推荐打分 = 基础规则 0~100 + 行为加权 ±10**：技能 40 / 城市 25 / 薪资 20 / 学历 15，再按历史 APPLY(+2) / FAVORITE(+1) / IGNORE(-2) 反推技能偏好加减分；已投递、已忽略的职位不再出现在推荐里。最终分裁剪回 0~100。**学生首页取数走 `matchGrouped`（可投递/市场参考各取前 25、全量池），`match()`（混合 Top N）仅供推送——详见「学生职位信息中心」章节**
 - **教学建议是真算的**：`TeachingSuggestionServiceImpl` 对比 `analysis_result`(dimension=skill) 的市场热度与学生画像的掌握率，输出「市场热但掌握率 <30%」的技能，每条附岗位数与掌握人数作证据。`marketDemand` 是**相对热度**（该技能岗位数 ÷ 最热技能岗位数），所以排第一的恒为 100
 - **批量查询避免 N+1**：`BehaviorService.countByActionGroupedByUser` / `UserService.mapByIds` / `JobDetailService.listByIds` 都是一次取回。加新的「列表 + 关联信息」接口时沿用这个模式
 - **限流是 Redis ZSET 滑动窗口 + Lua**（`RateLimitInterceptor`）：剔除→计数→写入必须原子完成，否则并发下超发。固定窗口计数在窗口边界会瞬间放过 2 倍流量
