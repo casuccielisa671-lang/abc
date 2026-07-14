@@ -63,7 +63,7 @@ import { useMessageStore } from '@/store/message'
 import { getMyMessages, markMessageRead, markAllMessagesRead } from '@/api/push'
 import { toList, toTotal } from '@/utils/list'
 import { formatTime } from '@/utils/format'
-import { messageMeta, messageTarget } from '@/utils/message'
+import { messageMeta, messageTarget, messageActionLabel } from '@/utils/message'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -83,8 +83,7 @@ const rolePrefix = computed(() =>
 function label(t) { return messageMeta(t).label }
 function tone(t) { return messageMeta(t).tone }
 function targetLabel(m) {
-  if (!m.refType) return null
-  return m.refType === 'APPLICATION' ? '查看投递详情' : m.refType === 'REPORT' ? '查看报告' : null
+  return messageActionLabel(m)
 }
 
 /** 「面试/投递」把 INTERVIEW/OFFER/REJECT 三类归到一起，其余按精确类型过滤 */
