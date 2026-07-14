@@ -1,6 +1,6 @@
 <template>
   <div class="employment-page">
-    <div class="page-head with-actions">
+    <div class="page-head with-actions" v-if="!embedded">
       <div>
         <h2 class="page-title">就业分析</h2>
         <p class="page-sub">
@@ -154,6 +154,9 @@ import { getEmployment, rebuildAnalysis } from '@/api/admin'
 import { useAppStore } from '@/store/app'
 import { chartThemeName, primarySeriesColor, moneySeriesColor, CHART_COLORS } from '@/styles/chartTheme'
 import { ElMessage } from 'element-plus'
+
+// embedded=true 时隐藏自身标题+重算按钮，供「数据分析」中心以标签页嵌入（重算由中心统一触发）
+defineProps({ embedded: { type: Boolean, default: false } })
 
 const appStore = useAppStore()
 const loading = ref(false)
@@ -322,6 +325,9 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize)
   disposeCharts()
 })
+
+// 供「数据分析」中心在点「重算」后刷新本标签
+defineExpose({ reload: load })
 </script>
 
 <style scoped>

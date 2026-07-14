@@ -108,8 +108,7 @@ const roleLabel = computed(() => {
 const flatMenuItems = computed(() => {
   const menus = {
     ADMIN: [
-      { index: '/admin/dashboard', title: '数据看板', icon: DataAnalysis },
-      { index: '/admin/employment', title: '就业分析', icon: TrendCharts },
+      { index: '/admin/dashboard', title: '数据分析', icon: DataAnalysis },
       { index: '/admin/crawler', title: '采集管理', icon: Setting },
       { index: '/admin/report-list', title: '报告中心', icon: Document },
       { index: '/admin/user', title: '用户管理', icon: User },
@@ -191,6 +190,10 @@ const activeIndex = computed(() => {
   // 「我的简历」并入「我的资料」中心（菜单项为 /student/profile）
   if (route.path === '/student/resume') {
     return '/student/profile'
+  }
+  // 「就业分析」并入「数据分析」中心（菜单项为 /admin/dashboard）
+  if (route.path === '/admin/employment') {
+    return '/admin/dashboard'
   }
   const leafItems = flatMenuItems.value.flatMap(item =>
     item.children ? [item, ...item.children] : [item]

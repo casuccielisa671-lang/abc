@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard">
-    <div class="page-head with-actions">
+    <div class="page-head with-actions" v-if="!embedded">
       <div>
         <h2 class="page-title">数据看板</h2>
         <p class="page-sub">数据每日凌晨 2:00 自动更新</p>
@@ -69,6 +69,9 @@ import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
 import { useAppStore } from '@/store/app'
 import { chartThemeName, primarySeriesColor, moneySeriesColor } from '@/styles/chartTheme'
+
+// embedded=true 时隐藏自身标题+重算按钮，供「数据分析」中心以标签页嵌入（重算由中心统一触发）
+defineProps({ embedded: { type: Boolean, default: false } })
 
 const appStore = useAppStore()
 const loading = ref(false)
@@ -253,6 +256,9 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize)
   disposeCharts()
 })
+
+// 供「数据分析」中心在点「重算」后刷新本标签
+defineExpose({ reload: loadDashboard })
 </script>
 
 <style scoped>

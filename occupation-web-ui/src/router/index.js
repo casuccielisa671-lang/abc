@@ -15,8 +15,8 @@ const routes = [
     meta: { role: 'ADMIN' },
     children: [
       { path: '', redirect: '/admin/dashboard' },
-      { path: 'dashboard', name: 'Dashboard', component: () => import('@/views/admin/Dashboard.vue') },
-      { path: 'employment', name: 'Employment', component: () => import('@/views/admin/Employment.vue') },
+      { path: 'dashboard', name: 'Dashboard', component: () => import('@/views/admin/Analysis.vue') },
+      { path: 'employment', name: 'Employment', component: () => import('@/views/admin/Analysis.vue') },
       { path: 'crawler', name: 'CrawlerTask', component: () => import('@/views/admin/CrawlerTask.vue') },
       { path: 'report-list', name: 'ReportList', component: () => import('@/views/admin/ReportList.vue') },
       { path: 'user', name: 'UserManage', component: () => import('@/views/admin/UserManage.vue') },
