@@ -95,27 +95,61 @@ public class StudentProfileController {
             String relativePath = "/avatars/" + dateDir + "/" + fileName;
             String avatarUrl = "/api" + relativePath;
 
-            // 更新画像中的证件照URL
+            // 更新画像中的证件照URL；记录旧 URL，保存后删掉旧文件（每人最多留 1 张，避免磁盘越堆越多）
             SysStudentProfile profile = profileService.getByUserId(UserContextHolder.getUserId());
+            String oldAvatarUrl = profile != null ? profile.getAvatarUrl() : null;
             if (profile != null) {
-                profile.setAvatarUrl(avatarUrl);
-                ProfileSaveDTO dto = new ProfileSaveDTO();
-                dto.setMajor(profile.getMajor());
-                dto.setSkills(profile.getSkills());
-                dto.setExpectedCity(profile.getExpectedCity());
-                dto.setExpectedIndustry(profile.getExpectedIndustry());
-                dto.setExpectedSalaryMin(profile.getExpectedSalaryMin());
-                dto.setExpectedSalaryMax(profile.getExpectedSalaryMax());
-                dto.setEducationLevel(profile.getEducationLevel());
+                ProfileSaveDTO dto = toSaveDto(profile);
                 dto.setAvatarUrl(avatarUrl);
                 profileService.saveProfile(UserContextHolder.getUserId(), dto);
             }
+            deleteAvatarFile(oldAvatarUrl);
 
             log.info("证件照上传成功: userId={}, path={}", UserContextHolder.getUserId(), relativePath);
             return Result.ok(Map.of("avatarUrl", avatarUrl));
         } catch (IOException e) {
             log.error("证件照上传失败: userId={}", UserContextHolder.getUserId(), e);
             return Result.error(500, "上传失败，请重试");
+        }
+    }
+
+    /** 删除证件照：清空画像 avatar_url 并删除磁盘文件（真正删，不只是清前端字段） */
+    @PreAuthorize("hasRole('STUDENT')")
+    @DeleteMapping("/avatar")
+    public Result<Void> deleteAvatar() {
+        SysStudentProfile profile = profileService.getByUserId(UserContextHolder.getUserId());
+        if (profile != null && profile.getAvatarUrl() != null) {
+            String old = profile.getAvatarUrl();
+            profileService.clearAvatar(UserContextHolder.getUserId());
+            deleteAvatarFile(old);
+        }
+        return Result.ok();
+    }
+
+    /** 复制画像字段到 DTO（保存时不能漏字段，否则会把其它字段清空） */
+    private ProfileSaveDTO toSaveDto(SysStudentProfile p) {
+        ProfileSaveDTO dto = new ProfileSaveDTO();
+        dto.setMajor(p.getMajor());
+        dto.setSkills(p.getSkills());
+        dto.setExpectedCity(p.getExpectedCity());
+        dto.setExpectedIndustry(p.getExpectedIndustry());
+        dto.setExpectedSalaryMin(p.getExpectedSalaryMin());
+        dto.setExpectedSalaryMax(p.getExpectedSalaryMax());
+        dto.setEducationLevel(p.getEducationLevel());
+        dto.setAvatarUrl(p.getAvatarUrl());
+        return dto;
+    }
+
+    /** 把 /api/avatars/xxx 映射回磁盘文件并删除；非 avatars 路径或不存在则忽略 */
+    private void deleteAvatarFile(String avatarUrl) {
+        if (avatarUrl == null || !avatarUrl.startsWith("/api/avatars/")) {
+            return;
+        }
+        try {
+            String rel = avatarUrl.substring("/api/avatars/".length());
+            Files.deleteIfExists(Paths.get(avatarStoragePath, rel));
+        } catch (Exception e) {
+            log.warn("删除旧证件照文件失败(忽略): {}", avatarUrl, e);
         }
     }
 

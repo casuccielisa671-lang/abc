@@ -107,7 +107,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
-import { getProfile, saveProfile, getProfileStats } from '@/api/student'
+import { getProfile, saveProfile, getProfileStats, deleteAvatar } from '@/api/student'
 import { parseSkills } from '@/utils/skills'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -203,9 +203,9 @@ async function handleRemoveAvatar() {
       cancelButtonText: '取消',
       type: 'warning'
     })
+    await deleteAvatar()   // 后端清 URL + 删磁盘文件
     avatarUrl.value = ''
     form.avatarUrl = ''
-    await saveProfile({ ...form })
     ElMessage.success('证件照已删除')
   } catch {
     // 用户取消

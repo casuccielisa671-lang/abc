@@ -17,6 +17,11 @@ export function getProfileStats() {
   return request.get('/student/profile/stats')
 }
 
+// 删除证件照（后端清空画像 avatar_url 并删除磁盘文件）
+export function deleteAvatar() {
+  return request.delete('/student/profile/avatar')
+}
+
 // ========== 简历 ==========
 /** 未填写时后端返回 { exists: false, educations: [], ... }，不会是 null */
 export function getResume() {
