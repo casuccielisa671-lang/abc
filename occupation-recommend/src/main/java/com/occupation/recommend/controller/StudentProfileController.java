@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -86,7 +87,9 @@ public class StudentProfileController {
             }
             String fileName = UUID.randomUUID().toString().replace("-", "") + ext;
             Path targetPath = uploadDir.resolve(fileName);
-            file.transferTo(targetPath.toFile());
+            // 不用 file.transferTo(File)：它对相对路径按 servlet 临时目录解析，与上面 createDirectories
+            // 建的目录对不上会 FileNotFound。改用 Files.copy，路径解析与 createDirectories 一致。
+            Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
             // 存储相对路径
             String relativePath = "/avatars/" + dateDir + "/" + fileName;

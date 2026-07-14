@@ -173,13 +173,14 @@ const completeness = computed(() => {
   const p = profile.value
   if (!p) return 0
   let filled = 0
-  const total = 6
+  const total = 7
   if (p.major) filled++
   if (parseSkills(p.skills).length) filled++
   if (p.expectedCity) filled++
   if (p.expectedIndustry) filled++
   if (p.educationLevel) filled++
   if (p.expectedSalaryMin || p.expectedSalaryMax) filled++
+  if (p.avatarUrl) filled++   // 证件照也计入完整度
   return Math.round((filled / total) * 100)
 })
 

@@ -23,6 +23,13 @@
       <el-card>
         <template #header>基本信息</template>
         <el-form :model="form" label-width="96px" style="max-width:720px">
+          <el-form-item label="证件照">
+            <div class="resume-avatar">
+              <img v-if="form.avatarUrl" :src="form.avatarUrl" alt="证件照" class="resume-avatar-img" />
+              <div v-else class="resume-avatar-empty">未上传</div>
+              <span class="resume-avatar-hint">证件照统一在「个人画像」中上传/修改，简历自动同步</span>
+            </div>
+          </el-form-item>
           <el-form-item label="求职意向">
             <el-input v-model="form.jobIntention" placeholder="如：Java后端开发工程师" maxlength="100" />
           </el-form-item>
@@ -225,6 +232,7 @@ const review = ref(null)
 
 const form = reactive({
   exists: false,
+  avatarUrl: '',
   jobIntention: '',
   contactPhone: '',
   contactEmail: '',
@@ -240,6 +248,7 @@ async function load() {
   try {
     const d = await getResume()
     form.exists = d.exists
+    form.avatarUrl = d.avatarUrl || ''
     form.jobIntention = d.jobIntention || ''
     form.contactPhone = d.contactPhone || ''
     form.contactEmail = d.contactEmail || ''
@@ -356,4 +365,16 @@ onMounted(load)
 @media (max-width: 760px) {
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
 }
+
+.resume-avatar { display: flex; align-items: center; gap: 14px; }
+.resume-avatar-img {
+  width: 84px; height: 112px; object-fit: cover; border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+.resume-avatar-empty {
+  width: 84px; height: 112px; display: flex; align-items: center; justify-content: center;
+  border-radius: 8px; border: 1px dashed var(--color-border);
+  color: var(--color-text-tertiary); font-size: 13px; background: var(--color-fill-light, transparent);
+}
+.resume-avatar-hint { font-size: 12px; color: var(--color-text-tertiary); }
 </style>

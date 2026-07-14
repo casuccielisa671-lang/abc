@@ -2,13 +2,22 @@
   <el-drawer v-model="visible" :title="title" size="560px">
     <div v-loading="loading">
       <template v-if="detail">
-        <!-- 身份与联系方式 -->
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="姓名">{{ detail.realName || '—' }}</el-descriptions-item>
-          <el-descriptions-item label="学号">{{ detail.username || '—' }}</el-descriptions-item>
-          <el-descriptions-item label="手机">{{ detail.phone || '—' }}</el-descriptions-item>
-          <el-descriptions-item label="邮箱">{{ detail.email || '—' }}</el-descriptions-item>
-        </el-descriptions>
+        <!-- 身份与联系方式（含证件照，来源为学生个人画像） -->
+        <div class="id-row">
+          <div class="id-photo">
+            <img
+              v-if="detail.resume && detail.resume.avatarUrl"
+              :src="detail.resume.avatarUrl" alt="证件照" class="id-photo-img"
+            />
+            <div v-else class="id-photo-empty">无证件照</div>
+          </div>
+          <el-descriptions :column="1" border class="id-desc">
+            <el-descriptions-item label="姓名">{{ detail.realName || '—' }}</el-descriptions-item>
+            <el-descriptions-item label="学号">{{ detail.username || '—' }}</el-descriptions-item>
+            <el-descriptions-item label="手机">{{ detail.phone || '—' }}</el-descriptions-item>
+            <el-descriptions-item label="邮箱">{{ detail.email || '—' }}</el-descriptions-item>
+          </el-descriptions>
+        </div>
 
         <!-- 已在别处入职：提示 HR 不必再录用 -->
         <el-alert
@@ -379,4 +388,17 @@ watch(
 .rs-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
 .rs-role, .rs-gpa { font-size: 12px; color: var(--app-ink-3); }
 .rs-text { font-size: 13px; line-height: 1.75; color: var(--app-ink-2); margin: 6px 0 0; white-space: pre-line; }
+
+.id-row { display: flex; gap: 14px; align-items: stretch; }
+.id-photo { flex: none; }
+.id-photo-img {
+  width: 96px; height: 128px; object-fit: cover; border-radius: 8px;
+  border: 1px solid var(--color-border, var(--app-hairline));
+}
+.id-photo-empty {
+  width: 96px; height: 128px; display: flex; align-items: center; justify-content: center;
+  border-radius: 8px; border: 1px dashed var(--color-border, #ddd);
+  color: var(--color-text-tertiary, var(--app-ink-3)); font-size: 12px;
+}
+.id-desc { flex: 1; min-width: 0; }
 </style>
