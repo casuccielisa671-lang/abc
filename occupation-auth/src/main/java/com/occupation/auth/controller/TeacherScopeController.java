@@ -32,12 +32,14 @@ public class TeacherScopeController {
     private final TeacherScopeService scopeService;
 
     /** 某教师的全部范围配置 */
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public Result<List<TeacherScope>> list(@RequestParam Long teacherId) {
         return Result.ok(scopeService.listByTeacher(teacherId));
     }
 
     /** 新增/编辑一条范围 */
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public Result<Void> save(@RequestBody TeacherScope scope) {
         if (scope.getTeacherId() == null || scope.getScopeType() == null || scope.getScopeValue() == null) {
@@ -53,6 +55,7 @@ public class TeacherScopeController {
     }
 
     /** 删除一条范围 */
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         scopeService.deleteScope(id);

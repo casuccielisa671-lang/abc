@@ -111,6 +111,13 @@
         <el-form-item label="职位描述" prop="description">
           <el-input v-model="form.description" type="textarea" :rows="5" placeholder="请输入职位描述" />
         </el-form-item>
+        <el-form-item label="JD 优化">
+          <JdOptimizeAssistant
+            v-model="form.description"
+            :title="form.title"
+            :skills="form.skills"
+          />
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -126,6 +133,7 @@ import { getHrJobs, createHrJob, updateHrJob, deleteHrJob } from '@/api/student'
 import { toList, toTotal } from '@/utils/list'
 import { parseSkills } from '@/utils/skills'
 import { salaryRange } from '@/utils/format'
+import JdOptimizeAssistant from '@/components/hr/JdOptimizeAssistant.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const jobs = ref([])

@@ -44,6 +44,8 @@ public class SecurityConfig {
             .antMatchers("/api/auth/login", "/api/auth/tenants", "/api/health/**").permitAll()
             // 对外开放 API：由 occupation-api 模块的 ApiTokenInterceptor 独立鉴权（apiKey 换 Token）
             .antMatchers("/api/open/**").permitAll()
+            // 新闻资讯：公开内容，无需登录即可浏览
+            .antMatchers("/api/news/**").permitAll()
             // Knife4j / OpenAPI 接口文档
             .antMatchers("/doc.html", "/v3/api-docs/**", "/webjars/**", "/favicon.ico").permitAll()
             .anyRequest().authenticated()

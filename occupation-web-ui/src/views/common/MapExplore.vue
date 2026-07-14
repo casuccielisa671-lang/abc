@@ -7,11 +7,11 @@
       </div>
       <div class="me-controls">
         <el-radio-group v-model="metric" size="small" @change="onMetric">
-          <el-radio-button v-for="l in layers" :key="l.key" :label="l.key">{{ l.label }}</el-radio-button>
+          <el-radio-button v-for="l in layers" :key="l.key" :value="l.key">{{ l.label }}</el-radio-button>
         </el-radio-group>
         <el-radio-group v-model="mode" size="small" @change="render">
-          <el-radio-button label="bar">柱状</el-radio-button>
-          <el-radio-button label="scatter">光点</el-radio-button>
+          <el-radio-button value="bar">柱状</el-radio-button>
+          <el-radio-button value="scatter">光点</el-radio-button>
         </el-radio-group>
       </div>
     </div>
@@ -108,10 +108,10 @@ function buildOption() {
   const data = points.value.map(p => ({ name: p.name, value: [p.coord[0], p.coord[1], p.val], p }))
   const labelStyle = {
     show: true, distance: 2,
-    formatter: (o) => (o.data.p.val >= max * 0.28 ? o.name : ''),
-    textStyle: { color: '#eef4ff', fontSize: 11.5, fontWeight: 600, backgroundColor: 'rgba(8,16,34,.7)', padding: [2, 5], borderRadius: 4 }
+    formatter: (o) => (o.data && o.data.p && o.data.p.val >= max * 0.28 ? o.name : ''),
+    color: '#eef4ff', fontSize: 11.5, fontWeight: 600, backgroundColor: 'rgba(8,16,34,.7)', padding: [2, 5], borderRadius: 4
   }
-  const emphasisLabel = { show: true, textStyle: { color: '#fff', fontSize: 13, backgroundColor: 'rgba(8,16,34,.85)', padding: [3, 6], borderRadius: 4 } }
+  const emphasisLabel = { show: true, color: '#fff', fontSize: 13, backgroundColor: 'rgba(8,16,34,.85)', padding: [3, 6], borderRadius: 4 }
 
   const series = mode.value === 'scatter'
     ? [{ type: 'scatter3D', coordinateSystem: 'geo3D', symbolSize: (v) => 10 + (v[2] / max) * 42, itemStyle: { opacity: 0.62 }, data, label: labelStyle, emphasis: { label: emphasisLabel } }]
@@ -153,6 +153,10 @@ async function render() {
   try { await ensureMap(); error.value = '' }
   catch (e) { error.value = e.message || '地图底图加载失败（请检查网络）'; return }
   if (!chart) chart = echarts.init(chartRef.value)
+  if (!points.value.length) {
+    chart.clear()
+    return
+  }
   chart.setOption(buildOption(), true)
 }
 

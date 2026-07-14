@@ -3,31 +3,45 @@
     <div class="page-head with-actions">
       <div>
         <h2 class="page-title">采集任务管理</h2>
-        <p class="page-sub">管理职位数据采集任务与执行日志。选中一条任务点「启动」即可采集，MOCK 源读本地样例文件、不访问外网</p>
+        <p class="page-sub">
+          管理岗位与官方公开招聘公告采集任务，用于行业热度、城市分布等数据面板。行业资讯/新闻请到「资讯管理」中拉取和维护。
+        </p>
       </div>
       <div class="page-actions">
         <el-button type="primary" @click="openDialog()">新增任务</el-button>
       </div>
     </div>
 
-    <!-- 任务表格 -->
+    <el-alert type="info" :closable="false" show-icon class="verify-tip">
+      <template #title>如何判断采集是否真实有效？</template>
+      <div>
+        “官方公开招聘公告”会写入岗位采集链路，可在岗位数据中核对 sourceUrl。
+        行业资讯是用户知识补充内容，属于独立资讯模块，请在「资讯管理」中拉取外部资讯。
+        MOCK 只用于演示和本地初始化，不代表外部真实数据。
+      </div>
+    </el-alert>
+
     <el-card>
       <el-table :data="tasks" v-loading="loading" stripe>
         <el-table-column prop="id" label="ID" width="70" />
-        <el-table-column prop="sourceName" label="任务名称" min-width="160" />
-        <el-table-column label="采集源" width="120">
-          <template #default="{ row }"><span class="chip">{{ sourceLabel(row.sourceType) }}</span></template>
-        </el-table-column>
-        <el-table-column prop="cronExpr" label="Cron 表达式" width="150" />
-        <el-table-column label="状态" width="100">
+        <el-table-column prop="sourceName" label="任务名称" min-width="170" />
+        <el-table-column label="采集源" width="150">
           <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small">{{ row.statusText }}</el-tag>
+            <span class="chip">{{ sourceLabel(row.sourceType) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="创建时间" width="150">
+        <el-table-column prop="cronExpr" label="Cron 表达式" width="160" />
+        <el-table-column label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small">
+              {{ row.statusText || (row.status === 1 ? '运行中' : '停止') }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="创建时间" width="170">
           <template #default="{ row }">{{ formatTime(row.createTime) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="210" fixed="right">
           <template #default="{ row }">
             <el-button v-if="row.status !== 1" text type="primary" size="small" @click="handleStart(row.id)">
               启动
@@ -40,75 +54,78 @@
       </el-table>
 
       <el-empty v-if="!loading && !tasks.length" description="暂无采集任务" />
-
       <el-pagination
         v-if="total > size"
-        v-model:current-page="page" :page-size="size"
-        :total="total" layout="total, prev, pager, next"
+        v-model:current-page="page"
+        :page-size="size"
+        :total="total"
+        layout="total, prev, pager, next"
         @current-change="loadTasks"
       />
     </el-card>
 
-    <!-- 采集日志 -->
     <el-card style="margin-top:16px">
       <template #header>采集日志</template>
       <el-table :data="logs" v-loading="logLoading" stripe size="small">
-        <el-table-column prop="id" label="ID" width="60" />
-        <el-table-column prop="taskId" label="任务ID" width="80" />
-        <el-table-column label="开始时间" width="150">
+        <el-table-column prop="id" label="ID" width="70" />
+        <el-table-column prop="taskId" label="任务ID" width="90" />
+        <el-table-column label="开始时间" width="170">
           <template #default="{ row }">{{ formatTime(row.startTime) }}</template>
         </el-table-column>
-        <el-table-column label="结束时间" width="150">
+        <el-table-column label="结束时间" width="170">
           <template #default="{ row }">{{ formatTime(row.endTime) }}</template>
         </el-table-column>
-        <el-table-column prop="recordCount" label="采集条数" width="90" />
+        <el-table-column prop="recordCount" label="采集条数" width="100" />
         <el-table-column prop="duration" label="耗时" width="90" />
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="logStatusTag(row.status)" size="small">{{ row.status }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="errorMsg" label="错误信息" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="errorMsg" label="错误信息" min-width="220" show-overflow-tooltip />
       </el-table>
 
       <el-empty v-if="!logLoading && !logs.length" description="暂无采集日志" />
-
       <el-pagination
         v-if="logTotal > logSize"
-        v-model:current-page="logPage" :page-size="logSize"
-        :total="logTotal" layout="total, prev, pager, next"
+        v-model:current-page="logPage"
+        :page-size="logSize"
+        :total="logTotal"
+        layout="total, prev, pager, next"
         @current-change="loadLogs"
       />
     </el-card>
 
-    <!-- 新增/编辑对话框 -->
-    <el-dialog v-model="dialogVisible" :title="editingId ? '编辑任务' : '新增任务'" width="500px">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
+    <el-dialog v-model="dialogVisible" :title="editingId ? '编辑任务' : '新增任务'" width="560px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="110px">
         <el-form-item label="采集源类型" prop="sourceType">
           <el-select v-model="form.sourceType" style="width:100%">
-            <el-option label="MOCK（本地样例，不访问外网，推荐）" value="MOCK" />
-            <el-option label="智联招聘（真实采集）" value="ZHAOPIN" />
-            <!-- BOSS 直聘已移除：其 robots.txt 明文禁止抓取职位列表页
-                 （Disallow: /*?query=*、*?city=*），后端 createProcessor 会直接拒绝 -->
+            <el-option label="MOCK（本地样例，不访问外网）" value="MOCK" />
+            <el-option label="官方公开招聘公告（写入岗位库）" value="OFFICIAL_PUBLIC" />
+            <el-option label="智联招聘（不推荐，易受限制）" value="ZHAOPIN" />
           </el-select>
         </el-form-item>
+
         <el-alert
-          v-if="form.sourceType !== 'MOCK'" type="warning" :closable="false" show-icon
-          style="margin:0 0 18px 100px; width:calc(100% - 100px)"
+          v-if="form.sourceType !== 'MOCK'"
+          type="warning"
+          :closable="false"
+          show-icon
+          class="form-alert"
         >
-          真实站点采集会向对方服务器发起请求。系统会先校验 robots.txt，单线程、每次请求间隔 5~10 秒，
-          且只抓取列表页（不进详情页，避免采集到 HR 联系方式等个人信息）。
-          页面改版仍可能导致解析失效，日常开发与演示请使用 MOCK 数据源。
+          外部岗位采集会先校验 robots.txt，并以单线程低频访问。招聘网站可能因反爬、改版或合规限制采集失败；
+          行业资讯请使用「资讯管理」中的拉取外部资讯。
         </el-alert>
+
         <el-form-item label="任务名称" prop="sourceName">
-          <el-input v-model="form.sourceName" placeholder="如：BOSS直聘-Java开发" />
+          <el-input v-model="form.sourceName" placeholder="如：官方公开招聘公告示例" />
         </el-form-item>
         <el-form-item label="URL/数据文件" prop="urlPattern">
           <el-input v-model="form.urlPattern" :placeholder="urlPatternHint" />
           <span class="form-tip">{{ urlPatternHint }}</span>
         </el-form-item>
         <el-form-item label="Cron 表达式" prop="cronExpr">
-          <el-input v-model="form.cronExpr" placeholder="如：0 0 6 * * ?（每天6点）" />
+          <el-input v-model="form.cronExpr" placeholder="如：0 0 6 * * ?（每天 6 点）" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -120,81 +137,33 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import {
-  getCrawlerTasks, getCrawlerTask, createCrawlerTask, updateCrawlerTask,
-  deleteCrawlerTask, startCrawlerTask, stopCrawlerTask,
-  getCrawlerLogs
+  createCrawlerTask,
+  deleteCrawlerTask,
+  getCrawlerLogs,
+  getCrawlerTask,
+  getCrawlerTasks,
+  startCrawlerTask,
+  stopCrawlerTask,
+  updateCrawlerTask
 } from '@/api/admin'
 import { toList, toTotal } from '@/utils/list'
 import { formatTime } from '@/utils/format'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
-// ========== 任务列表 ==========
 const tasks = ref([])
 const loading = ref(false)
 const page = ref(1)
 const size = ref(10)
 const total = ref(0)
 
-// 采集接口用的是 page/size（与其他控制器的 pageNum/pageSize 不同，勿改）
-async function loadTasks() {
-  loading.value = true
-  try {
-    const data = await getCrawlerTasks({ page: page.value, size: size.value })
-    tasks.value = toList(data)
-    total.value = toTotal(data, tasks.value)
-  } finally {
-    loading.value = false
-  }
-}
-
-// ========== 日志列表 ==========
 const logs = ref([])
 const logLoading = ref(false)
 const logPage = ref(1)
 const logSize = ref(10)
 const logTotal = ref(0)
 
-async function loadLogs() {
-  logLoading.value = true
-  try {
-    const data = await getCrawlerLogs({ page: logPage.value, size: logSize.value })
-    logs.value = toList(data)
-    logTotal.value = toTotal(data, logs.value)
-  } finally {
-    logLoading.value = false
-  }
-}
-
-// ========== 启停 ==========
-async function handleStart(id) {
-  try {
-    await startCrawlerTask(id)
-    ElMessage.success('任务已启动')
-    loadTasks()
-  } catch { /* handled */ }
-}
-
-async function handleStop(id) {
-  try {
-    await stopCrawlerTask(id)
-    ElMessage.success('任务已停止')
-    loadTasks()
-  } catch { /* handled */ }
-}
-
-// ========== 删除 ==========
-async function handleDelete(id) {
-  await ElMessageBox.confirm('确定删除该任务吗？', '确认', { type: 'warning' })
-  try {
-    await deleteCrawlerTask(id)
-    ElMessage.success('已删除')
-    loadTasks()
-  } catch { /* handled */ }
-}
-
-// ========== 新增/编辑对话框 ==========
 const dialogVisible = ref(false)
 const editingId = ref(null)
 const saving = ref(false)
@@ -211,18 +180,69 @@ const rules = {
   sourceName: [{ required: true, message: '请输入任务名称', trigger: 'blur' }]
 }
 
+const urlPatternHint = computed(() => ({
+  MOCK: '填写 mock 数据文件名，如 mock-jobs.json',
+  OFFICIAL_PUBLIC: '填写官方公开招聘公告列表页，如 url=https://example.gov.cn/jobs/&maxItems=30',
+  ZHAOPIN: '填写参数串，如 kw=Java&jl=653&maxPages=2'
+}[form.sourceType] || ''))
+
+async function loadTasks() {
+  loading.value = true
+  try {
+    const data = await getCrawlerTasks({ page: page.value, size: size.value })
+    tasks.value = toList(data)
+    total.value = toTotal(data, tasks.value)
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadLogs() {
+  logLoading.value = true
+  try {
+    const data = await getCrawlerLogs({ page: logPage.value, size: logSize.value })
+    logs.value = toList(data)
+    logTotal.value = toTotal(data, logs.value)
+  } finally {
+    logLoading.value = false
+  }
+}
+
+async function handleStart(id) {
+  try {
+    await startCrawlerTask(id)
+    ElMessage.success('任务已启动')
+    await Promise.all([loadTasks(), loadLogs()])
+  } catch { /* handled by interceptor */ }
+}
+
+async function handleStop(id) {
+  try {
+    await stopCrawlerTask(id)
+    ElMessage.success('任务已停止')
+    await Promise.all([loadTasks(), loadLogs()])
+  } catch { /* handled by interceptor */ }
+}
+
+async function handleDelete(id) {
+  await ElMessageBox.confirm('确定删除该任务吗？', '确认', { type: 'warning' })
+  try {
+    await deleteCrawlerTask(id)
+    ElMessage.success('已删除')
+    await loadTasks()
+  } catch { /* handled by interceptor */ }
+}
+
 async function openDialog(row) {
   editingId.value = row ? row.id : null
   if (row) {
-    try {
-      const detail = await getCrawlerTask(row.id)
-      Object.assign(form, {
-        sourceType: detail.sourceType || 'MOCK',
-        sourceName: detail.sourceName || '',
-        urlPattern: detail.urlPattern || '',
-        cronExpr: detail.cronExpr || ''
-      })
-    } catch { /* fallback to row data */ }
+    const detail = await getCrawlerTask(row.id).catch(() => row)
+    Object.assign(form, {
+      sourceType: detail.sourceType || 'MOCK',
+      sourceName: detail.sourceName || '',
+      urlPattern: detail.urlPattern || '',
+      cronExpr: detail.cronExpr || ''
+    })
   } else {
     Object.assign(form, { sourceType: 'MOCK', sourceName: '', urlPattern: '', cronExpr: '' })
   }
@@ -243,29 +263,24 @@ async function handleSave() {
       ElMessage.success('创建成功')
     }
     dialogVisible.value = false
-    loadTasks()
+    await loadTasks()
   } finally {
     saving.value = false
   }
 }
 
-const urlPatternHint = computed(() => ({
-  MOCK: '填 mock 数据文件名，如 mock-jobs.json',
-  ZHAOPIN: '填参数串，如 kw=Java&jl=653&maxPages=3（jl 是智联的城市编码，653=杭州）'
-}[form.sourceType] || ''))
-
-// 历史任务里可能还存着 BOSS_ZHIPIN / COMPANY_OFFICIAL，列表要能显示出来，
-// 只是不再允许新建。启动它们时后端会给出明确的拒绝理由。
 function sourceLabel(type) {
   return {
     MOCK: 'MOCK',
+    OFFICIAL_PUBLIC: '官方招聘公告',
     ZHAOPIN: '智联招聘',
+    NEWS_INFOQ: 'InfoQ 资讯',
+    NEWS_OSCHINA: '开源中国资讯',
     BOSS_ZHIPIN: 'BOSS 直聘（已停用）',
     COMPANY_OFFICIAL: '企业官网（未实现）'
   }[type] || type
 }
 
-// RUNNING 是进行中，不是失败
 function logStatusTag(status) {
   return { SUCCESS: 'success', FAILED: 'danger', RUNNING: 'warning' }[status] || 'info'
 }
@@ -277,5 +292,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.form-alert { margin: 0 0 18px 110px; width: calc(100% - 110px); }
 .form-tip { color: var(--app-ink-3); font-size: 12px; }
+.verify-tip { margin-bottom: 14px; }
 </style>

@@ -20,8 +20,8 @@ public interface NewsService {
      */
     Page<News> pageNews(String category, String type, int pageNum, int pageSize);
 
-    /** 首页资讯格子：最新上架资讯若干条（置顶优先） */
-    List<News> latest(int limit);
+    /** 首页资讯格子：最新上架资讯若干条（置顶优先），可按技术方向筛选 */
+    List<News> latest(int limit, String category);
 
     /** 资讯详情：仅上架可见，浏览数 +1 */
     News getDetail(Long id);
@@ -44,8 +44,8 @@ public interface NewsService {
     int generateDataCast();
 
     /**
-     * 从 Google News RSS 拉取外部资讯（best-effort）。
-     * 服务器无法访问 Google（如大陆网络）时静默返回 0，不抛异常。
+     * 从默认 RSS 源拉取外部资讯（best-effort）。
+     * 源站暂不可访问时静默返回 0，不抛异常。
      *
      * @param query    关键词（如「IT就业」「程序员招聘」）
      * @param maxItems 最多入库条数

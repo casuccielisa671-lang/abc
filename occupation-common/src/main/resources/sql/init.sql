@@ -67,6 +67,7 @@ CREATE TABLE sys_student_profile (
     expected_salary_min INT         DEFAULT NULL COMMENT '期望薪资下限（元）',
     expected_salary_max INT         DEFAULT NULL COMMENT '期望薪资上限（元）',
     education_level    VARCHAR(20)  DEFAULT NULL COMMENT '学历：专科/本科/硕士/博士',
+    avatar_url         VARCHAR(500) DEFAULT NULL COMMENT '证件照URL（上传后存储的相对路径或完整URL）',
     deleted            TINYINT      NOT NULL DEFAULT 0 COMMENT '逻辑删除',
     create_time        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -82,7 +83,7 @@ DROP TABLE IF EXISTS crawler_task;
 CREATE TABLE crawler_task (
     id          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '任务ID',
     tenant_id   BIGINT       NOT NULL COMMENT '所属租户ID',
-    source_type VARCHAR(30)  NOT NULL COMMENT '采集源类型：BOSS_ZHIPIN/ZHAOPIN/COMPANY_OFFICIAL',
+    source_type VARCHAR(30)  NOT NULL COMMENT '采集源类型：MOCK/OFFICIAL_PUBLIC/ZHAOPIN；历史资讯源仅兼容旧任务',
     source_name VARCHAR(100) NOT NULL COMMENT '采集源名称',
     url_pattern VARCHAR(500) DEFAULT NULL COMMENT 'URL 匹配模式',
     cron_expr   VARCHAR(50)  DEFAULT NULL COMMENT 'Cron 定时表达式',
@@ -403,6 +404,7 @@ CREATE TABLE news (
     summary      VARCHAR(600) DEFAULT NULL COMMENT '摘要',
     content      LONGTEXT     DEFAULT NULL COMMENT '正文（仅精选文章，外部/播报为空）',
     cover_style  VARCHAR(20)  DEFAULT 'blue' COMMENT '封面色块样式：blue/green/purple/amber',
+    cover_image  VARCHAR(500) DEFAULT NULL COMMENT '封面图片URL（有值时优先显示图片，否则使用 cover_style 色块）',
     source       VARCHAR(100) DEFAULT NULL COMMENT '来源：平台数据播报 / RSS源名 / 作者',
     source_url   VARCHAR(600) DEFAULT NULL COMMENT '外部原文链接（EXTERNAL 点击跳出）',
     link_target  VARCHAR(200) DEFAULT NULL COMMENT '站内跳转（DATA_CAST 点击去对应图表，如 /admin/dashboard）',
@@ -563,10 +565,8 @@ INSERT INTO student_resume (id, tenant_id, user_id, contact_phone, contact_email
 -- ---------- 采集任务 ----------
 INSERT INTO crawler_task (id, tenant_id, source_type, source_name, url_pattern, cron_expr, status, create_time) VALUES
 (1, 1, 'MOCK', '模拟采集-mock-jobs.json', 'mock-jobs.json', '0 0 2 * * ?', 0, '2026-06-18 10:00:00'),
-(2, 1, 'ZHAOPIN', '智联招聘-杭州Java岗', 'kw=Java&jl=653&maxPages=2', '0 0 3 * * ?', 0, '2026-06-18 10:05:00'),
-(3, 1, 'ZHAOPIN', '智联招聘-北京应届生岗', 'kw=应届生&jl=530&maxPages=2', NULL, 0, '2026-06-25 14:20:00'),
-(4, 1, 'COMPANY_OFFICIAL', '合作企业官网-校招页（未实现）', 'https://campus.example.com/jobs/*', '0 0 4 * * 1', 0, '2026-07-01 09:00:00'),
-(5, 2, 'MOCK', '模拟采集-示范大学', 'mock-jobs.json', NULL, 0, '2026-07-03 11:00:00');
+(2, 1, 'OFFICIAL_PUBLIC', '官方公开招聘公告示例', 'url=https://example.gov.cn/jobs/&maxItems=20', NULL, 0, '2026-06-25 14:20:00'),
+(3, 2, 'MOCK', '模拟采集-示范大学', 'mock-jobs.json', NULL, 0, '2026-07-03 11:00:00');
 
 -- ---------- 采集日志（开箱只有少量采集历史：1 次成功采到 5 条待清洗 + 1 次失败示例 + 1 条运行中）----------
 INSERT INTO crawler_log (id, task_id, tenant_id, start_time, end_time, record_count, status, error_msg) VALUES

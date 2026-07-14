@@ -64,7 +64,7 @@ public class AdminNewsController {
         return Result.ok(newsService.generateDataCast());
     }
 
-    /** 从 Google News RSS 拉取外部资讯（best-effort，服务器不可访问 Google 时返回 0） */
+    /** 从默认 RSS 源拉取外部资讯（best-effort，源站暂不可访问时返回 0） */
     @PostMapping("/pull-rss")
     public Result<Integer> pullRss(@RequestParam(defaultValue = "IT就业") String query,
                                    @RequestParam(defaultValue = "8") int maxItems) {

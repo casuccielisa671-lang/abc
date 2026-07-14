@@ -1,7 +1,7 @@
 # 职业能力大数据服务平台 — 技术选型文档
 
-> **版本**: v2.0（差异化升级，新增 AI 智能引擎层）  
-> **更新日期**: 2026-07-06  
+> **版本**: v2.1（当前落地版）  
+> **更新日期**: 2026-07-14  
 > **原则**: 最简可行、稳健可扩展（Simplest yet most robust）
 
 ---
@@ -35,15 +35,15 @@
 ├──────────────────────────────────────────────────────┤
 │ 缓存层           Redis 6.x                             │
 ├──────────────────────────────────────────────────────┤
-│ 存储层           MySQL 8.0 │ Neo4j │ Elasticsearch      │
-│ 大数据存储       HDFS 3.x + Hive 3.x + HBase 2.x       │
+│ 存储层           MySQL 8.0（当前主库）│ Redis 6.x          │
+│                  Neo4j/ES/HDFS/Hive/HBase 仅作为后续预留 │
 ├──────────────────────────────────────────────────────┤
 │ 大数据计算       Spark 3.x（批处理 + 流处理）           │
 ├──────────────────────────────────────────────────────┤
 │ 协调与调度       Zookeeper 3.x + Yarn                   │
 ├──────────────────────────────────────────────────────┤
 │ 容器化           Docker + Docker Compose（开发/测试）   │
-│                  K8s（生产环境，后续引入）              │
+│                  生产环境使用多镜像 Docker Compose       │
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -74,7 +74,7 @@
 | **Spring Security** | 5.x      | 认证授权，配合 JWT 实现无状态鉴权                            |
 | **MyBatis-Plus**   | 3.5.x     | 简化 CRUD，多租户插件原生支持 `tenant_id` 行级隔离           |
 | **Swagger/OpenAPI** | 3.x     | 自动生成 API 文档，Knife4j 增强 UI                           |
-| **XXL-Job**        | 2.x       | 分布式定时任务调度（替代 Quartz），管理采集/分析定时任务      |
+| **Spring @Scheduled** | 2.7.x 内置 | 当前默认调度方案，管理分析/推送/资讯等轻量任务 |
 | **Hutool**         | 5.x       | Java 工具集，减少重复造轮子                                  |
 
 **模块化单体架构说明**：
@@ -137,13 +137,11 @@ com.occupation.<模块名>
 
 | 组件           | 版本  | 用途                   | 必要性 |
 | -------------- | ----- | ---------------------- | ------ |
-| **HDFS**       | 3.3.x | 原始数据持久化层        | 核心   |
-| **Hive**       | 3.1.x | 结构化数据仓库，SQL 查询 | 核心   |
-| **HBase**      | 2.4.x | 职位明细实时查询         | 重要   |
-| **Spark**      | 3.4.x | 离线批处理 + 流处理     | 核心   |
+| **MySQL 分层表** | 8.0 | raw_job_data / job_detail / analysis_result 承载当前数据链路 | 当前落地 |
+| **Spark**      | 3.4.x | 通过 AnalysisJobService 接口预留，可替换当前 SQL/Java 聚合实现 | 预留   |
 | **Kafka**      | 3.4.x | 采集↔清洗↔分析消息解耦  | 核心   |
-| **Zookeeper**  | 3.8.x | Kafka/HBase 协调        | 依赖   |
-| **Yarn**       | 3.3.x | 资源调度                | 依赖   |
+| **Zookeeper**  | 3.8.x | Kafka 协调        | 依赖   |
+| **HDFS/Hive/HBase/Yarn** | 3.x | 大数据集群演进方向，当前不启用 | 预留 |
 | **MapReduce**  | —     | 批处理兜底，非首选      | 备选   |
 
 ### 2.6 基础设施
@@ -177,30 +175,24 @@ com.occupation.<模块名>
 - **MyBatis-Plus 多租户插件**：原生支持 `tenant_id` 拦截，业务代码零侵入。
 - **Kafka 消息队列**：采集数据天然异步，削峰填谷，采集端宕机不丢数据。
 - **Spark 批处理**：业界标准，分析任务可线性扩展。
-- **Docker Compose 一键启动**：Hadoop 全家桶 + MySQL + Redis + Nginx，一条命令启动开发环境。
+- **Docker Compose 一键启动**：当前只启用 MySQL + Redis + Kafka + Zookeeper + Nginx + Spring Boot，避免 Hadoop 全家桶拖慢本地与云服务器。
 
 ---
 
 ## 4. 开发环境搭建（Docker Compose 方案）
 
 ```yaml
-# 核心服务 docker-compose.yml（概念示意，非最终配置）
+# 核心服务 docker-compose.yml / docker-compose.prod.yml
 services:
   mysql:         # MySQL 8.0 业务库
   redis:         # Redis 6.2 缓存
   nginx:         # Nginx 反向代理
   kafka:         # Kafka + Zookeeper
-  namenode:      # HDFS NameNode
-  datanode:      # HDFS DataNode（可多实例）
-  hive:          # Hive Metastore + Server
-  hbase:         # HBase Master + RegionServer
-  spark:         # Spark Master + Worker
-  neo4j:         # ⭐ Neo4j 知识图谱
-  elasticsearch: # ⭐ Elasticsearch 全文检索
+  app:           # 生产环境 Spring Boot 后端镜像
 ```
 
-> 本地开发最少只需要 `mysql + redis + kafka + nginx`。  
-> P6 差异化阶段再接入 `neo4j + elasticsearch + LLM API`。
+> 本地开发最少只需要 `mysql + redis + kafka + nginx`，后端可本机运行。  
+> 生产环境使用 `docker-compose.prod.yml` 自动构建后端 JAR 与前端 dist。P6 差异化阶段再按需接入 `neo4j + elasticsearch + LLM API`。
 
 ---
 
@@ -232,7 +224,7 @@ services:
 | 时序预测 ⭐         | Prophet      | ARIMA/LSTM            | Facebook 开源，自动处理节假日/趋势，调参成本低 |
 | 后端架构           | 模块化单体   | 微服务                | 初期简单，按需拆分                             |
 | 数据库             | MySQL 8.0    | Oracle/PostgreSQL     | 团队熟悉，社区资源丰富                         |
-| 定时任务           | XXL-Job      | Quartz/Elastic-Job    | 可视化管理界面，分片支持                       |
+| 定时任务           | Spring @Scheduled | XXL-Job/Quartz    | 当前部署最轻；XXL-Job 作为后续集群调度备选                       |
 | ORM                | MyBatis-Plus | JPA/Hibernate         | 国内主流，多租户插件成熟                       |
 | 爬虫框架           | WebMagic     | 自研                  | 开源稳定，省去大量基础开发                     |
 | 报告图表           | ECharts 5    | D3.js/G2              | 文档中文，就业类图表模板丰富                   |

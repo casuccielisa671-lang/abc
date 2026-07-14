@@ -12,7 +12,7 @@ spring:
   profiles:
     # local 用于放本机私密配置（AI 密钥等）。application-local.yml 已 gitignore，
     # 文件不存在时 Spring 会静默跳过，队友不配也能正常启动
-    active: dev,local
+    active: ${SPRING_PROFILES_ACTIVE:dev,local}
   http:
     encoding:
       charset: UTF-8
@@ -121,16 +121,5 @@ logging:
     com.occupation: INFO
     com.baomidou.mybatisplus: DEBUG
 
-# ========== XXL-Job 调度器（可选，默认关闭；开启需先部署 xxl-job-admin） ==========
-xxl:
-  job:
-    enabled: false
-    admin:
-      # XXL-Job Admin 管理端地址（需单独部署）
-      addresses: ${XXL_JOB_ADMIN:http://localhost:8081/xxl-job-admin}
-    accessToken: ${XXL_JOB_TOKEN:}
-    executor:
-      appname: occupation-crawler-executor
-      port: ${XXL_JOB_EXECUTOR_PORT:9999}
-      logpath: ./logs/xxl-job
-      logretentiondays: 7
+
+

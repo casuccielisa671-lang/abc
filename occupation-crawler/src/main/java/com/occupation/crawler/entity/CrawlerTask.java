@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
 @TableName("crawler_task")
 public class CrawlerTask extends BaseEntity {
 
-    /** 采集源类型：BOSS_ZHIPIN / ZHAOPIN / COMPANY_OFFICIAL */
+    /** 采集源类型：MOCK / ZHAOPIN / OFFICIAL_PUBLIC */
     private String sourceType;
 
     /** 采集源名称 */

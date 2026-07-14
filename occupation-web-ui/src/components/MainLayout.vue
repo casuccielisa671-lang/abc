@@ -6,35 +6,39 @@
         <span class="brand-name">职业能力平台</span>
       </div>
 
-      <el-menu
-        mode="horizontal"
-        router
-        :default-active="activeIndex"
-        class="top-menu"
-        :ellipsis="false"
-      >
-        <template v-for="item in flatMenuItems" :key="item.index">
-          <el-sub-menu v-if="item.children" :index="item.index">
-            <template #title>
+      <div class="top-menu-wrap">
+        <el-menu
+          mode="horizontal"
+          router
+          :default-active="activeIndex"
+          class="top-menu"
+          :ellipsis="false"
+        >
+          <template v-for="item in flatMenuItems" :key="item.index">
+            <el-sub-menu v-if="item.children" :index="item.index">
+              <template #title>
+                <span class="submenu-title-link" @click.stop="goMenuHome(item.index)">
+                  <el-icon v-if="item.icon"><component :is="item.icon" /></el-icon>
+                  <span>{{ item.title }}</span>
+                </span>
+              </template>
+              <el-menu-item
+                v-for="child in item.children"
+                :key="child.index"
+                :index="child.index"
+              >
+                <el-icon v-if="child.icon"><component :is="child.icon" /></el-icon>
+                <span>{{ child.title }}</span>
+              </el-menu-item>
+            </el-sub-menu>
+
+            <el-menu-item v-else :index="item.index">
               <el-icon v-if="item.icon"><component :is="item.icon" /></el-icon>
               <span>{{ item.title }}</span>
-            </template>
-            <el-menu-item
-              v-for="child in item.children"
-              :key="child.index"
-              :index="child.index"
-            >
-              <el-icon v-if="child.icon"><component :is="child.icon" /></el-icon>
-              <span>{{ child.title }}</span>
             </el-menu-item>
-          </el-sub-menu>
-
-          <el-menu-item v-else :index="item.index">
-            <el-icon v-if="item.icon"><component :is="item.icon" /></el-icon>
-            <span>{{ item.title }}</span>
-          </el-menu-item>
-        </template>
-      </el-menu>
+          </template>
+        </el-menu>
+      </div>
 
       <div class="header-right">
         <NotificationBell />
@@ -61,7 +65,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { useAppStore } from '@/store/app'
 import NotificationBell from '@/components/NotificationBell.vue'
@@ -72,11 +76,16 @@ import {
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
+const router = useRouter()
 const userStore = useUserStore()
 const appStore = useAppStore()
 
 function handleThemeToggle() {
   appStore.toggleTheme()
+}
+
+function goMenuHome(path) {
+  if (path && route.path !== path) router.push(path)
 }
 
 const ROLE_HOME = {
@@ -105,7 +114,16 @@ const flatMenuItems = computed(() => {
       { index: '/admin/report-list', title: '报告中心', icon: Document },
       { index: '/admin/user', title: '用户管理', icon: User },
       { index: '/admin/class', title: '班级管理', icon: Reading },
-      { index: '/admin/news-manage', title: '资讯管理', icon: Notebook }
+      { index: '/admin/news-manage', title: '资讯管理', icon: Notebook },
+      {
+        index: '/admin/tools',
+        title: '工具箱',
+        icon: Setting,
+        children: [
+          { index: '/admin/tools/export-center', title: '数据导出' },
+          { index: '/admin/tools/tenant-health', title: '租户健康度' }
+        ]
+      }
     ],
     STUDENT: [
       { index: '/student', title: '首页', icon: House },
@@ -116,20 +134,50 @@ const flatMenuItems = computed(() => {
       { index: '/student/favorites', title: '我的收藏', icon: Star },
       { index: '/student/reports', title: '我的报告', icon: Document },
       { index: '/student/advisor', title: '职业顾问', icon: ChatDotRound },
-      { index: '/student/news', title: '资讯', icon: Notebook }
+      { index: '/student/news', title: '资讯', icon: Notebook },
+      {
+        index: '/student/tools',
+        title: '工具箱',
+        icon: Setting,
+        children: [
+          { index: '/student/tools/compare-jobs', title: '多岗位对比' },
+          { index: '/student/tools/skill-roi', title: '技能ROI' },
+          { index: '/student/tools/salary-calc', title: '薪资计算器' },
+          { index: '/student/tools/job-checklist', title: '求职清单' }
+        ]
+      }
     ],
     TEACHER: [
       { index: '/teacher', title: '首页', icon: House },
       { index: '/teacher/students', title: '学生管理', icon: Reading },
       { index: '/teacher/suggestions', title: '教学建议', icon: TrendCharts },
-      { index: '/teacher/news', title: '资讯', icon: Notebook }
+      { index: '/teacher/news', title: '资讯', icon: Notebook },
+      {
+        index: '/teacher/tools',
+        title: '工具箱',
+        icon: Setting,
+        children: [
+          { index: '/teacher/tools/compare-classes', title: '班级对比' },
+          { index: '/teacher/tools/student-alerts', title: '学生预警' },
+          { index: '/teacher/tools/course-match', title: '课程匹配' }
+        ]
+      }
     ],
     HR: [
       { index: '/hr', title: '首页', icon: House },
       { index: '/hr/jobs', title: '职位管理', icon: Management },
       { index: '/hr/applications', title: '收到的投递', icon: Tickets },
       { index: '/hr/talents', title: '人才浏览', icon: User },
-      { index: '/hr/news', title: '资讯', icon: Notebook }
+      { index: '/hr/news', title: '资讯', icon: Notebook },
+      {
+        index: '/hr/tools',
+        title: '工具箱',
+        icon: Setting,
+        children: [
+          { index: '/hr/tools/compare-talents', title: '人才对比' },
+          { index: '/hr/tools/salary-benchmark', title: '薪资竞争力' }
+        ]
+      }
     ]
   }
   return menus[userStore.role] || []
@@ -138,7 +186,7 @@ const flatMenuItems = computed(() => {
 /** 路由高亮：精确匹配优先，其次最长前缀（如职位详情归到职位推荐） */
 const activeIndex = computed(() => {
   const leafItems = flatMenuItems.value.flatMap(item =>
-    item.children ? item.children : [item]
+    item.children ? [item, ...item.children] : [item]
   )
   const exact = leafItems.find(i => i.index === route.path)
   if (exact) return exact.index
@@ -213,19 +261,42 @@ html:not(.dark) .brand-name {
   color: #000000;
 }
 
-.top-menu {
+.top-menu-wrap {
   flex: 1;
   min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* 隐藏滚动条但保留滚动能力 */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.top-menu-wrap::-webkit-scrollbar {
+  height: 4px;
+}
+
+.top-menu-wrap::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+.top-menu-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.top-menu {
   border-bottom: none;
   background: transparent;
+  white-space: nowrap;
 }
 
 .header-right {
   flex: none;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-left: 12px;
+  gap: 8px;
+  margin-left: 8px;
 }
 
 .theme-toggle-btn {
@@ -315,5 +386,11 @@ html:not(.dark) .user-name {
 .main-header .el-menu--horizontal .el-menu-item .el-icon,
 .main-header .el-menu--horizontal .el-sub-menu__title .el-icon {
   margin-right: 4px;
+}
+
+.submenu-title-link {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
 }
 </style>

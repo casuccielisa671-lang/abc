@@ -4,110 +4,111 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.occupation.common.config.TenantContextHolder;
+import com.occupation.common.dto.JobDataMessage;
 import com.occupation.common.exception.BizException;
 import com.occupation.crawler.entity.CrawlerLog;
 import com.occupation.crawler.entity.CrawlerTask;
 import com.occupation.crawler.mapper.CrawlerLogMapper;
 import com.occupation.crawler.mapper.CrawlerTaskMapper;
+import com.occupation.crawler.processor.InfoQNewsProcessor;
+import com.occupation.crawler.processor.JobPipeline;
 import com.occupation.crawler.processor.MockJobPageProcessor;
+import com.occupation.crawler.processor.NewsPageProcessor;
+import com.occupation.crawler.processor.OfficialPublicJobProcessor;
+import com.occupation.crawler.processor.OfficialReportProcessor;
+import com.occupation.crawler.processor.OsChinaNewsProcessor;
 import com.occupation.crawler.processor.RobotsRules;
 import com.occupation.crawler.processor.ZhaopinJobPageProcessor;
 import com.occupation.crawler.service.CrawlerService;
+import com.occupation.recommend.entity.News;
+import com.occupation.recommend.mapper.NewsMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import us.codecraft.webmagic.Request;
+import us.codecraft.webmagic.ResultItems;
 import us.codecraft.webmagic.Spider;
 import us.codecraft.webmagic.pipeline.ConsolePipeline;
+import us.codecraft.webmagic.pipeline.Pipeline;
 import us.codecraft.webmagic.processor.PageProcessor;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * 爬虫调度服务实现
+ * 采集任务调度服务。
+ *
+ * <p>岗位类来源写入 Kafka -> raw_job_data -> job_detail；报告/资讯类来源写入 news，
+ * 避免把公开报告误当成岗位样本。</p>
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class CrawlerServiceImpl implements CrawlerService {
 
-    /** MOCK 任务未指定数据文件时使用的默认文件（位于 classpath 的 mock/ 目录下） */
     private static final String DEFAULT_MOCK_FILE = "mock-jobs.json";
 
     private final CrawlerTaskMapper crawlerTaskMapper;
     private final CrawlerLogMapper crawlerLogMapper;
-    private final com.occupation.crawler.processor.JobPipeline jobPipeline;
+    private final JobPipeline jobPipeline;
+    private final NewsMapper newsMapper;
 
-    /** 运行中的爬虫实例（taskId → Spider） */
     private final Map<Long, Spider> runningSpiders = new ConcurrentHashMap<>();
-
-    /** 运行中采集任务的日志 ID */
     private final Map<Long, Long> runningLogIds = new ConcurrentHashMap<>();
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CrawlerLog startCrawl(CrawlerTask task) {
-        // 1. 停止旧实例（如果存在）
         stopCrawl(task.getId());
 
-        // 2. 创建采集日志（RUNNING）
         CrawlerLog crawlerLog = createLog(task);
-
-        // 3. 根据 source_type 选择处理器
         PageProcessor processor = createProcessor(task);
 
-        // 4. 启动爬虫
         if (processor instanceof MockJobPageProcessor) {
-            // Mock 爬虫不通过 Spider 框架，直接调用 process 方法处理数据
             MockJobPageProcessor mockProcessor = (MockJobPageProcessor) processor;
             mockProcessor.processAll(jobPipeline);
-            // 更新日志状态
             crawlerLog.setEndTime(LocalDateTime.now());
             crawlerLog.setRecordCount(mockProcessor.getCollectedCount());
             crawlerLog.setStatus("SUCCESS");
             crawlerLogMapper.updateById(crawlerLog);
-            // 更新任务状态为停止
+
             task.setStatus(0);
             crawlerTaskMapper.updateById(task);
-            log.info("Mock 采集完成 — taskId={}, 共 {} 条", task.getId(), mockProcessor.getCollectedCount());
-        } else {
-            // 单线程：真实站点是别人家的服务器。配合 Processor 里 5~10 秒的随机间隔，
-            // 抓取压力可以忽略。原来是 thread(3)，三个线程同时打一个站，不合适。
-            Spider spider = Spider.create(processor)
-                    .addPipeline(jobPipeline)
-                    .addPipeline(new ConsolePipeline())
-                    .thread(1);
-
-            // robots.txt 校验不通过时直接返回 FAILED 日志，而不是抛异常。
-            // 本方法带 @Transactional(rollbackFor = Exception.class)，而 BizException 是
-            // RuntimeException —— 一抛就会把上面刚写的 FAILED 日志一起回滚掉，
-            // 采集日志页什么都看不到，用户只会得到一句莫名其妙的报错。
-            Request seed = resolveSeedRequest(task, processor, crawlerLog);
-            if (seed == null) {
-                task.setStatus(0);
-                crawlerTaskMapper.updateById(task);
-                return crawlerLog;   // 已被 failLog 标记为 FAILED，原因写在 error_msg 里
-            }
-            spider.addRequest(seed);
-
-            spider.start();
-
-            // 记录运行状态
-            runningSpiders.put(task.getId(), spider);
-            runningLogIds.put(task.getId(), crawlerLog.getId());
-
-            // 更新任务状态为运行中
-            task.setStatus(1);
-            crawlerTaskMapper.updateById(task);
-
-            log.info("爬虫启动成功 — taskId={}, source={}", task.getId(), task.getSourceType());
+            log.info("Mock 采集完成 taskId={}, count={}", task.getId(), mockProcessor.getCollectedCount());
+            return crawlerLog;
         }
 
+        AtomicInteger collectedCount = new AtomicInteger(0);
+        Spider spider = Spider.create(processor)
+                .addPipeline(countingPipeline(collectedCount))
+                .addPipeline(new ConsolePipeline())
+                .thread(1);
+
+        Request seed = resolveSeedRequest(task, processor, crawlerLog);
+        if (seed == null) {
+            task.setStatus(0);
+            crawlerTaskMapper.updateById(task);
+            return crawlerLog;
+        }
+        spider.addRequest(seed);
+
+        runningSpiders.put(task.getId(), spider);
+        runningLogIds.put(task.getId(), crawlerLog.getId());
+
+        task.setStatus(1);
+        crawlerTaskMapper.updateById(task);
+
+        Long tenantId = task.getTenantId() != null ? task.getTenantId() : TenantContextHolder.getTenantId();
+        startSpiderAfterCommit(task.getId(), crawlerLog.getId(), spider, collectedCount, processor, tenantId);
+        log.info("采集任务已启动 taskId={}, source={}", task.getId(), task.getSourceType());
         return crawlerLog;
     }
 
@@ -116,13 +117,11 @@ public class CrawlerServiceImpl implements CrawlerService {
     public boolean stopCrawl(Long taskId) {
         Spider spider = runningSpiders.remove(taskId);
         Long logId = runningLogIds.remove(taskId);
-
         if (spider != null) {
             spider.stop();
-            log.info("爬虫已停止 — taskId={}", taskId);
+            log.info("采集任务已停止 taskId={}", taskId);
         }
 
-        // 更新日志状态
         if (logId != null) {
             CrawlerLog crawlerLog = new CrawlerLog();
             crawlerLog.setId(logId);
@@ -131,12 +130,10 @@ public class CrawlerServiceImpl implements CrawlerService {
             crawlerLogMapper.updateById(crawlerLog);
         }
 
-        // 更新任务状态为停止
         CrawlerTask task = new CrawlerTask();
         task.setId(taskId);
         task.setStatus(0);
         crawlerTaskMapper.updateById(task);
-
         return true;
     }
 
@@ -149,9 +146,7 @@ public class CrawlerServiceImpl implements CrawlerService {
     @Override
     public List<CrawlerTask> listRunningTasks() {
         return crawlerTaskMapper.selectList(
-                new LambdaQueryWrapper<CrawlerTask>()
-                        .eq(CrawlerTask::getStatus, 1)
-        );
+                new LambdaQueryWrapper<CrawlerTask>().eq(CrawlerTask::getStatus, 1));
     }
 
     @Override
@@ -160,12 +155,9 @@ public class CrawlerServiceImpl implements CrawlerService {
         Page<CrawlerLog> result = crawlerLogMapper.selectPage(pageParam,
                 new LambdaQueryWrapper<CrawlerLog>()
                         .eq(CrawlerLog::getTaskId, taskId)
-                        .orderByDesc(CrawlerLog::getCreateTime)
-        );
+                        .orderByDesc(CrawlerLog::getCreateTime));
         return result.getRecords();
     }
-
-    // ---- 内部方法 ----
 
     private CrawlerLog createLog(CrawlerTask task) {
         CrawlerLog logEntity = new CrawlerLog();
@@ -178,91 +170,184 @@ public class CrawlerServiceImpl implements CrawlerService {
         return logEntity;
     }
 
-    /**
-     * 解析本次采集的起始请求，顺带做 robots.txt 校验。
-     *
-     * @return null 表示不允许抓取，日志已被标记为 FAILED
-     */
     private Request resolveSeedRequest(CrawlerTask task, PageProcessor processor, CrawlerLog crawlerLog) {
         if (processor instanceof ZhaopinJobPageProcessor) {
-            // urlPattern 存的是参数串而非 URL，必须走 seedRequest：
-            // 它会解开 301（robots 允许的是跳转后的路径式地址）并逐段校验 robots.txt
             Map<String, String> params = parseUrlParams(task.getUrlPattern());
             String keyword = params.getOrDefault("kw", params.getOrDefault("query", "Java"));
             String city = params.getOrDefault("jl", params.getOrDefault("city", "530"));
             Request seed = ZhaopinJobPageProcessor.seedRequest(keyword, city);
             if (seed == null) {
-                failLog(crawlerLog, "目标站点的 robots.txt 不允许抓取该地址，已放弃本次采集");
+                failLog(crawlerLog, "目标站点 robots.txt 不允许抓取该地址，已放弃本次采集");
             }
             return seed;
         }
 
-        String url = task.getUrlPattern();
+        if (processor instanceof OfficialPublicJobProcessor) {
+            Map<String, String> params = parseUrlParams(task.getUrlPattern());
+            return checkedRequest(params.getOrDefault("url", task.getUrlPattern()), crawlerLog);
+        }
+
+        if (processor instanceof NewsPageProcessor) {
+            return checkedRequest(((NewsPageProcessor) processor).getRssUrl(), crawlerLog);
+        }
+
+        return checkedRequest(task.getUrlPattern(), crawlerLog);
+    }
+
+    private Request checkedRequest(String url, CrawlerLog crawlerLog) {
         if (url == null || url.trim().isEmpty()) {
             failLog(crawlerLog, "采集任务没有配置 URL");
             return null;
         }
         if (!RobotsRules.isAllowed(url)) {
-            failLog(crawlerLog, "目标站点的 robots.txt 不允许抓取: " + url);
+            failLog(crawlerLog, "目标站点 robots.txt 不允许抓取 " + url);
             return null;
         }
         return new Request(url);
     }
 
-    /**
-     * 把这条采集日志标记为失败。
-     * <p>
-     * createLog 已经写了一条 RUNNING 的记录，若直接抛异常返回，
-     * 那条记录会永远停在 RUNNING，采集日志页看起来像是「跑着没结束」。
-     */
     private void failLog(CrawlerLog crawlerLog, String reason) {
         crawlerLog.setEndTime(LocalDateTime.now());
         crawlerLog.setStatus("FAILED");
         crawlerLog.setErrorMsg(reason);
         crawlerLogMapper.updateById(crawlerLog);
-        log.warn("采集失败: taskId={}, {}", crawlerLog.getTaskId(), reason);
+        log.warn("采集失败 taskId={}, reason={}", crawlerLog.getTaskId(), reason);
+    }
+
+    private Pipeline countingPipeline(AtomicInteger collectedCount) {
+        return (ResultItems resultItems, us.codecraft.webmagic.Task task) -> {
+            @SuppressWarnings("unchecked")
+            List<JobDataMessage> jobs = resultItems.get("jobs");
+            if (jobs != null) {
+                collectedCount.addAndGet(jobs.size());
+            }
+            jobPipeline.process(resultItems, task);
+        };
+    }
+
+    private void watchSpiderCompletion(Long taskId, Long logId, Spider spider, AtomicInteger collectedCount,
+                                       PageProcessor processor, Long tenantId) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                boolean started = false;
+                while (true) {
+                    Spider.Status status = spider.getStatus();
+                    if (status == Spider.Status.Running) {
+                        started = true;
+                    } else if (started || status == Spider.Status.Stopped) {
+                        break;
+                    }
+                    Thread.sleep(1000L);
+                }
+                CrawlerLog current = crawlerLogMapper.selectById(logId);
+                if (current == null || !"RUNNING".equals(current.getStatus())) {
+                    return;
+                }
+
+                collectedCount.addAndGet(persistCollectedNews(processor, tenantId));
+                CrawlerLog finished = new CrawlerLog();
+                finished.setId(logId);
+                finished.setEndTime(LocalDateTime.now());
+                finished.setRecordCount(collectedCount.get());
+                finished.setStatus("SUCCESS");
+                crawlerLogMapper.updateById(finished);
+
+                CrawlerTask task = new CrawlerTask();
+                task.setId(taskId);
+                task.setStatus(0);
+                crawlerTaskMapper.updateById(task);
+                runningSpiders.remove(taskId);
+                runningLogIds.remove(taskId);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                log.error("采集完成状态回写失败 taskId={}, logId={}", taskId, logId, e);
+            }
+        });
+    }
+
+    private int persistCollectedNews(PageProcessor processor, Long tenantId) {
+        if (!(processor instanceof NewsPageProcessor)) {
+            return 0;
+        }
+        NewsPageProcessor newsProcessor = (NewsPageProcessor) processor;
+        List<News> newsList = newsProcessor.drainCollectedNews();
+        int inserted = 0;
+        for (News news : newsList) {
+            Long exists = newsMapper.selectCount(
+                    new LambdaQueryWrapper<News>().eq(News::getTitle, news.getTitle()));
+            if (exists != null && exists > 0) {
+                continue;
+            }
+            if (tenantId != null) {
+                news.setTenantId(tenantId);
+            }
+            try {
+                newsMapper.insert(news);
+                inserted++;
+            } catch (Exception e) {
+                log.warn("资讯入库失败，已跳过。title={}, source={}", news.getTitle(), news.getSource(), e);
+            }
+        }
+        log.info("资讯采集入库完成 source={}, inserted={}", newsProcessor.getSourceName(), inserted);
+        return inserted;
+    }
+
+    private void startSpiderAfterCommit(Long taskId, Long logId, Spider spider, AtomicInteger collectedCount,
+                                        PageProcessor processor, Long tenantId) {
+        Runnable starter = () -> {
+            spider.runAsync();
+            watchSpiderCompletion(taskId, logId, spider, collectedCount, processor, tenantId);
+        };
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    starter.run();
+                }
+            });
+        } else {
+            starter.run();
+        }
     }
 
     private PageProcessor createProcessor(CrawlerTask task) {
         switch (task.getSourceType()) {
             case "MOCK": {
-                // 模拟爬虫：从 classpath 加载 mock 数据（InputStream 方式，兼容 JAR 内运行）。
-                // urlPattern 为空时回落到默认文件 —— 否则会拼出 "mock/null" 而后静默采到 0 条。
                 String dataFile = StrUtil.blankToDefault(task.getUrlPattern(), DEFAULT_MOCK_FILE);
                 return new MockJobPageProcessor("mock/" + dataFile, true);
             }
             case "BOSS_ZHIPIN":
-                // BossJobPageProcessor 已于 2026-07-10 删除。
-                // 它拼出的列表页地址形如 /web/geek/job?query=Java&city=101010100，
-                // 而 www.zhipin.com/robots.txt 里明文写着：
-                //     Disallow: /*?query=*
-                //     Disallow: *?city=*
-                // 这不是技术问题，是人家写在门口的。何况页面已改成 JS 渲染 + 行为验证，
-                // 靠随机 UA 也过不去。真实采集请用 ZHAOPIN。
-                throw new BizException("Boss 直聘的 robots.txt 明确禁止抓取职位列表页，"
-                        + "本项目不再支持该采集源。请改用 ZHAOPIN（真实采集）或 MOCK（本地样例）");
-
+                throw new BizException("Boss 直聘 robots.txt 明确禁止抓取职位列表页，请改用 MOCK 或 OFFICIAL_PUBLIC。行业资讯请在资讯管理中拉取。");
             case "ZHAOPIN": {
-                // 真实采集：智联的城市参数是 jl（如 530=杭州），与 BOSS 的 city 编码不同
                 Map<String, String> params = parseUrlParams(task.getUrlPattern());
                 String keyword = params.getOrDefault("kw", params.getOrDefault("query", "Java"));
                 String cityCode = params.getOrDefault("jl", params.getOrDefault("city", "530"));
                 int maxPages = Integer.parseInt(params.getOrDefault("maxPages", "3"));
                 return new ZhaopinJobPageProcessor(keyword, cityCode, maxPages);
             }
+            case "NEWS_INFOQ":
+                return new InfoQNewsProcessor();
+            case "OFFICIAL_PUBLIC": {
+                Map<String, String> params = parseUrlParams(task.getUrlPattern());
+                String url = params.getOrDefault("url", task.getUrlPattern());
+                int maxItems = Integer.parseInt(params.getOrDefault("maxItems", "30"));
+                return new OfficialPublicJobProcessor(url, task.getSourceName(), maxItems);
+            }
+            case "OFFICIAL_REPORT": {
+                Map<String, String> params = parseUrlParams(task.getUrlPattern());
+                String url = params.getOrDefault("url", task.getUrlPattern());
+                int maxItems = Integer.parseInt(params.getOrDefault("maxItems", "20"));
+                return new OfficialReportProcessor(url, task.getSourceName(), maxItems);
+            }
+            case "NEWS_OSCHINA":
+                return new OsChinaNewsProcessor();
             default:
-                // 抛 BizException 而不是 IllegalArgumentException：后者会被兜底处理器变成
-                // 500「系统内部错误」，用户根本不知道自己选错了采集源。
-                // 种子里的 COMPANY_OFFICIAL 任务就会走到这里 —— 它只有表结构没有实现。
                 throw new BizException("暂不支持的采集源类型：" + task.getSourceType()
-                        + "。当前可用：MOCK（本地样例，不访问外网）/ ZHAOPIN（真实采集）");
+                        + "。当前可用：MOCK / OFFICIAL_PUBLIC / ZHAOPIN");
         }
     }
 
-    /**
-     * 解析 URL 参数字符串为 Map
-     * 格式: "key1=value1&key2=value2"
-     */
     private Map<String, String> parseUrlParams(String urlPattern) {
         Map<String, String> params = new LinkedHashMap<>();
         if (urlPattern == null || urlPattern.isEmpty()) {
@@ -277,5 +362,4 @@ public class CrawlerServiceImpl implements CrawlerService {
         }
         return params;
     }
-
 }

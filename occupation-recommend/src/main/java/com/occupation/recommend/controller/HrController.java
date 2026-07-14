@@ -48,7 +48,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/hr")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('HR')")
 public class HrController {
 
     private final JobDetailService jobDetailService;
@@ -59,6 +58,7 @@ public class HrController {
     private final UserService userService;
 
     /** 发布职位（平台内发布，source=HR_PUBLISH，publisher_id=当前 HR） */
+    @PreAuthorize("hasRole('HR')")
     @PostMapping("/jobs")
     public Result<Long> publishJob(@RequestBody @Validated JobSaveDTO dto) {
         dto.setId(null);
@@ -66,6 +66,7 @@ public class HrController {
     }
 
     /** 编辑职位（仅限本人发布的 HR_PUBLISH 职位） */
+    @PreAuthorize("hasRole('HR')")
     @PutMapping("/jobs/{id}")
     public Result<Long> updateJob(@PathVariable Long id, @RequestBody @Validated JobSaveDTO dto) {
         dto.setId(id);
@@ -73,6 +74,7 @@ public class HrController {
     }
 
     /** 下架职位（仅限本人发布的职位） */
+    @PreAuthorize("hasRole('HR')")
     @DeleteMapping("/jobs/{id}")
     public Result<Void> removeJob(@PathVariable Long id) {
         jobDetailService.removeJob(id, UserContextHolder.getUserId());
@@ -80,6 +82,7 @@ public class HrController {
     }
 
     /** 我发布的职位列表 —— publisherId 由服务端强制覆盖，前端传入无效 */
+    @PreAuthorize("hasRole('HR')")
     @GetMapping("/jobs")
     public Result<PageResult<JobDetailVO>> myJobs(JobQueryDTO query) {
         query.setPublisherId(UserContextHolder.getUserId());
@@ -90,6 +93,7 @@ public class HrController {
     /**
      * 人才浏览 — 脱敏：只暴露专业/技能/学历/意向/活跃度，不含姓名、联系方式、userId
      */
+    @PreAuthorize("hasRole('HR')")
     @GetMapping("/talents")
     public Result<PageResult<TalentVO>> talents(@RequestParam(required = false) String keyword,
                                                 @RequestParam(required = false) String education,
@@ -115,6 +119,7 @@ public class HrController {
      * 联系方式与简历正文不在列表里，需再调 {@link #applicantDetail(Long)} 单独拉取。
      * 租户隔离由 student_behavior 上的多租户插件保证。
      */
+    @PreAuthorize("hasRole('HR')")
     @GetMapping("/applications")
     public Result<List<ApplicationVO>> applications() {
         Long hrId = UserContextHolder.getUserId();
@@ -155,6 +160,7 @@ public class HrController {
      * 归属校验与状态流转合法性都在 Service 里做：不能改别人职位上的投递，
      * 不能从终态回退。
      */
+    @PreAuthorize("hasRole('HR')")
     @PutMapping("/applications/{id}/status")
     public Result<Void> changeApplicationStatus(@PathVariable Long id,
                                                 @RequestBody @Validated ApplicationStatusDTO dto) {
@@ -168,6 +174,7 @@ public class HrController {
      * <b>归属校验是这个接口的全部安全性所在</b>：只有当该学生投递过<b>本 HR 发布的</b>职位时才放行。
      * 少了这一步，任何 HR 只要把 userId 从 1 枚举到 N，就能拖走全校学生的手机号和邮箱。
      */
+    @PreAuthorize("hasRole('HR')")
     @GetMapping("/applicants/{userId}")
     public Result<ApplicantDetailVO> applicantDetail(@PathVariable Long userId) {
         Long hrId = UserContextHolder.getUserId();

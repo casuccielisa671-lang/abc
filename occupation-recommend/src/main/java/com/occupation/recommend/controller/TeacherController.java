@@ -66,7 +66,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/teacher")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
 public class TeacherController {
 
     /** 技能缺口诊断参与对比的市场热门技能数 */
@@ -88,6 +87,7 @@ public class TeacherController {
     private final com.occupation.recommend.service.TeacherMapService teacherMapService;
 
     /** 本校学生列表（分页，含真实姓名/学号、班级与行为计数；按教师范围过滤，支持专业/年级二次筛选） */
+    @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     @GetMapping("/students")
     public Result<PageResult<StudentVO>> listStudents(@RequestParam(required = false) String keyword,
                                                       @RequestParam(required = false) String education,
@@ -103,6 +103,7 @@ public class TeacherController {
     }
 
     /** 班级概览统计（统计卡片；数字按教师可见范围计算） */
+    @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     @GetMapping("/overview")
     public Result<TeacherOverviewVO> overview() {
         Set<Long> visible = visibleStudents();
@@ -124,6 +125,7 @@ public class TeacherController {
     }
 
     /** 指定学生的求职行为统计（带范围归属校验） */
+    @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     @GetMapping("/students/{userId}/stats")
     public Result<BehaviorStatsVO> studentStats(@PathVariable Long userId) {
         assertVisible(userId);
@@ -133,6 +135,7 @@ public class TeacherController {
     }
 
     /** 指定学生的行为明细（最近 50 条，附关联职位的标题与公司；带范围归属校验） */
+    @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     @GetMapping("/students/{userId}/behaviors")
     public Result<List<BehaviorVO>> studentBehaviors(@PathVariable Long userId) {
         assertVisible(userId);
@@ -152,6 +155,7 @@ public class TeacherController {
     }
 
     /** 教学建议 — 技能缺口诊断（市场热度 vs 学生掌握率；学生样本按教师范围限定） */
+    @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     @GetMapping("/suggestions")
     public Result<TeachingSuggestionVO> suggestions() {
         return Result.ok(suggestionService.diagnose(DIAGNOSE_TOP_SKILLS, DIAGNOSE_MAX_ITEMS, visibleStudents()));
@@ -163,6 +167,7 @@ public class TeacherController {
      * 单独一个接口而不是塞进 {@link #suggestions()}：调大模型要几秒，
      * 不能让教师每次打开页面都等；表格先出来，解读按需再拉。
      */
+    @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     @GetMapping("/suggestions/ai")
     public Result<AdvisorReplyVO> suggestionsAi() {
         return Result.ok(teachingAiService.analyze(
@@ -170,18 +175,21 @@ public class TeacherController {
     }
 
     /** 地图图层：学生求职意向城市分布（按可见范围） */
+    @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     @GetMapping("/map/intent-cities")
     public Result<java.util.List<com.occupation.recommend.vo.MapCityCountVO>> intentCities() {
         return Result.ok(teacherMapService.studentIntentCities());
     }
 
     /** 地图图层：投递去向城市分布（按可见范围） */
+    @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     @GetMapping("/map/application-cities")
     public Result<java.util.List<com.occupation.recommend.vo.MapCityCountVO>> applicationCities() {
         return Result.ok(teacherMapService.applicationCities());
     }
 
     /** 可选筛选项：教师可见范围内涉及的专业 / 入学年级（前端筛选下拉用） */
+    @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     @GetMapping("/filters")
     public Result<Map<String, Object>> filters() {
         Map<String, Object> data = new LinkedHashMap<>();
@@ -190,7 +198,42 @@ public class TeacherController {
         return Result.ok(data);
     }
 
+    /** 教师可见范围内的班级列表（工具箱班级对比下拉用） */
+    @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
+    @GetMapping("/classes")
+    public Result<List<Map<String, Object>>> classes() {
+        Set<Long> visible = visibleStudents();
+        List<SysClass> all = classService.listAll();
+        if (visible == null) {
+            // ADMIN：返回全部班级
+            return Result.ok(all.stream().map(c -> {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("id", c.getId());
+                m.put("name", c.getCode());
+                m.put("major", c.getMajor());
+                m.put("enrollYear", c.getEnrollYear());
+                m.put("className", c.getClassName());
+                return m;
+            }).collect(Collectors.toList()));
+        }
+        // 教师：只返回可见范围内有学生的班级
+        Set<Long> classIds = userService.mapByIds(visible).values().stream()
+                .map(SysUser::getClassId).filter(Objects::nonNull).collect(Collectors.toSet());
+        return Result.ok(all.stream()
+                .filter(c -> classIds.contains(c.getId()))
+                .map(c -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("id", c.getId());
+                    m.put("name", c.getCode());
+                    m.put("major", c.getMajor());
+                    m.put("enrollYear", c.getEnrollYear());
+                    m.put("className", c.getClassName());
+                    return m;
+                }).collect(Collectors.toList()));
+    }
+
     /** 导出学生就业数据 Excel（.xlsx；按教师可见范围导出） */
+    @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     @GetMapping("/export")
     public void export(HttpServletResponse response) throws IOException {
         // 导出范围内全量，不分页

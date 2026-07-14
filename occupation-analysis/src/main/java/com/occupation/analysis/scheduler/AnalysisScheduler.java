@@ -21,7 +21,6 @@ import java.util.List;
  *   <li>每小时第 10 分：存量清洗补偿（raw_job_data 中 status=RAW 的重放清洗）</li>
  *   <li>每日 02:00：全量统计重算（遍历所有租户，逐租户写 analysis_result）</li>
  * </ul>
- * 需要演示分布式调度时，可将两个方法体迁到 XXL-Job Handler（xxl.job.enabled=true）。
  *
  * @author occupation-team
  */

@@ -37,18 +37,21 @@ public class StudentReportController {
     private final ReportDeliveryService deliveryService;
 
     /** 生成/多轮改：返回正文，不落库 */
+    @PreAuthorize("hasRole('STUDENT')")
     @PostMapping("/ai-report/preview")
     public Result<StudentAiReportVO> preview(@RequestBody StudentReportDTO dto) {
         return Result.ok(service.preview(UserContextHolder.getUserId(), dto));
     }
 
     /** 定稿保存：落库为个人报告 + 导出文件 */
+    @PreAuthorize("hasRole('STUDENT')")
     @PostMapping("/ai-report/save")
     public Result<ReportRecord> save(@RequestBody @Validated StudentReportDTO dto) {
         return Result.ok(service.save(UserContextHolder.getUserId(), dto));
     }
 
     /** 我的报告列表（仅本人） */
+    @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/reports")
     public Result<PageResult<ReportRecordVO>> myReports(@RequestParam(defaultValue = "1") int pageNum,
                                                         @RequestParam(defaultValue = "10") int pageSize) {
@@ -58,6 +61,7 @@ public class StudentReportController {
     }
 
     /** 收到的报告：管理员广播的市场报告 + 定向下发给我的就业报告 */
+    @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/received-reports")
     public Result<PageResult<ReceivedReportVO>> received(@RequestParam(defaultValue = "1") int pageNum,
                                                          @RequestParam(defaultValue = "10") int pageSize) {
@@ -66,6 +70,7 @@ public class StudentReportController {
     }
 
     /** 标记某收到的报告为已读（下载时前端可顺手调） */
+    @PreAuthorize("hasRole('STUDENT')")
     @PostMapping("/received-reports/{id}/read")
     public Result<Void> markRead(@PathVariable Long id) {
         deliveryService.markRead(id, UserContextHolder.getUserId());

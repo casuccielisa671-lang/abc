@@ -1,0 +1,124 @@
+# ============================================================
+# 职业能力大数据服务平台 — 生产环境 Docker Compose
+# 使用方式：docker-compose -f docker-compose.prod.yml up -d
+# ============================================================
+
+services:
+
+  # ========== MySQL 8.0 ==========
+  mysql:
+    image: mysql:8.0
+    container_name: occupation-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-Occupation@2026!}
+      MYSQL_DATABASE: occupation
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./occupation-common/src/main/resources/sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ========== Redis 6.2 ==========
+  redis:
+    image: redis:6.2-alpine
+    container_name: occupation-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-Redis@2026!}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ========== Kafka + Zookeeper ==========
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: occupation-zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: occupation-kafka
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+  # ========== Spring Boot 应用 ==========
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: occupation-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    environment:
+      # 数据库（容器内用服务名通信）
+      DB_URL: jdbc:mysql://mysql:3306/occupation?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD:-Occupation@2026!}
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-Redis@2026!}
+      # Kafka
+      KAFKA_SERVERS: kafka:9092
+      # Spring Profile
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-random-string-in-production}
+      # AI（可选）
+      AI_ENABLED: ${AI_ENABLED:-false}
+      AI_API_KEY: ${AI_API_KEY:-}
+      # 报告存储
+      REPORT_STORAGE_PATH: /data/reports
+    volumes:
+      - app-reports:/data/reports
+
+  # ========== Nginx 反向代理 ==========
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: occupation-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx-prod.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app
+
+volumes:
+  mysql-data:
+  redis-data:
+  app-reports:

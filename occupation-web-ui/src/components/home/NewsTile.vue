@@ -4,21 +4,22 @@
       <span class="t">行业资讯</span>
       <div class="news-cats">
         <span v-for="c in NEWS_CATS" :key="c.id" class="nc" :class="{ on: newsCat === c.id }"
-              @click="newsCat = c.id">{{ c.label }}</span>
+              @click="switchCat(c.id)">{{ c.label }}</span>
         <span class="view-all" @click="viewAll">查看全部 ›</span>
       </div>
     </div>
-    <div v-loading="loading" class="news-grid">
-      <div v-for="n in filteredNews" :key="n.id" class="ncard" @click="detailRef?.open(n)">
-        <div class="thumb" :class="'cov-' + (n.coverStyle || 'blue')">
-          <span class="k">{{ typeLabel(n.type) }}</span>
-        </div>
-        <div class="nbody">
-          <div class="nti">{{ n.title }}</div>
-          <div class="ntm">{{ formatTime(n.publishTime) }} · {{ n.source || '资讯' }}</div>
+    <div v-loading="loading" class="news-list" element-loading-text="加载中...">
+      <div v-for="n in news" :key="n.id" class="nitem" @click="detailRef?.open(n)">
+        <div class="ni-body">
+          <div class="ni-head">
+            <span class="ni-source">{{ n.source || '资讯' }}</span>
+            <span class="ni-time">{{ formatTime(n.publishTime) }}</span>
+            <span class="ni-type-tag" :class="'t-' + (n.type || '')">{{ typeLabel(n.type) }}</span>
+          </div>
+          <div class="ni-title">{{ n.title }}</div>
         </div>
       </div>
-      <el-empty v-if="!loading && !filteredNews.length" description="该方向暂无资讯" :image-size="52" />
+      <el-empty v-if="!loading && !news.length" description="该方向暂无资讯" :image-size="48" />
     </div>
 
     <NewsDetailDialog ref="detailRef" />
@@ -26,7 +27,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { getLatestNews } from '@/api/student'
@@ -45,9 +46,7 @@ const NEWS_CATS = [
 const news = ref([])
 const loading = ref(false)
 const newsCat = ref('all')
-const filteredNews = computed(() =>
-  (newsCat.value === 'all' ? news.value : news.value.filter(n => n.category === newsCat.value)).slice(0, 6)
-)
+
 function typeLabel(t) {
   return { DATA_CAST: '数据播报', ARTICLE: '精选文章', EXTERNAL: '外部资讯' }[t] || '资讯'
 }
@@ -56,30 +55,76 @@ function viewAll() {
   router.push(`/${rp}/news`)
 }
 
-onMounted(() => {
+async function load(category) {
   loading.value = true
-  getLatestNews(12).then(d => { news.value = toList(d) }).catch(() => {}).finally(() => { loading.value = false })
-})
+  try {
+    const cat = category && category !== 'all' ? category : undefined
+    const d = await getLatestNews(12, cat)
+    let rows = toList(d)
+    if (!rows.length && cat) {
+      const fallback = await getLatestNews(12)
+      rows = toList(fallback)
+    }
+    news.value = rows.slice(0, 6)
+  } catch {
+    news.value = []
+  }
+  finally { loading.value = false }
+}
+
+function switchCat(id) {
+  newsCat.value = id
+  load(id)
+}
+
+onMounted(() => load('all'))
 </script>
 
 <style scoped>
 .news-tile { display: flex; flex-direction: column; height: 100%; }
 .tile-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 10px; flex-wrap: wrap; }
-.tile-h .t { font-size: 14px; font-weight: 650; }
-.news-cats { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-.nc { font-size: 12px; padding: 3px 10px; border-radius: 999px; color: var(--color-text-secondary); background: var(--color-bg-secondary); border: 1px solid var(--color-border); cursor: pointer; }
+.tile-h .t { font-size: 15px; font-weight: 700; color: #1e293b; }
+.news-cats { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+.nc { font-size: 11.5px; padding: 3px 10px; border-radius: 8px; color: #64748b; background: #f1f5f9; border: 1px solid #e2e8f0; cursor: pointer; transition: all .15s; user-select: none; }
+.nc:hover { background: #e2e8f0; color: #334155; }
 .nc.on { color: #fff; background: var(--color-primary); border-color: transparent; font-weight: 600; }
-.view-all { font-size: 12px; color: var(--color-primary); cursor: pointer; margin-left: 4px; }
-.news-grid { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; overflow: hidden; }
-.ncard { border: 1px solid var(--color-border); border-radius: 11px; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; }
-.ncard:hover { border-color: var(--color-primary); }
-.thumb { height: 74px; position: relative; }
-.thumb.cov-blue { background: linear-gradient(135deg,#2563EB,#5B60F0); }
-.thumb.cov-green { background: linear-gradient(135deg,#0E9F6E,#15A34A); }
-.thumb.cov-purple { background: linear-gradient(135deg,#5B60F0,#8A5BF0); }
-.thumb.cov-amber { background: linear-gradient(135deg,#C97A00,#E08600); }
-.thumb .k { position: absolute; top: 8px; left: 8px; font-size: 10.5px; font-weight: 600; color: #fff; background: rgba(0,0,0,.32); padding: 2px 7px; border-radius: 6px; }
-.nbody { padding: 8px 10px; }
-.nti { font-size: 12.5px; font-weight: 600; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.ntm { font-size: 11px; color: var(--color-text-tertiary); margin-top: 5px; }
+.view-all { font-size: 12px; color: var(--color-primary); cursor: pointer; margin-left: 2px; font-weight: 500; white-space: nowrap; }
+.view-all:hover { text-decoration: underline; }
+
+/* 横条列表 */
+.news-list {
+  flex: 1; display: flex; flex-direction: column; gap: 2px;
+  overflow-y: auto; overflow-x: hidden;
+  max-height: 380px;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.news-list::-webkit-scrollbar { width: 6px; }
+.news-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+.news-list::-webkit-scrollbar-track { background: transparent; }
+.nitem {
+  padding: 10px 8px; border-radius: 8px; cursor: pointer;
+  transition: background .15s;
+}
+.nitem:hover { background: #f8fafc; }
+.nitem + .nitem { border-top: 1px solid #f1f5f9; }
+
+/* 文本 */
+.ni-body { flex: 1; min-width: 0; }
+.ni-head { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+.ni-source { font-size: 12px; font-weight: 600; color: #1e293b; }
+.ni-time { font-size: 11px; color: #94a3b8; }
+.ni-type-tag {
+  font-size: 10px; font-weight: 600; padding: 0 6px; border-radius: 4px;
+  border: 1px solid;
+}
+.t-DATA_CAST { color: #047857; background: #ecfdf5; border-color: #a7f3d0; }
+.t-ARTICLE   { color: #6d28d9; background: #f5f3ff; border-color: #ddd6fe; }
+.t-EXTERNAL  { color: #1d4ed8; background: #eff6ff; border-color: #bfdbfe; }
+
+.ni-title {
+  font-size: 13px; font-weight: 500; color: #1e293b; line-height: 1.45;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.nitem:hover .ni-title { color: #1d4ed8; }
 </style>

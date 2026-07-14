@@ -47,10 +47,6 @@ export function stopCrawlerTask(id) {
   return request.put(`/admin/crawler/task/${id}/stop`)
 }
 
-// 原先这里有个 mockCrawl()，对应后端 POST /admin/crawler/task/mock。
-// 已删除：它与「对一条 MOCK 任务点启动」完全等价，却每调一次就新插一条一次性采集任务，
-// 跑完不清理，任务列表越点越脏。统一走 startCrawlerTask()。
-
 // ========== 采集日志 ==========
 export function getCrawlerLogs(params) {
   return request.get('/admin/crawler/log', { params })
@@ -170,7 +166,7 @@ export function updateNewsStatus(id, status) {
 export function generateDataCast() {
   return request.post('/admin/news/generate-datacast')
 }
-/** 从 Google News RSS 拉取外部资讯（服务器需能访问 Google，否则返回 0） */
+/** 从默认 RSS 源拉取外部资讯（源站暂不可访问时返回 0） */
 export function pullRssNews(query, maxItems = 8) {
   return request.post('/admin/news/pull-rss', null, { params: { query, maxItems }, timeout: 20000 })
 }
@@ -187,3 +183,4 @@ export function saveTeacherScope(data) {
 export function deleteTeacherScope(id) {
   return request.delete(`/admin/teacher-scopes/${id}`)
 }
+

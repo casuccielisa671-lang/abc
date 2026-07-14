@@ -58,10 +58,10 @@
       <div class="tile t-quick">
         <div class="tile-h"><span class="t">快捷入口</span></div>
         <div class="quick-grid">
-          <div class="qa" @click="go('/teacher/students')"><span class="qi">👥</span>学生管理</div>
-          <div class="qa" @click="go('/teacher/suggestions')"><span class="qi">💡</span>教学建议</div>
-          <div class="qa" @click="go('/teacher/students')"><span class="qi">📊</span>就业数据</div>
-          <div class="qa" @click="exportData"><span class="qi">⬇️</span>导出 Excel</div>
+          <div class="qa" @click="go('/teacher/students')">学生管理</div>
+          <div class="qa" @click="go('/teacher/suggestions')">教学建议</div>
+          <div class="qa" @click="go('/teacher/students')">就业数据</div>
+          <div class="qa" @click="exportData">导出 Excel</div>
         </div>
       </div>
 

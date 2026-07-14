@@ -45,6 +45,7 @@ public class UserController {
     /**
      * 用户分页列表（可按角色筛选、按用户名/姓名搜索）
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public Result<PageResult<UserVO>> pageUsers(@RequestParam(required = false) String role,
                                                 @RequestParam(required = false) String keyword,
@@ -57,6 +58,7 @@ public class UserController {
     /**
      * 新增用户
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public Result<Void> createUser(@RequestBody @Validated UserSaveDTO dto) {
         dto.setId(null);
@@ -67,6 +69,7 @@ public class UserController {
     /**
      * 编辑用户（密码留空表示不修改）
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public Result<Void> updateUser(@PathVariable Long id, @RequestBody @Validated UserSaveDTO dto) {
         dto.setId(id);
@@ -77,6 +80,7 @@ public class UserController {
     /**
      * 启用/禁用用户
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/status")
     public Result<Void> updateStatus(@PathVariable Long id, @RequestParam Integer status) {
         userService.updateStatus(id, status);
@@ -89,6 +93,7 @@ public class UserController {
      * 全量校验通过才写库；任一行不合法则整体拒绝并返回逐行错误，
      * 便于管理员改好名单后重传，不会留下导入一半的状态。
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/batch-import")
     public Result<BatchImportVO> batchImport(@RequestParam("file") MultipartFile file) throws IOException {
         if (file.isEmpty()) {
@@ -100,6 +105,7 @@ public class UserController {
     }
 
     /** 下载导入模板（含表头与一行示例） */
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/import-template")
     public void importTemplate(HttpServletResponse response) throws IOException {
         String filename = "用户批量导入模板.xlsx";

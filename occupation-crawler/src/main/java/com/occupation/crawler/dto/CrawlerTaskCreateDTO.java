@@ -10,7 +10,7 @@ import javax.validation.constraints.NotBlank;
 @Data
 public class CrawlerTaskCreateDTO {
 
-    /** 采集源类型：BOSS_ZHIPIN / ZHAOPIN / COMPANY_OFFICIAL / MOCK */
+    /** 采集源类型：MOCK / ZHAOPIN / OFFICIAL_PUBLIC */
     @NotBlank(message = "采集源类型不能为空")
     private String sourceType;
 
