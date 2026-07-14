@@ -1,0 +1,13 @@
+.git
+.idea
+.vscode
+**/target
+**/node_modules
+**/dist
+logs
+*.log
+data/reports
+app_run*.log
+backend*.log
+.env
+application-local.yml

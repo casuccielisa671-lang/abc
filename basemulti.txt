@@ -1,0 +1,822 @@
+Compiled from "BaseMultiTableInnerInterceptor.java"
+public abstract class com.baomidou.mybatisplus.extension.plugins.inner.BaseMultiTableInnerInterceptor extends com.baomidou.mybatisplus.extension.parser.JsqlParserSupport implements com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor {
+  protected void processSelectBody(net.sf.jsqlparser.statement.select.Select, java.lang.String);
+    Code:
+       0: aload_1
+       1: ifnonnull     5
+       4: return
+       5: aload_1
+       6: instanceof    #1                  // class net/sf/jsqlparser/statement/select/PlainSelect
+       9: ifeq          24
+      12: aload_0
+      13: aload_1
+      14: checkcast     #1                  // class net/sf/jsqlparser/statement/select/PlainSelect
+      17: aload_2
+      18: invokevirtual #3                  // Method processPlainSelect:(Lnet/sf/jsqlparser/statement/select/PlainSelect;Ljava/lang/String;)V
+      21: goto          88
+      24: aload_1
+      25: instanceof    #9                  // class net/sf/jsqlparser/statement/select/ParenthesedSelect
+      28: ifeq          48
+      31: aload_1
+      32: checkcast     #9                  // class net/sf/jsqlparser/statement/select/ParenthesedSelect
+      35: astore_3
+      36: aload_0
+      37: aload_3
+      38: invokevirtual #11                 // Method net/sf/jsqlparser/statement/select/ParenthesedSelect.getSelect:()Lnet/sf/jsqlparser/statement/select/Select;
+      41: aload_2
+      42: invokevirtual #15                 // Method processSelectBody:(Lnet/sf/jsqlparser/statement/select/Select;Ljava/lang/String;)V
+      45: goto          88
+      48: aload_1
+      49: instanceof    #19                 // class net/sf/jsqlparser/statement/select/SetOperationList
+      52: ifeq          88
+      55: aload_1
+      56: checkcast     #19                 // class net/sf/jsqlparser/statement/select/SetOperationList
+      59: astore_3
+      60: aload_3
+      61: invokevirtual #21                 // Method net/sf/jsqlparser/statement/select/SetOperationList.getSelects:()Ljava/util/List;
+      64: astore        4
+      66: aload         4
+      68: invokestatic  #25                 // Method com/baomidou/mybatisplus/core/toolkit/CollectionUtils.isNotEmpty:(Ljava/util/Collection;)Z
+      71: ifeq          88
+      74: aload         4
+      76: aload_0
+      77: aload_2
+      78: invokedynamic #31,  0             // InvokeDynamic #0:accept:(Lcom/baomidou/mybatisplus/extension/plugins/inner/BaseMultiTableInnerInterceptor;Ljava/lang/String;)Ljava/util/function/Consumer;
+      83: invokeinterface #35,  2           // InterfaceMethod java/util/List.forEach:(Ljava/util/function/Consumer;)V
+      88: return
+
+  protected net.sf.jsqlparser.expression.Expression andExpression(net.sf.jsqlparser.schema.Table, net.sf.jsqlparser.expression.Expression, java.lang.String);
+    Code:
+       0: aload_0
+       1: aload_1
+       2: aload_2
+       3: aload_3
+       4: invokevirtual #41                 // Method buildTableExpression:(Lnet/sf/jsqlparser/schema/Table;Lnet/sf/jsqlparser/expression/Expression;Ljava/lang/String;)Lnet/sf/jsqlparser/expression/Expression;
+       7: astore        4
+       9: aload         4
+      11: ifnonnull     16
+      14: aload_2
+      15: areturn
+      16: aload_2
+      17: ifnull        63
+      20: aload_2
+      21: instanceof    #45                 // class net/sf/jsqlparser/expression/operators/conditional/OrExpression
+      24: ifeq          52
+      27: new           #47                 // class net/sf/jsqlparser/expression/operators/conditional/AndExpression
+      30: dup
+      31: new           #49                 // class net/sf/jsqlparser/expression/operators/relational/ParenthesedExpressionList
+      34: dup
+      35: iconst_1
+      36: anewarray     #51                 // class net/sf/jsqlparser/expression/Expression
+      39: dup
+      40: iconst_0
+      41: aload_2
+      42: aastore
+      43: invokespecial #53                 // Method net/sf/jsqlparser/expression/operators/relational/ParenthesedExpressionList."<init>":([Lnet/sf/jsqlparser/expression/Expression;)V
+      46: aload         4
+      48: invokespecial #57                 // Method net/sf/jsqlparser/expression/operators/conditional/AndExpression."<init>":(Lnet/sf/jsqlparser/expression/Expression;Lnet/sf/jsqlparser/expression/Expression;)V
+      51: areturn
+      52: new           #47                 // class net/sf/jsqlparser/expression/operators/conditional/AndExpression
+      55: dup
+      56: aload_2
+      57: aload         4
+      59: invokespecial #57                 // Method net/sf/jsqlparser/expression/operators/conditional/AndExpression."<init>":(Lnet/sf/jsqlparser/expression/Expression;Lnet/sf/jsqlparser/expression/Expression;)V
+      62: areturn
+      63: aload         4
+      65: areturn
+
+  protected void processPlainSelect(net.sf.jsqlparser.statement.select.PlainSelect, java.lang.String);
+    Code:
+       0: aload_1
+       1: invokevirtual #60                 // Method net/sf/jsqlparser/statement/select/PlainSelect.getSelectItems:()Ljava/util/List;
+       4: astore_3
+       5: aload_3
+       6: invokestatic  #25                 // Method com/baomidou/mybatisplus/core/toolkit/CollectionUtils.isNotEmpty:(Ljava/util/Collection;)Z
+       9: ifeq          25
+      12: aload_3
+      13: aload_0
+      14: aload_2
+      15: invokedynamic #63,  0             // InvokeDynamic #1:accept:(Lcom/baomidou/mybatisplus/extension/plugins/inner/BaseMultiTableInnerInterceptor;Ljava/lang/String;)Ljava/util/function/Consumer;
+      20: invokeinterface #35,  2           // InterfaceMethod java/util/List.forEach:(Ljava/util/function/Consumer;)V
+      25: aload_1
+      26: invokevirtual #64                 // Method net/sf/jsqlparser/statement/select/PlainSelect.getWhere:()Lnet/sf/jsqlparser/expression/Expression;
+      29: astore        4
+      31: aload_0
+      32: aload         4
+      34: aload_2
+      35: invokevirtual #68                 // Method processWhereSubSelect:(Lnet/sf/jsqlparser/expression/Expression;Ljava/lang/String;)V
+      38: aload_1
+      39: invokevirtual #72                 // Method net/sf/jsqlparser/statement/select/PlainSelect.getFromItem:()Lnet/sf/jsqlparser/statement/select/FromItem;
+      42: astore        5
+      44: aload_0
+      45: aload         5
+      47: aload_2
+      48: invokevirtual #76                 // Method processFromItem:(Lnet/sf/jsqlparser/statement/select/FromItem;Ljava/lang/String;)Ljava/util/List;
+      51: astore        6
+      53: new           #80                 // class java/util/ArrayList
+      56: dup
+      57: aload         6
+      59: invokespecial #82                 // Method java/util/ArrayList."<init>":(Ljava/util/Collection;)V
+      62: astore        7
+      64: aload_1
+      65: invokevirtual #85                 // Method net/sf/jsqlparser/statement/select/PlainSelect.getJoins:()Ljava/util/List;
+      68: astore        8
+      70: aload         8
+      72: invokestatic  #25                 // Method com/baomidou/mybatisplus/core/toolkit/CollectionUtils.isNotEmpty:(Ljava/util/Collection;)Z
+      75: ifeq          88
+      78: aload_0
+      79: aload         7
+      81: aload         8
+      83: aload_2
+      84: invokevirtual #88                 // Method processJoins:(Ljava/util/List;Ljava/util/List;Ljava/lang/String;)Ljava/util/List;
+      87: pop
+      88: aload         7
+      90: invokestatic  #25                 // Method com/baomidou/mybatisplus/core/toolkit/CollectionUtils.isNotEmpty:(Ljava/util/Collection;)Z
+      93: ifeq          109
+      96: aload_1
+      97: aload_0
+      98: aload         4
+     100: aload         7
+     102: aload_2
+     103: invokevirtual #92                 // Method builderExpression:(Lnet/sf/jsqlparser/expression/Expression;Ljava/util/List;Ljava/lang/String;)Lnet/sf/jsqlparser/expression/Expression;
+     106: invokevirtual #96                 // Method net/sf/jsqlparser/statement/select/PlainSelect.setWhere:(Lnet/sf/jsqlparser/expression/Expression;)V
+     109: return
+
+  private java.util.List<net.sf.jsqlparser.schema.Table> processFromItem(net.sf.jsqlparser.statement.select.FromItem, java.lang.String);
+    Code:
+       0: new           #80                 // class java/util/ArrayList
+       3: dup
+       4: invokespecial #100                // Method java/util/ArrayList."<init>":()V
+       7: astore_3
+       8: aload_1
+       9: instanceof    #103                // class net/sf/jsqlparser/schema/Table
+      12: ifeq          33
+      15: aload_1
+      16: checkcast     #103                // class net/sf/jsqlparser/schema/Table
+      19: astore        4
+      21: aload_3
+      22: aload         4
+      24: invokeinterface #105,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+      29: pop
+      30: goto          69
+      33: aload_1
+      34: instanceof    #109                // class net/sf/jsqlparser/statement/select/ParenthesedFromItem
+      37: ifeq          63
+      40: aload_0
+      41: aload_1
+      42: checkcast     #109                // class net/sf/jsqlparser/statement/select/ParenthesedFromItem
+      45: aload_2
+      46: invokevirtual #111                // Method processSubJoin:(Lnet/sf/jsqlparser/statement/select/ParenthesedFromItem;Ljava/lang/String;)Ljava/util/List;
+      49: astore        4
+      51: aload_3
+      52: aload         4
+      54: invokeinterface #115,  2          // InterfaceMethod java/util/List.addAll:(Ljava/util/Collection;)Z
+      59: pop
+      60: goto          69
+      63: aload_0
+      64: aload_1
+      65: aload_2
+      66: invokevirtual #118                // Method processOtherFromItem:(Lnet/sf/jsqlparser/statement/select/FromItem;Ljava/lang/String;)V
+      69: aload_3
+      70: areturn
+
+  protected void processWhereSubSelect(net.sf.jsqlparser.expression.Expression, java.lang.String);
+    Code:
+       0: aload_1
+       1: ifnonnull     5
+       4: return
+       5: aload_1
+       6: instanceof    #122                // class net/sf/jsqlparser/statement/select/FromItem
+       9: ifeq          22
+      12: aload_0
+      13: aload_1
+      14: checkcast     #122                // class net/sf/jsqlparser/statement/select/FromItem
+      17: aload_2
+      18: invokevirtual #118                // Method processOtherFromItem:(Lnet/sf/jsqlparser/statement/select/FromItem;Ljava/lang/String;)V
+      21: return
+      22: aload_1
+      23: invokeinterface #124,  1          // InterfaceMethod net/sf/jsqlparser/expression/Expression.toString:()Ljava/lang/String;
+      28: ldc           #128                // String SELECT
+      30: invokevirtual #130                // Method java/lang/String.indexOf:(Ljava/lang/String;)I
+      33: ifle          181
+      36: aload_1
+      37: instanceof    #136                // class net/sf/jsqlparser/expression/BinaryExpression
+      40: ifeq          69
+      43: aload_1
+      44: checkcast     #136                // class net/sf/jsqlparser/expression/BinaryExpression
+      47: astore_3
+      48: aload_0
+      49: aload_3
+      50: invokevirtual #138                // Method net/sf/jsqlparser/expression/BinaryExpression.getLeftExpression:()Lnet/sf/jsqlparser/expression/Expression;
+      53: aload_2
+      54: invokevirtual #68                 // Method processWhereSubSelect:(Lnet/sf/jsqlparser/expression/Expression;Ljava/lang/String;)V
+      57: aload_0
+      58: aload_3
+      59: invokevirtual #141                // Method net/sf/jsqlparser/expression/BinaryExpression.getRightExpression:()Lnet/sf/jsqlparser/expression/Expression;
+      62: aload_2
+      63: invokevirtual #68                 // Method processWhereSubSelect:(Lnet/sf/jsqlparser/expression/Expression;Ljava/lang/String;)V
+      66: goto          181
+      69: aload_1
+      70: instanceof    #144                // class net/sf/jsqlparser/expression/operators/relational/InExpression
+      73: ifeq          108
+      76: aload_1
+      77: checkcast     #144                // class net/sf/jsqlparser/expression/operators/relational/InExpression
+      80: astore_3
+      81: aload_3
+      82: invokevirtual #146                // Method net/sf/jsqlparser/expression/operators/relational/InExpression.getRightExpression:()Lnet/sf/jsqlparser/expression/Expression;
+      85: astore        4
+      87: aload         4
+      89: instanceof    #147                // class net/sf/jsqlparser/statement/select/Select
+      92: ifeq          105
+      95: aload_0
+      96: aload         4
+      98: checkcast     #147                // class net/sf/jsqlparser/statement/select/Select
+     101: aload_2
+     102: invokevirtual #15                 // Method processSelectBody:(Lnet/sf/jsqlparser/statement/select/Select;Ljava/lang/String;)V
+     105: goto          181
+     108: aload_1
+     109: instanceof    #149                // class net/sf/jsqlparser/expression/operators/relational/ExistsExpression
+     112: ifeq          132
+     115: aload_1
+     116: checkcast     #149                // class net/sf/jsqlparser/expression/operators/relational/ExistsExpression
+     119: astore_3
+     120: aload_0
+     121: aload_3
+     122: invokevirtual #151                // Method net/sf/jsqlparser/expression/operators/relational/ExistsExpression.getRightExpression:()Lnet/sf/jsqlparser/expression/Expression;
+     125: aload_2
+     126: invokevirtual #68                 // Method processWhereSubSelect:(Lnet/sf/jsqlparser/expression/Expression;Ljava/lang/String;)V
+     129: goto          181
+     132: aload_1
+     133: instanceof    #152                // class net/sf/jsqlparser/expression/NotExpression
+     136: ifeq          156
+     139: aload_1
+     140: checkcast     #152                // class net/sf/jsqlparser/expression/NotExpression
+     143: astore_3
+     144: aload_0
+     145: aload_3
+     146: invokevirtual #154                // Method net/sf/jsqlparser/expression/NotExpression.getExpression:()Lnet/sf/jsqlparser/expression/Expression;
+     149: aload_2
+     150: invokevirtual #68                 // Method processWhereSubSelect:(Lnet/sf/jsqlparser/expression/Expression;Ljava/lang/String;)V
+     153: goto          181
+     156: aload_1
+     157: instanceof    #49                 // class net/sf/jsqlparser/expression/operators/relational/ParenthesedExpressionList
+     160: ifeq          181
+     163: aload_1
+     164: checkcast     #49                 // class net/sf/jsqlparser/expression/operators/relational/ParenthesedExpressionList
+     167: astore_3
+     168: aload_0
+     169: aload_3
+     170: iconst_0
+     171: invokevirtual #157                // Method net/sf/jsqlparser/expression/operators/relational/ParenthesedExpressionList.get:(I)Ljava/lang/Object;
+     174: checkcast     #51                 // class net/sf/jsqlparser/expression/Expression
+     177: aload_2
+     178: invokevirtual #68                 // Method processWhereSubSelect:(Lnet/sf/jsqlparser/expression/Expression;Ljava/lang/String;)V
+     181: return
+
+  protected void processSelectItem(net.sf.jsqlparser.statement.select.SelectItem, java.lang.String);
+    Code:
+       0: aload_1
+       1: invokevirtual #161                // Method net/sf/jsqlparser/statement/select/SelectItem.getExpression:()Lnet/sf/jsqlparser/expression/Expression;
+       4: astore_3
+       5: aload_3
+       6: instanceof    #147                // class net/sf/jsqlparser/statement/select/Select
+       9: ifeq          24
+      12: aload_0
+      13: aload_3
+      14: checkcast     #147                // class net/sf/jsqlparser/statement/select/Select
+      17: aload_2
+      18: invokevirtual #15                 // Method processSelectBody:(Lnet/sf/jsqlparser/statement/select/Select;Ljava/lang/String;)V
+      21: goto          69
+      24: aload_3
+      25: instanceof    #164                // class net/sf/jsqlparser/expression/Function
+      28: ifeq          43
+      31: aload_0
+      32: aload_3
+      33: checkcast     #164                // class net/sf/jsqlparser/expression/Function
+      36: aload_2
+      37: invokevirtual #166                // Method processFunction:(Lnet/sf/jsqlparser/expression/Function;Ljava/lang/String;)V
+      40: goto          69
+      43: aload_3
+      44: instanceof    #149                // class net/sf/jsqlparser/expression/operators/relational/ExistsExpression
+      47: ifeq          69
+      50: aload_3
+      51: checkcast     #149                // class net/sf/jsqlparser/expression/operators/relational/ExistsExpression
+      54: astore        4
+      56: aload_0
+      57: aload         4
+      59: invokevirtual #151                // Method net/sf/jsqlparser/expression/operators/relational/ExistsExpression.getRightExpression:()Lnet/sf/jsqlparser/expression/Expression;
+      62: checkcast     #147                // class net/sf/jsqlparser/statement/select/Select
+      65: aload_2
+      66: invokevirtual #15                 // Method processSelectBody:(Lnet/sf/jsqlparser/statement/select/Select;Ljava/lang/String;)V
+      69: return
+
+  protected void processFunction(net.sf.jsqlparser.expression.Function, java.lang.String);
+    Code:
+       0: aload_1
+       1: invokevirtual #170                // Method net/sf/jsqlparser/expression/Function.getParameters:()Lnet/sf/jsqlparser/expression/operators/relational/ExpressionList;
+       4: astore_3
+       5: aload_3
+       6: ifnull        20
+       9: aload_3
+      10: aload_0
+      11: aload_2
+      12: invokedynamic #174,  0            // InvokeDynamic #2:accept:(Lcom/baomidou/mybatisplus/extension/plugins/inner/BaseMultiTableInnerInterceptor;Ljava/lang/String;)Ljava/util/function/Consumer;
+      17: invokevirtual #175                // Method net/sf/jsqlparser/expression/operators/relational/ExpressionList.forEach:(Ljava/util/function/Consumer;)V
+      20: return
+
+  protected void processOtherFromItem(net.sf.jsqlparser.statement.select.FromItem, java.lang.String);
+    Code:
+       0: aload_1
+       1: instanceof    #9                  // class net/sf/jsqlparser/statement/select/ParenthesedSelect
+       4: ifeq          21
+       7: aload_1
+       8: checkcast     #147                // class net/sf/jsqlparser/statement/select/Select
+      11: astore_3
+      12: aload_0
+      13: aload_3
+      14: aload_2
+      15: invokevirtual #15                 // Method processSelectBody:(Lnet/sf/jsqlparser/statement/select/Select;Ljava/lang/String;)V
+      18: goto          39
+      21: aload_1
+      22: instanceof    #109                // class net/sf/jsqlparser/statement/select/ParenthesedFromItem
+      25: ifeq          39
+      28: aload_0
+      29: getfield      #178                // Field logger:Lorg/apache/ibatis/logging/Log;
+      32: ldc           #182                // String Perform a subQuery, if you do not give us feedback
+      34: invokeinterface #184,  2          // InterfaceMethod org/apache/ibatis/logging/Log.debug:(Ljava/lang/String;)V
+      39: return
+
+  private java.util.List<net.sf.jsqlparser.schema.Table> processSubJoin(net.sf.jsqlparser.statement.select.ParenthesedFromItem, java.lang.String);
+    Code:
+       0: new           #80                 // class java/util/ArrayList
+       3: dup
+       4: invokespecial #100                // Method java/util/ArrayList."<init>":()V
+       7: astore_3
+       8: aload_1
+       9: invokevirtual #190                // Method net/sf/jsqlparser/statement/select/ParenthesedFromItem.getJoins:()Ljava/util/List;
+      12: ifnonnull     36
+      15: aload_1
+      16: invokevirtual #191                // Method net/sf/jsqlparser/statement/select/ParenthesedFromItem.getFromItem:()Lnet/sf/jsqlparser/statement/select/FromItem;
+      19: instanceof    #109                // class net/sf/jsqlparser/statement/select/ParenthesedFromItem
+      22: ifeq          36
+      25: aload_1
+      26: invokevirtual #191                // Method net/sf/jsqlparser/statement/select/ParenthesedFromItem.getFromItem:()Lnet/sf/jsqlparser/statement/select/FromItem;
+      29: checkcast     #109                // class net/sf/jsqlparser/statement/select/ParenthesedFromItem
+      32: astore_1
+      33: goto          8
+      36: aload_1
+      37: invokevirtual #190                // Method net/sf/jsqlparser/statement/select/ParenthesedFromItem.getJoins:()Ljava/util/List;
+      40: ifnull        74
+      43: aload_0
+      44: aload_1
+      45: invokevirtual #191                // Method net/sf/jsqlparser/statement/select/ParenthesedFromItem.getFromItem:()Lnet/sf/jsqlparser/statement/select/FromItem;
+      48: aload_2
+      49: invokevirtual #76                 // Method processFromItem:(Lnet/sf/jsqlparser/statement/select/FromItem;Ljava/lang/String;)Ljava/util/List;
+      52: astore        4
+      54: aload_3
+      55: aload         4
+      57: invokeinterface #115,  2          // InterfaceMethod java/util/List.addAll:(Ljava/util/Collection;)Z
+      62: pop
+      63: aload_0
+      64: aload_3
+      65: aload_1
+      66: invokevirtual #190                // Method net/sf/jsqlparser/statement/select/ParenthesedFromItem.getJoins:()Ljava/util/List;
+      69: aload_2
+      70: invokevirtual #88                 // Method processJoins:(Ljava/util/List;Ljava/util/List;Ljava/lang/String;)Ljava/util/List;
+      73: pop
+      74: aload_3
+      75: areturn
+
+  private java.util.List<net.sf.jsqlparser.schema.Table> processJoins(java.util.List<net.sf.jsqlparser.schema.Table>, java.util.List<net.sf.jsqlparser.statement.select.Join>, java.lang.String);
+    Code:
+       0: aconst_null
+       1: astore        4
+       3: aconst_null
+       4: astore        5
+       6: aload_1
+       7: invokeinterface #192,  1          // InterfaceMethod java/util/List.size:()I
+      12: iconst_1
+      13: if_icmpne     32
+      16: aload_1
+      17: iconst_0
+      18: invokeinterface #196,  2          // InterfaceMethod java/util/List.get:(I)Ljava/lang/Object;
+      23: checkcast     #103                // class net/sf/jsqlparser/schema/Table
+      26: astore        4
+      28: aload         4
+      30: astore        5
+      32: new           #197                // class java/util/LinkedList
+      35: dup
+      36: invokespecial #199                // Method java/util/LinkedList."<init>":()V
+      39: astore        6
+      41: aload_2
+      42: invokeinterface #200,  1          // InterfaceMethod java/util/List.iterator:()Ljava/util/Iterator;
+      47: astore        7
+      49: aload         7
+      51: invokeinterface #204,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+      56: ifeq          522
+      59: aload         7
+      61: invokeinterface #210,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+      66: checkcast     #214                // class net/sf/jsqlparser/statement/select/Join
+      69: astore        8
+      71: aload         8
+      73: invokevirtual #216                // Method net/sf/jsqlparser/statement/select/Join.getRightItem:()Lnet/sf/jsqlparser/statement/select/FromItem;
+      76: astore        9
+      78: aconst_null
+      79: astore        10
+      81: aload         9
+      83: instanceof    #103                // class net/sf/jsqlparser/schema/Table
+      86: ifeq          114
+      89: new           #80                 // class java/util/ArrayList
+      92: dup
+      93: invokespecial #100                // Method java/util/ArrayList."<init>":()V
+      96: astore        10
+      98: aload         10
+     100: aload         9
+     102: checkcast     #103                // class net/sf/jsqlparser/schema/Table
+     105: invokeinterface #105,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+     110: pop
+     111: goto          134
+     114: aload         9
+     116: instanceof    #109                // class net/sf/jsqlparser/statement/select/ParenthesedFromItem
+     119: ifeq          134
+     122: aload_0
+     123: aload         9
+     125: checkcast     #109                // class net/sf/jsqlparser/statement/select/ParenthesedFromItem
+     128: aload_3
+     129: invokevirtual #111                // Method processSubJoin:(Lnet/sf/jsqlparser/statement/select/ParenthesedFromItem;Ljava/lang/String;)Ljava/util/List;
+     132: astore        10
+     134: aload         10
+     136: ifnull        509
+     139: aload         8
+     141: invokevirtual #219                // Method net/sf/jsqlparser/statement/select/Join.isSimple:()Z
+     144: ifeq          159
+     147: aload_1
+     148: aload         10
+     150: invokeinterface #115,  2          // InterfaceMethod java/util/List.addAll:(Ljava/util/Collection;)Z
+     155: pop
+     156: goto          49
+     159: aload         10
+     161: iconst_0
+     162: invokeinterface #196,  2          // InterfaceMethod java/util/List.get:(I)Ljava/lang/Object;
+     167: checkcast     #103                // class net/sf/jsqlparser/schema/Table
+     170: astore        11
+     172: aconst_null
+     173: astore        12
+     175: aload         8
+     177: invokevirtual #222                // Method net/sf/jsqlparser/statement/select/Join.isRight:()Z
+     180: ifeq          208
+     183: aload         11
+     185: astore        4
+     187: aload_1
+     188: invokeinterface #225,  1          // InterfaceMethod java/util/List.clear:()V
+     193: aload         5
+     195: ifnull        269
+     198: aload         5
+     200: invokestatic  #228                // Method java/util/Collections.singletonList:(Ljava/lang/Object;)Ljava/util/List;
+     203: astore        12
+     205: goto          269
+     208: aload         8
+     210: invokevirtual #234                // Method net/sf/jsqlparser/statement/select/Join.isInner:()Z
+     213: ifeq          262
+     216: aload         4
+     218: ifnonnull     231
+     221: aload         11
+     223: invokestatic  #228                // Method java/util/Collections.singletonList:(Ljava/lang/Object;)Ljava/util/List;
+     226: astore        12
+     228: goto          250
+     231: iconst_2
+     232: anewarray     #103                // class net/sf/jsqlparser/schema/Table
+     235: dup
+     236: iconst_0
+     237: aload         4
+     239: aastore
+     240: dup
+     241: iconst_1
+     242: aload         11
+     244: aastore
+     245: invokestatic  #237                // Method java/util/Arrays.asList:([Ljava/lang/Object;)Ljava/util/List;
+     248: astore        12
+     250: aconst_null
+     251: astore        4
+     253: aload_1
+     254: invokeinterface #225,  1          // InterfaceMethod java/util/List.clear:()V
+     259: goto          269
+     262: aload         11
+     264: invokestatic  #228                // Method java/util/Collections.singletonList:(Ljava/lang/Object;)Ljava/util/List;
+     267: astore        12
+     269: aload         4
+     271: ifnull        294
+     274: aload_1
+     275: aload         4
+     277: invokeinterface #243,  2          // InterfaceMethod java/util/List.contains:(Ljava/lang/Object;)Z
+     282: ifne          294
+     285: aload_1
+     286: aload         4
+     288: invokeinterface #105,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+     293: pop
+     294: aload         8
+     296: invokevirtual #246                // Method net/sf/jsqlparser/statement/select/Join.getOnExpressions:()Ljava/util/Collection;
+     299: astore        13
+     301: aload         13
+     303: invokeinterface #250,  1          // InterfaceMethod java/util/Collection.size:()I
+     308: iconst_1
+     309: if_icmpne     381
+     312: aload         12
+     314: ifnull        381
+     317: new           #197                // class java/util/LinkedList
+     320: dup
+     321: invokespecial #199                // Method java/util/LinkedList."<init>":()V
+     324: astore        14
+     326: aload         14
+     328: aload_0
+     329: aload         13
+     331: invokeinterface #253,  1          // InterfaceMethod java/util/Collection.iterator:()Ljava/util/Iterator;
+     336: invokeinterface #210,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+     341: checkcast     #51                 // class net/sf/jsqlparser/expression/Expression
+     344: aload         12
+     346: aload_3
+     347: invokevirtual #92                 // Method builderExpression:(Lnet/sf/jsqlparser/expression/Expression;Ljava/util/List;Ljava/lang/String;)Lnet/sf/jsqlparser/expression/Expression;
+     350: invokeinterface #105,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+     355: pop
+     356: aload         8
+     358: aload         14
+     360: invokevirtual #254                // Method net/sf/jsqlparser/statement/select/Join.setOnExpressions:(Ljava/util/Collection;)Lnet/sf/jsqlparser/statement/select/Join;
+     363: pop
+     364: aload         4
+     366: ifnonnull     374
+     369: aload         11
+     371: goto          376
+     374: aload         4
+     376: astore        5
+     378: goto          49
+     381: aload         6
+     383: aload         12
+     385: invokeinterface #258,  2          // InterfaceMethod java/util/Deque.push:(Ljava/lang/Object;)V
+     390: aload         13
+     392: invokeinterface #250,  1          // InterfaceMethod java/util/Collection.size:()I
+     397: iconst_1
+     398: if_icmple     502
+     401: new           #197                // class java/util/LinkedList
+     404: dup
+     405: invokespecial #199                // Method java/util/LinkedList."<init>":()V
+     408: astore        14
+     410: aload         13
+     412: invokeinterface #253,  1          // InterfaceMethod java/util/Collection.iterator:()Ljava/util/Iterator;
+     417: astore        15
+     419: aload         15
+     421: invokeinterface #204,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+     426: ifeq          494
+     429: aload         15
+     431: invokeinterface #210,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+     436: checkcast     #51                 // class net/sf/jsqlparser/expression/Expression
+     439: astore        16
+     441: aload         6
+     443: invokeinterface #264,  1          // InterfaceMethod java/util/Deque.poll:()Ljava/lang/Object;
+     448: checkcast     #36                 // class java/util/List
+     451: astore        17
+     453: aload         17
+     455: invokestatic  #267                // Method com/baomidou/mybatisplus/core/toolkit/CollectionUtils.isEmpty:(Ljava/util/Collection;)Z
+     458: ifeq          474
+     461: aload         14
+     463: aload         16
+     465: invokeinterface #270,  2          // InterfaceMethod java/util/Collection.add:(Ljava/lang/Object;)Z
+     470: pop
+     471: goto          491
+     474: aload         14
+     476: aload_0
+     477: aload         16
+     479: aload         17
+     481: aload_3
+     482: invokevirtual #92                 // Method builderExpression:(Lnet/sf/jsqlparser/expression/Expression;Ljava/util/List;Ljava/lang/String;)Lnet/sf/jsqlparser/expression/Expression;
+     485: invokeinterface #270,  2          // InterfaceMethod java/util/Collection.add:(Ljava/lang/Object;)Z
+     490: pop
+     491: goto          419
+     494: aload         8
+     496: aload         14
+     498: invokevirtual #254                // Method net/sf/jsqlparser/statement/select/Join.setOnExpressions:(Ljava/util/Collection;)Lnet/sf/jsqlparser/statement/select/Join;
+     501: pop
+     502: aload         11
+     504: astore        5
+     506: goto          519
+     509: aload_0
+     510: aload         9
+     512: aload_3
+     513: invokevirtual #118                // Method processOtherFromItem:(Lnet/sf/jsqlparser/statement/select/FromItem;Ljava/lang/String;)V
+     516: aconst_null
+     517: astore        5
+     519: goto          49
+     522: aload_1
+     523: areturn
+
+  protected net.sf.jsqlparser.expression.Expression builderExpression(net.sf.jsqlparser.expression.Expression, java.util.List<net.sf.jsqlparser.schema.Table>, java.lang.String);
+    Code:
+       0: aload_2
+       1: invokestatic  #267                // Method com/baomidou/mybatisplus/core/toolkit/CollectionUtils.isEmpty:(Ljava/util/Collection;)Z
+       4: ifeq          9
+       7: aload_1
+       8: areturn
+       9: aload_2
+      10: invokeinterface #271,  1          // InterfaceMethod java/util/List.stream:()Ljava/util/stream/Stream;
+      15: aload_0
+      16: aload_1
+      17: aload_3
+      18: invokedynamic #275,  0            // InvokeDynamic #3:apply:(Lcom/baomidou/mybatisplus/extension/plugins/inner/BaseMultiTableInnerInterceptor;Lnet/sf/jsqlparser/expression/Expression;Ljava/lang/String;)Ljava/util/function/Function;
+      23: invokeinterface #279,  2          // InterfaceMethod java/util/stream/Stream.map:(Ljava/util/function/Function;)Ljava/util/stream/Stream;
+      28: invokedynamic #285,  0            // InvokeDynamic #4:test:()Ljava/util/function/Predicate;
+      33: invokeinterface #289,  2          // InterfaceMethod java/util/stream/Stream.filter:(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;
+      38: invokestatic  #293                // Method java/util/stream/Collectors.toList:()Ljava/util/stream/Collector;
+      41: invokeinterface #299,  2          // InterfaceMethod java/util/stream/Stream.collect:(Ljava/util/stream/Collector;)Ljava/lang/Object;
+      46: checkcast     #36                 // class java/util/List
+      49: astore        4
+      51: aload         4
+      53: invokestatic  #267                // Method com/baomidou/mybatisplus/core/toolkit/CollectionUtils.isEmpty:(Ljava/util/Collection;)Z
+      56: ifeq          61
+      59: aload_1
+      60: areturn
+      61: aload         4
+      63: iconst_0
+      64: invokeinterface #196,  2          // InterfaceMethod java/util/List.get:(I)Ljava/lang/Object;
+      69: checkcast     #51                 // class net/sf/jsqlparser/expression/Expression
+      72: astore        5
+      74: aload         4
+      76: invokeinterface #192,  1          // InterfaceMethod java/util/List.size:()I
+      81: iconst_1
+      82: if_icmple     129
+      85: iconst_1
+      86: istore        6
+      88: iload         6
+      90: aload         4
+      92: invokeinterface #192,  1          // InterfaceMethod java/util/List.size:()I
+      97: if_icmpge     129
+     100: new           #47                 // class net/sf/jsqlparser/expression/operators/conditional/AndExpression
+     103: dup
+     104: aload         5
+     106: aload         4
+     108: iload         6
+     110: invokeinterface #196,  2          // InterfaceMethod java/util/List.get:(I)Ljava/lang/Object;
+     115: checkcast     #51                 // class net/sf/jsqlparser/expression/Expression
+     118: invokespecial #57                 // Method net/sf/jsqlparser/expression/operators/conditional/AndExpression."<init>":(Lnet/sf/jsqlparser/expression/Expression;Lnet/sf/jsqlparser/expression/Expression;)V
+     121: astore        5
+     123: iinc          6, 1
+     126: goto          88
+     129: aload_1
+     130: ifnonnull     136
+     133: aload         5
+     135: areturn
+     136: aload_1
+     137: instanceof    #45                 // class net/sf/jsqlparser/expression/operators/conditional/OrExpression
+     140: ifeq          168
+     143: new           #47                 // class net/sf/jsqlparser/expression/operators/conditional/AndExpression
+     146: dup
+     147: new           #49                 // class net/sf/jsqlparser/expression/operators/relational/ParenthesedExpressionList
+     150: dup
+     151: iconst_1
+     152: anewarray     #51                 // class net/sf/jsqlparser/expression/Expression
+     155: dup
+     156: iconst_0
+     157: aload_1
+     158: aastore
+     159: invokespecial #53                 // Method net/sf/jsqlparser/expression/operators/relational/ParenthesedExpressionList."<init>":([Lnet/sf/jsqlparser/expression/Expression;)V
+     162: aload         5
+     164: invokespecial #57                 // Method net/sf/jsqlparser/expression/operators/conditional/AndExpression."<init>":(Lnet/sf/jsqlparser/expression/Expression;Lnet/sf/jsqlparser/expression/Expression;)V
+     167: areturn
+     168: new           #47                 // class net/sf/jsqlparser/expression/operators/conditional/AndExpression
+     171: dup
+     172: aload_1
+     173: aload         5
+     175: invokespecial #57                 // Method net/sf/jsqlparser/expression/operators/conditional/AndExpression."<init>":(Lnet/sf/jsqlparser/expression/Expression;Lnet/sf/jsqlparser/expression/Expression;)V
+     178: areturn
+
+  public abstract net.sf.jsqlparser.expression.Expression buildTableExpression(net.sf.jsqlparser.schema.Table, net.sf.jsqlparser.expression.Expression, java.lang.String);
+
+  public com.baomidou.mybatisplus.extension.plugins.inner.BaseMultiTableInnerInterceptor();
+    Code:
+       0: aload_0
+       1: invokespecial #303                // Method com/baomidou/mybatisplus/extension/parser/JsqlParserSupport."<init>":()V
+       4: return
+
+  public java.lang.String toString();
+    Code:
+       0: aload_0
+       1: invokespecial #306                // Method java/lang/Object.toString:()Ljava/lang/String;
+       4: invokedynamic #309,  0            // InvokeDynamic #5:makeConcatWithConstants:(Ljava/lang/String;)Ljava/lang/String;
+       9: areturn
+
+  public boolean equals(java.lang.Object);
+    Code:
+       0: aload_1
+       1: aload_0
+       2: if_acmpne     7
+       5: iconst_1
+       6: ireturn
+       7: aload_1
+       8: instanceof    #4                  // class com/baomidou/mybatisplus/extension/plugins/inner/BaseMultiTableInnerInterceptor
+      11: ifne          16
+      14: iconst_0
+      15: ireturn
+      16: aload_1
+      17: checkcast     #4                  // class com/baomidou/mybatisplus/extension/plugins/inner/BaseMultiTableInnerInterceptor
+      20: astore_2
+      21: aload_2
+      22: aload_0
+      23: invokevirtual #313                // Method canEqual:(Ljava/lang/Object;)Z
+      26: ifne          31
+      29: iconst_0
+      30: ireturn
+      31: aload_0
+      32: aload_1
+      33: invokespecial #316                // Method java/lang/Object.equals:(Ljava/lang/Object;)Z
+      36: ifne          41
+      39: iconst_0
+      40: ireturn
+      41: iconst_1
+      42: ireturn
+
+  protected boolean canEqual(java.lang.Object);
+    Code:
+       0: aload_1
+       1: instanceof    #4                  // class com/baomidou/mybatisplus/extension/plugins/inner/BaseMultiTableInnerInterceptor
+       4: ireturn
+
+  public int hashCode();
+    Code:
+       0: aload_0
+       1: invokespecial #319                // Method java/lang/Object.hashCode:()I
+       4: istore_1
+       5: iload_1
+       6: ireturn
+
+  private net.sf.jsqlparser.expression.Expression lambda$builderExpression$3(net.sf.jsqlparser.expression.Expression, java.lang.String, net.sf.jsqlparser.schema.Table);
+    Code:
+       0: aload_0
+       1: aload_3
+       2: aload_1
+       3: aload_2
+       4: invokevirtual #41                 // Method buildTableExpression:(Lnet/sf/jsqlparser/schema/Table;Lnet/sf/jsqlparser/expression/Expression;Ljava/lang/String;)Lnet/sf/jsqlparser/expression/Expression;
+       7: areturn
+
+  private void lambda$processFunction$2(java.lang.String, net.sf.jsqlparser.expression.Expression);
+    Code:
+       0: aload_2
+       1: instanceof    #147                // class net/sf/jsqlparser/statement/select/Select
+       4: ifeq          19
+       7: aload_0
+       8: aload_2
+       9: checkcast     #147                // class net/sf/jsqlparser/statement/select/Select
+      12: aload_1
+      13: invokevirtual #15                 // Method processSelectBody:(Lnet/sf/jsqlparser/statement/select/Select;Ljava/lang/String;)V
+      16: goto          101
+      19: aload_2
+      20: instanceof    #164                // class net/sf/jsqlparser/expression/Function
+      23: ifeq          38
+      26: aload_0
+      27: aload_2
+      28: checkcast     #164                // class net/sf/jsqlparser/expression/Function
+      31: aload_1
+      32: invokevirtual #166                // Method processFunction:(Lnet/sf/jsqlparser/expression/Function;Ljava/lang/String;)V
+      35: goto          101
+      38: aload_2
+      39: instanceof    #322                // class net/sf/jsqlparser/expression/operators/relational/EqualsTo
+      42: ifeq          101
+      45: aload_2
+      46: checkcast     #322                // class net/sf/jsqlparser/expression/operators/relational/EqualsTo
+      49: invokevirtual #324                // Method net/sf/jsqlparser/expression/operators/relational/EqualsTo.getLeftExpression:()Lnet/sf/jsqlparser/expression/Expression;
+      52: instanceof    #147                // class net/sf/jsqlparser/statement/select/Select
+      55: ifeq          73
+      58: aload_0
+      59: aload_2
+      60: checkcast     #322                // class net/sf/jsqlparser/expression/operators/relational/EqualsTo
+      63: invokevirtual #324                // Method net/sf/jsqlparser/expression/operators/relational/EqualsTo.getLeftExpression:()Lnet/sf/jsqlparser/expression/Expression;
+      66: checkcast     #147                // class net/sf/jsqlparser/statement/select/Select
+      69: aload_1
+      70: invokevirtual #15                 // Method processSelectBody:(Lnet/sf/jsqlparser/statement/select/Select;Ljava/lang/String;)V
+      73: aload_2
+      74: checkcast     #322                // class net/sf/jsqlparser/expression/operators/relational/EqualsTo
+      77: invokevirtual #325                // Method net/sf/jsqlparser/expression/operators/relational/EqualsTo.getRightExpression:()Lnet/sf/jsqlparser/expression/Expression;
+      80: instanceof    #147                // class net/sf/jsqlparser/statement/select/Select
+      83: ifeq          101
+      86: aload_0
+      87: aload_2
+      88: checkcast     #322                // class net/sf/jsqlparser/expression/operators/relational/EqualsTo
+      91: invokevirtual #325                // Method net/sf/jsqlparser/expression/operators/relational/EqualsTo.getRightExpression:()Lnet/sf/jsqlparser/expression/Expression;
+      94: checkcast     #147                // class net/sf/jsqlparser/statement/select/Select
+      97: aload_1
+      98: invokevirtual #15                 // Method processSelectBody:(Lnet/sf/jsqlparser/statement/select/Select;Ljava/lang/String;)V
+     101: return
+
+  private void lambda$processPlainSelect$1(java.lang.String, net.sf.jsqlparser.statement.select.SelectItem);
+    Code:
+       0: aload_0
+       1: aload_2
+       2: aload_1
+       3: invokevirtual #326                // Method processSelectItem:(Lnet/sf/jsqlparser/statement/select/SelectItem;Ljava/lang/String;)V
+       6: return
+
+  private void lambda$processSelectBody$0(java.lang.String, net.sf.jsqlparser.statement.select.Select);
+    Code:
+       0: aload_0
+       1: aload_2
+       2: aload_1
+       3: invokevirtual #15                 // Method processSelectBody:(Lnet/sf/jsqlparser/statement/select/Select;Ljava/lang/String;)V
+       6: return
+}
