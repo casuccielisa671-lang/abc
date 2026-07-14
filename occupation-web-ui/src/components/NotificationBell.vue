@@ -1,5 +1,6 @@
 <template>
   <el-popover
+    v-model:visible="popVisible"
     placement="bottom-end"
     :width="340"
     trigger="click"
@@ -65,6 +66,7 @@ const { unread } = storeToRefs(messageStore)
 
 const recent = ref([])
 const loading = ref(false)
+const popVisible = ref(false)   // 控制铃铛弹层，点消息跳转后要关掉，否则弹层一直盖在页面上像“没反应”
 
 const rolePrefix = computed(() =>
   ({ STUDENT: 'student', TEACHER: 'teacher', HR: 'hr', ADMIN: 'admin' }[userStore.role] || 'student')
@@ -91,7 +93,10 @@ async function open(m) {
     } catch { /* 拦截器已提示 */ }
   }
   const target = messageTarget(m, rolePrefix.value)
-  if (target) router.push(target)
+  if (target) {
+    popVisible.value = false   // 先关弹层再跳，否则弹层浮在新页面上盖住、看着像没反应
+    router.push(target)
+  }
 }
 
 async function readAll() {
@@ -103,6 +108,7 @@ async function readAll() {
 }
 
 function goAll() {
+  popVisible.value = false
   router.push(`/${rolePrefix.value}/messages`)
 }
 
