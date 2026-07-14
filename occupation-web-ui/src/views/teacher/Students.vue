@@ -44,6 +44,13 @@
         <el-table-column label="学历" width="90">
           <template #default="{ row }"><span class="chip">{{ row.educationLevel || '—' }}</span></template>
         </el-table-column>
+        <el-table-column label="就业状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="employmentTag(row.employmentStatus)" size="small" effect="plain">
+              {{ employmentLabel(row.employmentStatus) }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column label="技能" min-width="200">
           <template #default="{ row }">
             <div class="chip-row">
@@ -134,6 +141,7 @@ import { getTeacherStudents, getStudentStats, getStudentBehaviors, getTeacherFil
 import { toList, toTotal } from '@/utils/list'
 import { parseSkills } from '@/utils/skills'
 import { salaryRange, formatTime } from '@/utils/format'
+import { employmentLabel, employmentTag } from '@/utils/employment'
 
 const route = useRoute()
 

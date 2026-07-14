@@ -1,11 +1,11 @@
-package com.occupation.recommend.mapper;
+package com.occupation.common.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.occupation.recommend.entity.PushRecord;
+import com.occupation.common.entity.PushRecord;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 推送记录 Mapper
+ * 站内通知 Mapper（多租户自动隔离）
  *
  * @author occupation-team
  */

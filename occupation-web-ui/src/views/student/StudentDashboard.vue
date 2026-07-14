@@ -4,6 +4,7 @@
     <section class="welcome">
       <div class="hi">
         你好，{{ displayName }} 👋
+        <span class="emp-badge" :class="empStatus.toLowerCase()">{{ empLabel }}</span>
         <small>{{ profileSub }}</small>
       </div>
       <div class="prog">
@@ -126,6 +127,9 @@
         <div v-else class="empty-mini">完善画像与推荐后展示能力对比</div>
       </div>
 
+      <!-- 最新消息 -->
+      <div class="tile t-msg"><MessageTile /></div>
+
       <!-- 行业资讯 -->
       <NewsTile class="t-news" />
     </section>
@@ -140,8 +144,10 @@ import { getProfile, getRecommend, getMyApplications, getFavorites, getResume } 
 import { toList } from '@/utils/list'
 import { parseSkills } from '@/utils/skills'
 import { salaryRange } from '@/utils/format'
+import { employmentLabel } from '@/utils/employment'
 import MapHeroTile from '@/components/home/MapHeroTile.vue'
 import NewsTile from '@/components/home/NewsTile.vue'
+import MessageTile from '@/components/home/MessageTile.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -189,6 +195,16 @@ const applyStats = computed(() => {
   }
 })
 const favCount = computed(() => favorites.value.length)
+
+/** 就业状态徽章（从投递派生，与后端口径一致） */
+const empStatus = computed(() => {
+  const apps = applications.value
+  if (!apps.length) return 'IDLE'
+  if (apps.some(a => a.status === 'ACCEPTED')) return 'EMPLOYED'
+  if (apps.some(a => a.status === 'OFFER')) return 'OFFERED'
+  return 'SEEKING'
+})
+const empLabel = computed(() => employmentLabel(empStatus.value))
 const todos = computed(() => {
   const t = []
   if (completeness.value < 100) t.push({ label: '完善个人画像', to: '/student/profile' })
@@ -243,6 +259,11 @@ onMounted(() => {
 }
 .welcome .hi { font-size: 19px; font-weight: 700; }
 .welcome .hi small { display: block; font-size: 12.5px; font-weight: 500; color: var(--color-text-tertiary); margin-top: 3px; }
+.emp-badge { font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; margin-left: 8px; vertical-align: middle; }
+.emp-badge.employed { background: var(--color-success-lighter); color: var(--color-success); }
+.emp-badge.offered { background: var(--color-warning-lighter); color: var(--color-warning); }
+.emp-badge.seeking { background: var(--color-primary-lighter); color: var(--color-primary); }
+.emp-badge.idle { background: var(--color-bg-secondary); color: var(--color-text-tertiary); }
 .prog { display: flex; align-items: center; gap: 12px; margin-left: auto; }
 .ring { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center;
   background: conic-gradient(var(--color-primary) calc(var(--p) * 1%), var(--color-bg-tertiary) 0); }
@@ -265,6 +286,7 @@ onMounted(() => {
 .t-map { grid-column: span 2; grid-row: span 2; }
 .t-reco { grid-column: span 2; grid-row: span 2; }
 .t-skill { grid-column: span 2; grid-row: span 2; }
+.t-msg { grid-column: span 4; grid-row: span 2; }
 .t-news { grid-column: span 4; grid-row: span 2;
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 14px;
   padding: 16px; box-shadow: var(--shadow-sm); }

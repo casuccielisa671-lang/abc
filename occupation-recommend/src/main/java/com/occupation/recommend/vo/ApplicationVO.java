@@ -42,6 +42,12 @@ public class ApplicationVO implements Serializable {
     private String hrNote;
     private LocalDateTime statusChangedAt;
 
+    /** 面试信息（HR 邀请面试后回显，方便 HR 核对已发出的安排） */
+    private LocalDateTime interviewTime;
+    private String interviewPlace;
+    private String interviewContact;
+    private String interviewContent;
+
     /** 被投递的职位 */
     private Long jobId;
     private String jobTitle;
@@ -79,6 +85,10 @@ public class ApplicationVO implements Serializable {
         vo.userId = app.getUserId();
         vo.statusChangedAt = app.getStatusChangedAt();
         vo.hrNote = app.getHrNote();
+        vo.interviewTime = app.getInterviewTime();
+        vo.interviewPlace = app.getInterviewPlace();
+        vo.interviewContact = app.getInterviewContact();
+        vo.interviewContent = app.getInterviewContent();
 
         ApplicationStatus st = ApplicationStatus.valueOf(app.getStatus());
         vo.status = st.name();

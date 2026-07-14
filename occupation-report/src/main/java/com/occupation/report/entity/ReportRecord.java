@@ -41,4 +41,10 @@ public class ReportRecord extends BaseEntity {
 
     /** 错误信息 */
     private String errorMsg;
+
+    /**
+     * 可见性：PUBLIC=全体可见 / SELF=仅自己可见。
+     * 主要用于市场报告的广播开关；就业报告的可见范围由 report_delivery 决定，此字段保持 PUBLIC。
+     */
+    private String visibility;
 }

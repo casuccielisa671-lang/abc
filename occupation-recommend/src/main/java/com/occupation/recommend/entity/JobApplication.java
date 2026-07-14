@@ -36,6 +36,18 @@ public class JobApplication extends BaseEntity {
     /** HR 备注，仅 HR 可见 */
     private String hrNote;
 
+    /** 面试时间（HR 邀请面试时填，其余状态为 null） */
+    private LocalDateTime interviewTime;
+
+    /** 面试地点/方式：线下地址或线上会议链接 */
+    private String interviewPlace;
+
+    /** 面试官/联系人 */
+    private String interviewContact;
+
+    /** 面试内容/环节说明 */
+    private String interviewContent;
+
     private LocalDateTime appliedAt;
 
     private LocalDateTime statusChangedAt;

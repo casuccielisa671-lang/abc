@@ -14,7 +14,7 @@ const routes = [
     component: () => import('@/components/MainLayout.vue'),
     meta: { role: 'ADMIN' },
     children: [
-      { path: '', name: 'AdminHome', component: () => import('@/views/admin/Dashboard.vue') },
+      { path: '', redirect: '/admin/dashboard' },
       { path: 'dashboard', name: 'Dashboard', component: () => import('@/views/admin/Dashboard.vue') },
       { path: 'employment', name: 'Employment', component: () => import('@/views/admin/Employment.vue') },
       { path: 'crawler', name: 'CrawlerTask', component: () => import('@/views/admin/CrawlerTask.vue') },
@@ -23,6 +23,7 @@ const routes = [
       { path: 'class', name: 'ClassManage', component: () => import('@/views/admin/ClassManage.vue') },
       { path: 'news', name: 'AdminNews', component: () => import('@/views/common/NewsPage.vue') },
       { path: 'news-manage', name: 'NewsManage', component: () => import('@/views/admin/NewsManage.vue') },
+      { path: 'messages', name: 'AdminMessages', component: () => import('@/views/common/MessagePage.vue') },
       { path: 'map', name: 'AdminMap', component: () => import('@/views/common/MapExplore.vue') }
     ]
   },
@@ -42,6 +43,7 @@ const routes = [
       { path: 'favorites', name: 'Favorites', component: () => import('@/views/student/Favorites.vue') },
       { path: 'reports', name: 'StudentReports', component: () => import('@/views/student/Reports.vue') },
       { path: 'news', name: 'StudentNews', component: () => import('@/views/common/NewsPage.vue') },
+      { path: 'messages', name: 'StudentMessages', component: () => import('@/views/common/MessagePage.vue') },
       { path: 'map', name: 'StudentMap', component: () => import('@/views/common/MapExplore.vue') }
     ]
   },
@@ -55,6 +57,7 @@ const routes = [
       { path: 'students', name: 'Students', component: () => import('@/views/teacher/Students.vue') },
       { path: 'suggestions', name: 'Suggestions', component: () => import('@/views/teacher/Suggestions.vue') },
       { path: 'news', name: 'TeacherNews', component: () => import('@/views/common/NewsPage.vue') },
+      { path: 'messages', name: 'TeacherMessages', component: () => import('@/views/common/MessagePage.vue') },
       { path: 'map', name: 'TeacherMap', component: () => import('@/views/common/MapExplore.vue') }
     ]
   },
@@ -69,6 +72,7 @@ const routes = [
       { path: 'applications', name: 'HrApplications', component: () => import('@/views/hr/Applications.vue') },
       { path: 'talents', name: 'Talents', component: () => import('@/views/hr/Talents.vue') },
       { path: 'news', name: 'HrNews', component: () => import('@/views/common/NewsPage.vue') },
+      { path: 'messages', name: 'HrMessages', component: () => import('@/views/common/MessagePage.vue') },
       { path: 'map', name: 'HrMap', component: () => import('@/views/common/MapExplore.vue') }
     ]
   },

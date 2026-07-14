@@ -59,12 +59,12 @@
         </el-button>
         <el-button
           v-if="job.applicable"
-          type="primary" @click="handleApply" :loading="applyLoading"
-        >投递简历</el-button>
+          type="primary" @click="handleApply" :loading="applyLoading" :disabled="empStore.employed"
+        >{{ empStore.employed ? '你已入职' : '投递简历' }}</el-button>
         <el-button
           v-else
-          type="primary" @click="handleContact" :loading="contactLoading"
-        >自主联系</el-button>
+          type="primary" @click="handleContact" :loading="contactLoading" :disabled="empStore.employed"
+        >{{ empStore.employed ? '你已入职' : '自主联系' }}</el-button>
       </div>
     </el-card>
 
@@ -82,6 +82,9 @@ import { toList } from '@/utils/list'
 import { parseSkills } from '@/utils/skills'
 import { salaryRange } from '@/utils/format'
 import { ElMessage } from 'element-plus'
+import { useEmploymentStore } from '@/store/employment'
+
+const empStore = useEmploymentStore()
 
 const route = useRoute()
 const job = ref({})
@@ -186,7 +189,7 @@ async function handleExplain() {
   }
 }
 
-onMounted(() => loadDetail())
+onMounted(() => { loadDetail(); empStore.refresh() })
 </script>
 
 <style scoped>

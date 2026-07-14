@@ -40,9 +40,9 @@
             @open="goDetail(item.job.id)"
           >
             <el-button
-              text size="small" :loading="contacting === item.job.id"
+              text size="small" :loading="contacting === item.job.id" :disabled="empStore.employed"
               @click.stop="handleContact(item.job)"
-            >自主联系</el-button>
+            >{{ empStore.employed ? '已入职' : '自主联系' }}</el-button>
           </JobCard>
         </div>
       </template>
@@ -57,6 +57,9 @@ import { getRecommend, contactJob } from '@/api/student'
 import JobCard from '@/components/JobCard.vue'
 import { toList } from '@/utils/list'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useEmploymentStore } from '@/store/employment'
+
+const empStore = useEmploymentStore()
 
 /** 取多一些：可投递岗位远少于采集岗位，取 20 条常常一条可投的都排不进来 */
 const TOP_N = 30
@@ -121,7 +124,7 @@ async function load() {
   }
 }
 
-onMounted(load)
+onMounted(() => { load(); empStore.refresh() })
 </script>
 
 <style scoped>

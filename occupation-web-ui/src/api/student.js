@@ -90,6 +90,16 @@ export function getMyApplications() {
   return request.get('/student/applications')
 }
 
+/** 接收某条 OFFER 录用（OFFER→ACCEPTED）。接收后即已就业，不能再投递/联系 */
+export function acceptOffer(applicationId) {
+  return request.post(`/student/applications/${applicationId}/accept`)
+}
+
+/** 我的就业状态：EMPLOYED / OFFERED / SEEKING / IDLE */
+export function getEmploymentStatus() {
+  return request.get('/student/employment-status')
+}
+
 /**
  * 自主联系：对采集来的「市场参考」职位表达求职意向。
  * 只有 job.applicable === false 的职位可以调，站内职位后端会拒绝。
@@ -205,9 +215,11 @@ export function getHrApplicant(userId) {
 /**
  * 变更投递状态。status 只能是 VIEWED / INTERVIEW / OFFER / REJECTED。
  * 后端会校验归属（只能改自己职位上的投递）与流转合法性（终态不可回退）。
+ * data = { status, hrNote?, interviewTime?, interviewPlace?, interviewContact?, interviewContent? }。
+ * status=INTERVIEW 时后端要求 interviewTime 与 interviewPlace 非空，并按模板给学生发面试通知。
  */
-export function changeApplicationStatus(applicationId, status, hrNote) {
-  return request.put(`/hr/applications/${applicationId}/status`, { status, hrNote })
+export function changeApplicationStatus(applicationId, data) {
+  return request.put(`/hr/applications/${applicationId}/status`, data)
 }
 
 export function createHrJob(data) {

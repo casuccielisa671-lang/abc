@@ -37,6 +37,7 @@
       </el-menu>
 
       <div class="header-right">
+        <NotificationBell />
         <button class="theme-toggle-btn" @click="handleThemeToggle" :title="appStore.dark ? '切换到日光模式' : '切换到夜光模式'">
           <svg v-if="!appStore.dark" class="theme-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
@@ -63,6 +64,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { useAppStore } from '@/store/app'
+import NotificationBell from '@/components/NotificationBell.vue'
 import {
   DataAnalysis, Setting, Document, User, House,
   Reading, Star, TrendCharts, Management,
@@ -97,7 +99,6 @@ const roleLabel = computed(() => {
 const flatMenuItems = computed(() => {
   const menus = {
     ADMIN: [
-      { index: '/admin', title: '首页', icon: House },
       { index: '/admin/dashboard', title: '数据看板', icon: DataAnalysis },
       { index: '/admin/employment', title: '就业分析', icon: TrendCharts },
       { index: '/admin/crawler', title: '采集管理', icon: Setting },
