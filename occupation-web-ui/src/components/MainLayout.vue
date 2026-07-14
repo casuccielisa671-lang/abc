@@ -279,22 +279,13 @@ html:not(.dark) .brand-name {
   min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
-  /* 隐藏滚动条但保留滚动能力 */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  /* 菜单精简后一般不溢出：不显示滚动条（原来那条 4px「下栏」已移除），
+     但保留横向滚动能力作窄屏兜底，避免菜单被截断 */
+  scrollbar-width: none;
 }
 
 .top-menu-wrap::-webkit-scrollbar {
-  height: 4px;
-}
-
-.top-menu-wrap::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 2px;
-}
-
-.top-menu-wrap::-webkit-scrollbar-track {
-  background: transparent;
+  display: none;
 }
 
 .top-menu {
