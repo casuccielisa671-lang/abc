@@ -16,7 +16,8 @@ services:
       MYSQL_CHARSET: utf8mb4
       MYSQL_COLLATION: utf8mb4_unicode_ci
     ports:
-      - "3306:3306"
+      # 本机若已安装 MySQL 会占用 3306，改映射到 3307（与 start-backend.ps1 一致）
+      - "3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
       - ./occupation-common/src/main/resources/sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
