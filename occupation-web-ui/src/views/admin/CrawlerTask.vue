@@ -43,7 +43,7 @@
         </el-table-column>
         <el-table-column label="操作" width="210" fixed="right">
           <template #default="{ row }">
-            <el-button v-if="row.status !== 1" text type="primary" size="small" @click="handleStart(row.id)">
+            <el-button v-if="row.status !== 1" text type="primary" size="small" @click="handleStart(row)">
               启动
             </el-button>
             <el-button v-else text type="warning" size="small" @click="handleStop(row.id)">停止</el-button>
@@ -133,6 +133,34 @@
         <el-button type="primary" :loading="saving" @click="handleSave">保存</el-button>
       </template>
     </el-dialog>
+
+    <!-- MOCK 采集进度弹窗 -->
+    <el-dialog
+      v-model="crawlProgress.visible"
+      :title="crawlProgress.done ? '采集完成' : '采集中'"
+      width="380px"
+      :show-close="crawlProgress.done"
+      :close-on-click-modal="crawlProgress.done"
+      :close-on-press-escape="crawlProgress.done"
+    >
+      <div class="crawl-progress">
+        <el-progress
+          :percentage="crawlProgress.pct"
+          :status="crawlProgress.done ? 'success' : ''"
+          :stroke-width="14"
+          :duration="1"
+        />
+        <p class="cp-text">
+          <template v-if="crawlProgress.done">
+            ✓ 采集完成，本次采集 <b>{{ crawlProgress.count }}</b> 条职位，市场参考数据已刷新
+          </template>
+          <template v-else>正在读取并清洗职位数据…</template>
+        </p>
+      </div>
+      <template #footer v-if="crawlProgress.done">
+        <el-button type="primary" @click="crawlProgress.visible = false">知道了</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -157,6 +185,9 @@ const loading = ref(false)
 const page = ref(1)
 const size = ref(10)
 const total = ref(0)
+
+// MOCK 采集进度弹窗（同步瞬时完成，用短动画把结果“铺开成过程”，结尾落到真实条数）
+const crawlProgress = ref({ visible: false, pct: 0, done: false, count: 0 })
 
 const logs = ref([])
 const logLoading = ref(false)
@@ -208,12 +239,35 @@ async function loadLogs() {
   }
 }
 
-async function handleStart(id) {
+async function handleStart(row) {
+  // 真实爬虫是异步的（点完还在后台跑），不能显示“完成 N 条”，保持原“已启动”提示
+  if (row.sourceType !== 'MOCK') {
+    try {
+      await startCrawlerTask(row.id)
+      ElMessage.success('任务已启动')
+      await Promise.all([loadTasks(), loadLogs()])
+    } catch { /* handled by interceptor */ }
+    return
+  }
+
+  // MOCK：同步瞬时完成。用 ~1.2s 进度动画把瞬时结果铺开成有始有终的过程
+  const p = crawlProgress.value
+  p.visible = true; p.done = false; p.pct = 0; p.count = 0
+  const timer = setInterval(() => { p.pct = Math.min(90, p.pct + 6) }, 80)
+  const started = Date.now()
   try {
-    await startCrawlerTask(id)
-    ElMessage.success('任务已启动')
+    const count = await startCrawlerTask(row.id)  // 接口返回本次采集条数
+    const wait = 1200 - (Date.now() - started)    // 保证动画至少展示 1.2s
+    if (wait > 0) await new Promise(r => setTimeout(r, wait))
+    clearInterval(timer)
+    p.pct = 100
+    p.count = count ?? 0
+    p.done = true
     await Promise.all([loadTasks(), loadLogs()])
-  } catch { /* handled by interceptor */ }
+  } catch {
+    clearInterval(timer)
+    p.visible = false   // 失败由拦截器提示
+  }
 }
 
 async function handleStop(id) {
@@ -295,4 +349,7 @@ onMounted(() => {
 .form-alert { margin: 0 0 18px 110px; width: calc(100% - 110px); }
 .form-tip { color: var(--app-ink-3); font-size: 12px; }
 .verify-tip { margin-bottom: 14px; }
+.crawl-progress { padding: 6px 2px 2px; }
+.cp-text { margin: 16px 0 0; font-size: 13.5px; color: var(--color-text-secondary); line-height: 1.6; text-align: center; }
+.cp-text b { color: var(--color-primary); font-size: 16px; }
 </style>

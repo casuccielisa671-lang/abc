@@ -113,7 +113,7 @@ public class CrawlerController {
      * 手动启动任务
      */
     @PutMapping("/task/{id}/start")
-    public Result<Long> startTask(@PathVariable Long id) {
+    public Result<Integer> startTask(@PathVariable Long id) {
         CrawlerTask task = crawlerTaskMapper.selectById(id);
         if (task == null) {
             return Result.error(404, "任务不存在");
@@ -121,8 +121,10 @@ public class CrawlerController {
         if (crawlerService.isRunning(id)) {
             return Result.error(400, "任务已在运行中");
         }
-        crawlerService.startCrawl(task);
-        return Result.ok(id);
+        // 返回本次采集条数：MOCK 同步入库后即为真实条数（前端进度弹窗展示）；
+        // 真实爬虫异步，返回时为 0（前端对真实源不展示条数）。
+        CrawlerLog log = crawlerService.startCrawl(task);
+        return Result.ok(log != null ? log.getRecordCount() : 0);
     }
 
     /**
