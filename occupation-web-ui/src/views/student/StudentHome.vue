@@ -72,18 +72,9 @@
 
     <!-- 目标岗位：搜索选一个想去的岗位，看技能覆盖（首页「能力画像」卡同步显示） -->
     <div v-show="activeTab === 'target'" class="tab-panel">
-      <p class="panel-note">选一个你想去的目标岗位，看看你的技能覆盖了多少、还差哪些。首页「能力画像」会同步显示这个目标。</p>
-      <div class="target-pick">
-        <el-select
-          v-model="targetSelId" filterable remote reserve-keyword clearable
-          :remote-method="searchTargetJobs" :loading="targetSearching"
-          placeholder="输入职位名 / 公司搜索，选为目标岗位" class="target-select"
-          @change="onPickTarget" @clear="clearTarget"
-        >
-          <el-option v-for="j in targetOptions" :key="j.id" :label="`${j.title} · ${j.company}`" :value="j.id" />
-        </el-select>
-      </div>
+      <p class="panel-note">从你收藏的岗位里选一个设为目标岗位，看技能覆盖。首页「能力画像」会同步显示这个目标。（用上方搜索框可在收藏里筛选）</p>
 
+      <!-- 当前目标的技能对比卡 -->
       <div v-if="targetStore.target && targetGap" class="target-card">
         <div class="tc-head">
           <div>
@@ -116,7 +107,43 @@
           <el-button text @click="clearTarget">清除目标</el-button>
         </div>
       </div>
-      <el-empty v-else description="还没选目标岗位，上方搜索选一个开始对比" />
+      <el-empty v-else description="还没设目标岗位，从下面收藏里选一个「设为目标」" :image-size="52" />
+
+      <!-- 从收藏中选目标（用顶部共享搜索框筛，不再单独放搜索） -->
+      <div class="tgt-favs" v-loading="favLoading">
+        <div class="tgt-favs-h">我的收藏 · 点「设为目标」选一个</div>
+        <div class="job-grid">
+          <div
+            v-for="job in favFiltered" :key="job.id"
+            class="job-card tgt-fav" :class="{ current: targetStore.target && targetStore.target.id === job.id }"
+            @click="goDetail(job.id)"
+          >
+            <div class="job-head">
+              <div>
+                <h3 class="job-title">{{ job.title }}</h3>
+                <p class="job-company">{{ job.company }}</p>
+              </div>
+              <div class="job-salary">{{ salaryRange(job.salaryMin, job.salaryMax) }}</div>
+            </div>
+            <div class="job-chips">
+              <span class="chip">{{ job.city }}</span>
+              <span v-if="job.industry" class="chip">{{ job.industry }}</span>
+            </div>
+            <div class="job-foot">
+              <el-button
+                v-if="targetStore.target && targetStore.target.id === job.id"
+                type="success" size="small" plain disabled
+              >✓ 当前目标</el-button>
+              <el-button v-else type="primary" size="small" text @click.stop="setTargetFromFav(job)">设为目标岗位</el-button>
+            </div>
+          </div>
+        </div>
+        <el-empty
+          v-if="!favLoading && !favFiltered.length"
+          :description="favJobs.length ? '没有匹配的收藏' : '还没有收藏岗位，先去可投递/市场参考收藏一些'"
+          :image-size="50"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -124,9 +151,10 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { getRecommend, contactJob, getToolJobs, getProfile } from '@/api/student'
+import { getRecommend, contactJob, getProfile, getFavorites } from '@/api/student'
 import { useTargetJobStore } from '@/store/targetJob'
 import { skillGap } from '@/utils/skillGap'
+import { salaryRange } from '@/utils/format'
 import JobCard from '@/components/JobCard.vue'
 import MyApplications from '@/views/student/Applications.vue'
 import MyFavorites from '@/views/student/Favorites.vue'
@@ -165,31 +193,28 @@ function jobMatch(job) {
 const applicable = computed(() => list.value.filter(i => i.job?.applicable && jobMatch(i.job)))
 const reference = computed(() => list.value.filter(i => !i.job?.applicable && jobMatch(i.job)))
 
-// ===== 目标岗位（可搜索选择，持久化 store，首页能力画像卡读同一份）=====
+// ===== 目标岗位：从「收藏」里选，持久化 store，首页能力画像卡读同一份 =====
 const targetStore = useTargetJobStore()
-const mySkills = ref('')          // 画像技能，用于技能对比
-const targetSelId = ref(null)     // 下拉当前选中 id
-const targetOptions = ref([])     // 搜索结果
-const targetSearching = ref(false)
+const mySkills = ref('')       // 画像技能，用于技能对比
+const favJobs = ref([])        // 收藏列表（目标岗位从这里选）
+const favLoading = ref(false)
 const targetGap = computed(() => targetStore.target ? skillGap(targetStore.target.skills, mySkills.value) : null)
+// 收藏用顶部共享搜索框 query 过滤（复用 jobMatch，与其它标签一致，不再单独放搜索框）
+const favFiltered = computed(() => favJobs.value.filter(j => jobMatch(j)))
 
-async function searchTargetJobs(q) {
-  const kw = (q || '').trim()
-  if (!kw) { targetOptions.value = []; return }
-  targetSearching.value = true
-  try {
-    targetOptions.value = toList(await getToolJobs({ keyword: kw, pageSize: 20 }))
-  } catch { targetOptions.value = [] } finally { targetSearching.value = false }
+async function loadFavTargets() {
+  favLoading.value = true
+  try { favJobs.value = toList(await getFavorites()) }
+  catch { favJobs.value = [] }
+  finally { favLoading.value = false }
 }
-function onPickTarget(id) {
-  const j = targetOptions.value.find(o => o.id === id)
-  if (!j) return
+function setTargetFromFav(job) {
   targetStore.setTarget({
-    id: j.id, title: j.title, company: j.company, city: j.city,
-    skills: j.skills, salaryMin: j.salaryMin, salaryMax: j.salaryMax
+    id: job.id, title: job.title, company: job.company, city: job.city,
+    skills: job.skills, salaryMin: job.salaryMin, salaryMax: job.salaryMax
   })
 }
-function clearTarget() { targetStore.clear(); targetSelId.value = null; targetOptions.value = [] }
+function clearTarget() { targetStore.clear() }
 
 /**
  * 当前标签由路由决定，保证 Dashboard 卡片、消息通知等老链接照常落到正确标签：
@@ -273,11 +298,7 @@ watch(activeTab, tab => {
 onMounted(() => {
   empStore.refresh()
   targetStore.load()
-  // 已选目标回显到下拉（把它放进候选，下拉才有 label 显示）
-  if (targetStore.target) {
-    targetSelId.value = targetStore.target.id
-    targetOptions.value = [targetStore.target]
-  }
+  loadFavTargets()   // 目标岗位从收藏里选
   // 载入画像技能供技能对比
   getProfile().then(p => { mySkills.value = p?.skills || '' }).catch(() => {})
 })
@@ -343,8 +364,9 @@ onMounted(() => {
 }
 
 /* ---- 目标岗位 ---- */
-.target-pick { margin-bottom: 16px; }
-.target-select { width: 100%; max-width: 460px; }
+.tgt-favs { margin-top: 20px; }
+.tgt-favs-h { font-size: 14px; font-weight: 650; margin-bottom: 12px; color: var(--color-text-secondary); }
+.tgt-fav.current { border-color: var(--color-success); box-shadow: 0 0 0 1px var(--color-success) inset; }
 .target-card {
   border: 1px solid var(--color-border); border-radius: 14px; padding: 18px 20px;
   background: var(--color-surface); box-shadow: var(--shadow-sm); max-width: 720px;
