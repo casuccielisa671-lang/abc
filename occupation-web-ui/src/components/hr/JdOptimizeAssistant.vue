@@ -1,7 +1,7 @@
 <template>
   <div class="jd-assistant">
     <div class="actions">
-      <el-button type="primary" plain @click="analyze">分析当前描述</el-button>
+      <el-button type="primary" plain :loading="analyzing" @click="analyze">AI 分析当前描述</el-button>
       <el-button plain :disabled="!draft" @click="applyDraft">应用润色稿</el-button>
     </div>
 
@@ -20,19 +20,21 @@
     </div>
 
     <div class="chat-box">
-      <div class="chat-list">
+      <div class="chat-list" ref="chatList">
         <div v-for="(msg, index) in messages" :key="index" class="msg" :class="msg.role">
           <span class="role">{{ msg.role === 'user' ? 'HR' : 'AI' }}</span>
-          <p>{{ msg.content }}</p>
+          <p v-if="msg.role === 'assistant'" style="white-space: pre-wrap;">{{ msg.content }}</p>
+          <p v-else>{{ msg.content }}</p>
         </div>
       </div>
       <div class="chat-input">
         <el-input
           v-model="instruction"
-          placeholder="告诉 AI 你的主要意思，如：突出成长空间，语气更吸引应届生"
-          @keyup.enter="polish"
+          placeholder="告诉 AI 你的优化要求，如：突出成长空间、语气更吸引应届生"
+          :disabled="optimizing"
+          @keyup.enter="optimize"
         />
-        <el-button type="primary" :loading="polishing" @click="polish">润色</el-button>
+        <el-button type="primary" :loading="optimizing" @click="optimize">优化</el-button>
       </div>
       <el-input
         v-if="draft"
@@ -46,9 +48,9 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { analyzeJd } from '@/utils/jdOptimizer'
+import { aiAnalyzeJd, aiOptimizeJd } from '@/api/student'
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
@@ -61,9 +63,11 @@ const emit = defineEmits(['update:modelValue'])
 const analysis = ref(null)
 const instruction = ref('')
 const draft = ref('')
-const polishing = ref(false)
+const analyzing = ref(false)
+const optimizing = ref(false)
+const chatList = ref(null)
 const messages = ref([
-  { role: 'assistant', content: '你可以先点“分析当前描述”，也可以直接告诉我想强化什么卖点，我会生成一版更适合发布的 JD。' }
+  { role: 'assistant', content: '你可以先点"AI 分析当前描述"查看 JD 质量评分，也可以直接告诉我优化要求，我会帮你生成更专业的 JD。' }
 ])
 
 watch(() => props.modelValue, () => {
@@ -71,27 +75,58 @@ watch(() => props.modelValue, () => {
   draft.value = ''
 })
 
-function analyze() {
-  const result = analyzeJd(props.modelValue)
-  if (!result) {
+async function analyze() {
+  if (!props.modelValue?.trim()) {
     ElMessage.warning('请先填写职位描述')
     return
   }
-  analysis.value = result
+  analyzing.value = true
+  try {
+    const res = await aiAnalyzeJd(props.modelValue)
+    analysis.value = res.data
+    messages.value.push({
+      role: 'assistant',
+      content: `分析完成！综合评分 ${res.data.score}/100。${res.data.suggestions?.length ? '建议：' + res.data.suggestions.join('；') : ''}`
+    })
+  } catch {
+    ElMessage.error('AI 分析失败，请稍后重试')
+  } finally {
+    analyzing.value = false
+  }
 }
 
-function polish() {
+async function optimize() {
   const input = instruction.value.trim()
   if (!props.modelValue?.trim() && !input) {
-    ElMessage.warning('请先填写职位描述或输入润色要求')
+    ElMessage.warning('请先填写职位描述或输入优化要求')
     return
   }
-  polishing.value = true
-  messages.value.push({ role: 'user', content: input || '请基于当前内容润色一版 JD' })
-  draft.value = buildPolishedJd(input)
-  messages.value.push({ role: 'assistant', content: '我已生成一版更清晰、更像正式招聘发布的 JD。你可以继续提要求，或直接应用到职位描述。' })
+  optimizing.value = true
+  const userMsg = input || '请基于当前内容优化一版 JD'
+  messages.value.push({ role: 'user', content: userMsg })
   instruction.value = ''
-  polishing.value = false
+
+  // 构建对话历史（不含 system prompt）
+  const history = messages.value
+    .filter(m => m.role === 'user' || m.role === 'assistant')
+    .slice(0, -1) // 排除刚加的这条 user 消息，后端会自己处理
+    .map(m => ({ role: m.role, content: m.content }))
+
+  try {
+    const res = await aiOptimizeJd(props.modelValue, history)
+    draft.value = res.data
+    messages.value.push({
+      role: 'assistant',
+      content: '已生成优化版 JD，你可以查看下方润色稿，满意后点击"应用润色稿"替换原文。也可以继续提要求。'
+    })
+    await nextTick()
+    scrollToBottom()
+  } catch {
+    ElMessage.error('AI 优化失败，请稍后重试')
+    messages.value.push({ role: 'assistant', content: '抱歉，优化请求失败，请稍后重试。' })
+  } finally {
+    optimizing.value = false
+  }
 }
 
 function applyDraft() {
@@ -105,31 +140,10 @@ function scoreColor(score) {
   return '#e74c3c'
 }
 
-function buildPolishedJd(input) {
-  const title = props.title || '该岗位'
-  const skillText = props.skills || '相关专业技能'
-  const source = props.modelValue || input
-  return [
-    `${title}`,
-    '',
-    '我们希望找到一位对业务有好奇心、愿意把技术能力落到真实场景中的伙伴。你将参与核心业务模块建设，在清晰的目标和团队支持下持续成长。',
-    '',
-    '岗位职责：',
-    `1. 围绕 ${title} 的业务目标，参与需求理解、方案设计、开发实现与持续优化。`,
-    '2. 与产品、设计、测试及业务同学协作，保障功能按时、高质量交付。',
-    '3. 关注系统稳定性、用户体验与数据反馈，持续推动流程和产品改进。',
-    '',
-    '任职要求：',
-    `1. 熟悉 ${skillText}，具备良好的学习能力和问题拆解能力。`,
-    '2. 有项目实践、实习经历或作品沉淀者优先。',
-    '3. 沟通主动，责任心强，能够在团队协作中稳定推进任务。',
-    '',
-    '你将获得：',
-    '1. 清晰的培养路径、真实业务项目和可见的成长反馈。',
-    '2. 开放协作的团队氛围，以及对优秀表现的及时认可。',
-    input ? `\nHR 特别强调：${input}` : '',
-    source && !input ? `\n原始要点已保留：${source}` : ''
-  ].filter(Boolean).join('\n')
+function scrollToBottom() {
+  if (chatList.value) {
+    chatList.value.scrollTop = chatList.value.scrollHeight
+  }
 }
 </script>
 

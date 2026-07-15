@@ -28,7 +28,7 @@
 </template>
 
 <script setup>
-import { ArrowRight, Coin, Switch } from '@element-plus/icons-vue'
+import { ArrowRight, Coin, Switch, ChatLineSquare } from '@element-plus/icons-vue'
 
 const tools = [
   {
@@ -42,6 +42,12 @@ const tools = [
     desc: '输入岗位，对比市场薪资分位，评估自家 offer 竞争力。',
     icon: Coin,
     route: '/hr/tools/salary-benchmark'
+  },
+  {
+    title: 'AI 面试问题生成',
+    desc: '根据职位要求和候选人简历，AI 自动生成技术、项目、行为三类面试问题，附带评分要点。',
+    icon: ChatLineSquare,
+    route: '/hr/tools/interview-questions'
   }
 ]
 </script>

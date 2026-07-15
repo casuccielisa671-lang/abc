@@ -84,7 +84,8 @@ const routes = [
       { path: 'map', name: 'HrMap', component: () => import('@/views/common/MapExplore.vue') },
       { path: 'tools', name: 'HrToolbox', component: () => import('@/views/hr/Toolbox.vue') },
       { path: 'tools/compare-talents', name: 'CompareTalents', component: () => import('@/views/hr/tools/CompareTalents.vue') },
-      { path: 'tools/salary-benchmark', name: 'SalaryBenchmark', component: () => import('@/views/hr/tools/SalaryBenchmark.vue') }
+      { path: 'tools/salary-benchmark', name: 'SalaryBenchmark', component: () => import('@/views/hr/tools/SalaryBenchmark.vue') },
+      { path: 'tools/interview-questions', name: 'InterviewQuestions', component: () => import('@/views/hr/tools/InterviewQuestions.vue') }
     ]
   },
 

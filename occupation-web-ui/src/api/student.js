@@ -281,3 +281,35 @@ export function courseMatch(courseName) {
   return request.get('/teacher/tools/course-match', { params: { courseName } })
 }
 
+// ========== HR 端 AI 辅助 ==========
+
+/** AI 生成 JD */
+export function aiGenerateJd(params) {
+  return request.post('/hr/ai/jd/generate', params, { timeout: 90000 })
+}
+
+/** AI 分析 JD 质量 */
+export function aiAnalyzeJd(content) {
+  return request.post('/hr/ai/jd/analyze', { content }, { timeout: 90000 })
+}
+
+/** AI 多轮优化 JD */
+export function aiOptimizeJd(content, history) {
+  return request.post('/hr/ai/jd/optimize', { content, history }, { timeout: 90000 })
+}
+
+/** AI 简历筛选 — 单份分析 */
+export function aiScreenResume(userId, jobId) {
+  return request.get('/hr/ai/resume/screen/' + userId, { params: { jobId }, timeout: 90000 })
+}
+
+/** AI 简历筛选 — 批量排序 */
+export function aiRankResumes(jobId, applicantIds) {
+  return request.post('/hr/ai/resume/rank', { jobId, applicantIds }, { timeout: 90000 })
+}
+
+/** AI 面试问题生成 */
+export function aiInterviewQuestions(jobId, applicantId) {
+  return request.get('/hr/ai/interview/questions', { params: { jobId, applicantId }, timeout: 90000 })
+}
+

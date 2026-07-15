@@ -22,7 +22,7 @@
 docker-compose up -d                      # mysql/redis/zookeeper/kafka/nginx
 mvn install -DskipTests                   # ⚠️ 改过非 web 模块后必须先装，见下
 mvn spring-boot:run -pl occupation-web    # 后端 8080
-cd occupation-web-ui && npm run dev       # 前端 5173
+cd occupation-web-ui && npm run dev       # 前端 
 ```
 
 - **`spring-boot:run -pl occupation-web` 不会重新编译其它模块**：它从本地 `.m2` 取 `occupation-auth` 等依赖的旧 jar。改了 auth/analysis/recommend/report/api/common 里的代码却不先 `mvn install`，跑的还是旧代码 —— 表现为「明明改了却没生效」。只改 occupation-web 或前端时可跳过。

@@ -174,7 +174,8 @@ const flatMenuItems = computed(() => {
         icon: Setting,
         children: [
           { index: '/hr/tools/compare-talents', title: '人才对比' },
-          { index: '/hr/tools/salary-benchmark', title: '薪资竞争力' }
+          { index: '/hr/tools/salary-benchmark', title: '薪资竞争力' },
+          { index: '/hr/tools/interview-questions', title: 'AI 面试问题生成' }
         ]
       }
     ]
