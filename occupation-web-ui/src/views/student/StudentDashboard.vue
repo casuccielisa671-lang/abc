@@ -99,16 +99,16 @@
         </div>
       </div>
 
-      <!-- 能力画像 -->
+      <!-- 能力画像（我的技能 vs 目标岗位；目标在职位信息「目标岗位」标签里选，此处是缩影） -->
       <div class="tile t-skill">
         <div class="tile-h">
           <span class="t">能力画像</span>
-          <span class="a" @click="go('/student/profile')">我的技能 vs 目标岗位</span>
+          <span class="a" @click="go('/student/jobs?tab=target')">我的技能 vs 目标岗位</span>
         </div>
-        <div v-if="skillMatch.req.length" class="skill-body">
+        <div v-if="targetStore.target && skillMatch.req.length" class="skill-body">
           <div class="skill-cover">
             <div class="cov-num">{{ skillCoverage }}<small>%</small></div>
-            <div class="cov-lab">技能覆盖<br>「{{ topMatch.job.title }}」</div>
+            <div class="cov-lab">技能覆盖<br>「{{ targetStore.target.title }}」</div>
           </div>
           <div class="skill-cols">
             <div class="scol">
@@ -127,7 +127,9 @@
             </div>
           </div>
         </div>
-        <div v-else class="empty-mini">完善画像与推荐后展示能力对比</div>
+        <div v-else class="empty-mini clickable" @click="go('/student/jobs?tab=target')">
+          未选择目标岗位 · 点这里去选一个 →
+        </div>
       </div>
 
       <!-- 最新消息 -->
@@ -146,6 +148,8 @@ import { useUserStore } from '@/store/user'
 import { getProfile, getRecommend, getMyApplications, getFavorites, getResume } from '@/api/student'
 import { toList } from '@/utils/list'
 import { parseSkills } from '@/utils/skills'
+import { useTargetJobStore } from '@/store/targetJob'
+import { skillGap } from '@/utils/skillGap'
 import { salaryRange } from '@/utils/format'
 import { employmentLabel } from '@/utils/employment'
 import MapHeroTile from '@/components/home/MapHeroTile.vue'
@@ -217,19 +221,14 @@ const todos = computed(() => {
 })
 const recoTop = computed(() => recommend.value.slice(0, 4))
 
+// 能力画像卡改用「目标岗位」store（学生在职位信息「目标岗位」标签里选，两处呼应）；不预设
+const targetStore = useTargetJobStore()
 const skillMatch = computed(() => {
-  const top = topMatch.value
-  if (!top) return { req: [], have: [], miss: [] }
-  const req = parseSkills(top.job?.skills)
-  const missSet = new Set((top.missingSkills || []).map(s => s.toLowerCase()))
-  const miss = req.filter(s => missSet.has(s.toLowerCase()))
-  const have = req.filter(s => !missSet.has(s.toLowerCase()))
-  return { req, have, miss }
+  const t = targetStore.target
+  if (!t) return { req: [], have: [], miss: [] }
+  return skillGap(t.skills, profile.value?.skills)
 })
-const skillCoverage = computed(() => {
-  const m = skillMatch.value
-  return m.req.length ? Math.round((m.have.length / m.req.length) * 100) : 0
-})
+const skillCoverage = computed(() => skillMatch.value.coverage || 0)
 
 const AV_COLORS = [
   'linear-gradient(135deg,#2563EB,#5B60F0)', 'linear-gradient(135deg,#0E9F6E,#15A34A)',
@@ -243,6 +242,7 @@ function avatarBg(name) {
 
 onMounted(() => {
   loading.value = true
+  targetStore.load()   // 载入当前账号选定的目标岗位（能力画像卡据此显示）
   getProfile().then(d => { profile.value = d }).catch(() => {})
   getResume().then(d => { resumeExists.value = !!d?.exists }).catch(() => {})
   getMyApplications().then(d => { applications.value = toList(d) }).catch(() => {})

@@ -69,13 +69,64 @@
     <div v-if="activeTab === 'favorites'" class="tab-panel">
       <MyFavorites embedded :filter="query" />
     </div>
+
+    <!-- 目标岗位：搜索选一个想去的岗位，看技能覆盖（首页「能力画像」卡同步显示） -->
+    <div v-show="activeTab === 'target'" class="tab-panel">
+      <p class="panel-note">选一个你想去的目标岗位，看看你的技能覆盖了多少、还差哪些。首页「能力画像」会同步显示这个目标。</p>
+      <div class="target-pick">
+        <el-select
+          v-model="targetSelId" filterable remote reserve-keyword clearable
+          :remote-method="searchTargetJobs" :loading="targetSearching"
+          placeholder="输入职位名 / 公司搜索，选为目标岗位" class="target-select"
+          @change="onPickTarget" @clear="clearTarget"
+        >
+          <el-option v-for="j in targetOptions" :key="j.id" :label="`${j.title} · ${j.company}`" :value="j.id" />
+        </el-select>
+      </div>
+
+      <div v-if="targetStore.target && targetGap" class="target-card">
+        <div class="tc-head">
+          <div>
+            <div class="tc-title">{{ targetStore.target.title }}</div>
+            <div class="tc-sub">{{ targetStore.target.company }}<span v-if="targetStore.target.city"> · {{ targetStore.target.city }}</span></div>
+          </div>
+          <div class="tc-cov" :class="{ full: targetGap.coverage === 100 }">
+            <span class="tc-cov-num">{{ targetGap.coverage }}<small>%</small></span>
+            <span class="tc-cov-lab">技能覆盖</span>
+          </div>
+        </div>
+        <div class="tc-cols">
+          <div class="tc-col">
+            <div class="tc-col-h have">已掌握 {{ targetGap.have.length }}</div>
+            <div class="tc-chips">
+              <span v-for="s in targetGap.have" :key="s" class="chip have">{{ s }}</span>
+              <span v-if="!targetGap.have.length" class="tc-dash">—</span>
+            </div>
+          </div>
+          <div class="tc-col">
+            <div class="tc-col-h miss">待补强 {{ targetGap.miss.length }}</div>
+            <div class="tc-chips">
+              <span v-for="s in targetGap.miss" :key="s" class="chip miss">{{ s }}</span>
+              <span v-if="!targetGap.miss.length" class="tc-dash">全部掌握 🎉</span>
+            </div>
+          </div>
+        </div>
+        <div class="tc-foot">
+          <el-button text type="primary" @click="goDetail(targetStore.target.id)">查看职位详情 →</el-button>
+          <el-button text @click="clearTarget">清除目标</el-button>
+        </div>
+      </div>
+      <el-empty v-else description="还没选目标岗位，上方搜索选一个开始对比" />
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { getRecommend, contactJob } from '@/api/student'
+import { getRecommend, contactJob, getToolJobs, getProfile } from '@/api/student'
+import { useTargetJobStore } from '@/store/targetJob'
+import { skillGap } from '@/utils/skillGap'
 import JobCard from '@/components/JobCard.vue'
 import MyApplications from '@/views/student/Applications.vue'
 import MyFavorites from '@/views/student/Favorites.vue'
@@ -88,7 +139,8 @@ const TABS = [
   { key: 'applicable', label: '可投递岗位' },
   { key: 'market', label: '市场参考' },
   { key: 'applications', label: '我的投递' },
-  { key: 'favorites', label: '我的收藏' }
+  { key: 'favorites', label: '我的收藏' },
+  { key: 'target', label: '目标岗位' }
 ]
 
 /** 可投递 / 市场参考 两栏各自独立取前 25 名（后端 matchGrouped 按栏分别截取，互不抢名额） */
@@ -113,6 +165,32 @@ function jobMatch(job) {
 const applicable = computed(() => list.value.filter(i => i.job?.applicable && jobMatch(i.job)))
 const reference = computed(() => list.value.filter(i => !i.job?.applicable && jobMatch(i.job)))
 
+// ===== 目标岗位（可搜索选择，持久化 store，首页能力画像卡读同一份）=====
+const targetStore = useTargetJobStore()
+const mySkills = ref('')          // 画像技能，用于技能对比
+const targetSelId = ref(null)     // 下拉当前选中 id
+const targetOptions = ref([])     // 搜索结果
+const targetSearching = ref(false)
+const targetGap = computed(() => targetStore.target ? skillGap(targetStore.target.skills, mySkills.value) : null)
+
+async function searchTargetJobs(q) {
+  const kw = (q || '').trim()
+  if (!kw) { targetOptions.value = []; return }
+  targetSearching.value = true
+  try {
+    targetOptions.value = toList(await getToolJobs({ keyword: kw, pageSize: 20 }))
+  } catch { targetOptions.value = [] } finally { targetSearching.value = false }
+}
+function onPickTarget(id) {
+  const j = targetOptions.value.find(o => o.id === id)
+  if (!j) return
+  targetStore.setTarget({
+    id: j.id, title: j.title, company: j.company, city: j.city,
+    skills: j.skills, salaryMin: j.salaryMin, salaryMax: j.salaryMax
+  })
+}
+function clearTarget() { targetStore.clear(); targetSelId.value = null; targetOptions.value = [] }
+
 /**
  * 当前标签由路由决定，保证 Dashboard 卡片、消息通知等老链接照常落到正确标签：
  *   /student/applications → 我的投递    /student/favorites → 我的收藏
@@ -121,7 +199,10 @@ const reference = computed(() => list.value.filter(i => !i.job?.applicable && jo
 const activeTab = computed(() => {
   if (route.path === '/student/applications') return 'applications'
   if (route.path === '/student/favorites') return 'favorites'
-  return route.query.tab === 'market' ? 'market' : 'applicable'
+  const t = route.query.tab
+  if (t === 'market') return 'market'
+  if (t === 'target') return 'target'
+  return 'applicable'
 })
 
 function switchTab(key) {
@@ -130,7 +211,8 @@ function switchTab(key) {
     applicable: { path: '/student/jobs' },
     market: { path: '/student/jobs', query: { tab: 'market' } },
     applications: { path: '/student/applications' },
-    favorites: { path: '/student/favorites' }
+    favorites: { path: '/student/favorites' },
+    target: { path: '/student/jobs', query: { tab: 'target' } }
   }[key]
   router.push(target)
 }
@@ -188,7 +270,17 @@ watch(activeTab, tab => {
   }
 }, { immediate: true })
 
-onMounted(() => { empStore.refresh() })
+onMounted(() => {
+  empStore.refresh()
+  targetStore.load()
+  // 已选目标回显到下拉（把它放进候选，下拉才有 label 显示）
+  if (targetStore.target) {
+    targetSelId.value = targetStore.target.id
+    targetOptions.value = [targetStore.target]
+  }
+  // 载入画像技能供技能对比
+  getProfile().then(p => { mySkills.value = p?.skills || '' }).catch(() => {})
+})
 </script>
 
 <style scoped>
@@ -249,4 +341,31 @@ onMounted(() => { empStore.refresh() })
   color: var(--color-text-tertiary);
   margin: 0 0 14px;
 }
+
+/* ---- 目标岗位 ---- */
+.target-pick { margin-bottom: 16px; }
+.target-select { width: 100%; max-width: 460px; }
+.target-card {
+  border: 1px solid var(--color-border); border-radius: 14px; padding: 18px 20px;
+  background: var(--color-surface); box-shadow: var(--shadow-sm); max-width: 720px;
+}
+.tc-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.tc-title { font-size: 17px; font-weight: 700; color: var(--color-text-primary); }
+.tc-sub { font-size: 13px; color: var(--color-text-tertiary); margin-top: 2px; }
+.tc-cov { text-align: center; flex: none; color: var(--color-danger); }
+.tc-cov.full { color: var(--color-success); }
+.tc-cov-num { font-size: 30px; font-weight: 800; line-height: 1; }
+.tc-cov-num small { font-size: 15px; font-weight: 700; }
+.tc-cov-lab { display: block; font-size: 11px; color: var(--color-text-tertiary); margin-top: 3px; }
+.tc-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+.tc-col-h { font-size: 13px; font-weight: 650; margin-bottom: 10px; }
+.tc-col-h.have { color: var(--color-success); }
+.tc-col-h.miss { color: var(--color-danger); }
+.tc-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--color-bg-secondary); color: var(--color-text-secondary); }
+.chip.have { background: var(--color-success-lighter); color: var(--color-success); }
+.chip.miss { background: var(--color-danger-lighter); color: var(--color-danger); }
+.tc-dash { font-size: 12px; color: var(--color-text-tertiary); }
+.tc-foot { margin-top: 16px; display: flex; gap: 6px; }
+@media (max-width: 640px) { .tc-cols { grid-template-columns: 1fr; } }
 </style>
