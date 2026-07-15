@@ -2,6 +2,7 @@ package com.occupation.recommend.controller;
 
 import com.occupation.common.config.UserContextHolder;
 import com.occupation.common.result.Result;
+import com.occupation.recommend.dto.ResumePolishChatDTO;
 import com.occupation.recommend.dto.ResumePolishDTO;
 import com.occupation.recommend.dto.ResumeSaveDTO;
 import com.occupation.recommend.service.ResumeAiService;
@@ -72,5 +73,18 @@ public class StudentResumeController {
     public Result<Map<String, String>> aiPolish(@RequestBody @Validated ResumePolishDTO dto) {
         String polished = resumeAiService.polish(dto.getSection(), dto.getText());
         return Result.ok(Collections.singletonMap("polished", polished));
+    }
+
+    /**
+     * AI 多轮润色聊天 — 支持持续提要求（如"再精简一点""突出技术栈"）。
+     * 前端维护完整对话历史，每次把历史 + 本轮消息一起传过来。
+     * 返回 {reply: "..."}，前端追加到聊天记录中。
+     */
+    @PreAuthorize("hasRole('STUDENT')")
+    @PostMapping("/ai-polish-chat")
+    public Result<Map<String, String>> aiPolishChat(@RequestBody @Validated ResumePolishChatDTO dto) {
+        String reply = resumeAiService.polishChat(
+                dto.getSection(), dto.getOriginalText(), dto.getMessages(), dto.getUserMessage());
+        return Result.ok(Collections.singletonMap("reply", reply));
     }
 }

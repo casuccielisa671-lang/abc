@@ -17,13 +17,20 @@ import com.occupation.recommend.entity.BehaviorAction;
 import com.occupation.recommend.entity.JobApplication;
 import com.occupation.recommend.entity.SysStudentProfile;
 import com.occupation.recommend.service.BehaviorService;
+import com.occupation.recommend.service.HrInterviewAiService;
+import com.occupation.recommend.service.HrJdAiService;
+import com.occupation.recommend.service.HrResumeAiService;
 import com.occupation.recommend.service.JobApplicationService;
 import com.occupation.recommend.service.ResumeService;
 import com.occupation.recommend.service.StudentProfileService;
 import com.occupation.recommend.vo.ApplicantDetailVO;
 import com.occupation.recommend.vo.ApplicationVO;
+import com.occupation.recommend.vo.InterviewQuestionVO;
+import com.occupation.recommend.vo.JdOptimizeVO;
+import com.occupation.recommend.vo.ResumeScreenVO;
 import com.occupation.recommend.vo.ResumeVO;
 import com.occupation.recommend.vo.TalentVO;
+import com.occupation.common.ai.AiMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -56,6 +63,9 @@ public class HrController {
     private final JobApplicationService applicationService;
     private final ResumeService resumeService;
     private final UserService userService;
+    private final HrJdAiService hrJdAiService;
+    private final HrResumeAiService hrResumeAiService;
+    private final HrInterviewAiService hrInterviewAiService;
 
     /** 发布职位（平台内发布，source=HR_PUBLISH，publisher_id=当前 HR） */
     @PreAuthorize("hasRole('HR')")
@@ -258,6 +268,87 @@ public class HrController {
         }).collect(Collectors.toList()));
 
         return Result.ok(vo);
+    }
+
+    // ==================== AI 辅助功能 ====================
+
+    /**
+     * AI JD 生成
+     */
+    @PreAuthorize("hasRole('HR')")
+    @PostMapping("/ai/jd/generate")
+    public Result<String> aiGenerateJd(@RequestBody Map<String, Object> params) {
+        String title = (String) params.get("title");
+        String company = (String) params.get("company");
+        String city = (String) params.get("city");
+        Integer salaryMin = params.get("salaryMin") != null ? ((Number) params.get("salaryMin")).intValue() : null;
+        Integer salaryMax = params.get("salaryMax") != null ? ((Number) params.get("salaryMax")).intValue() : null;
+        String education = (String) params.get("education");
+        Integer experienceYears = params.get("experienceYears") != null ? ((Number) params.get("experienceYears")).intValue() : null;
+        @SuppressWarnings("unchecked")
+        List<String> skills = (List<String>) params.get("skills");
+        String style = (String) params.get("style");
+        return Result.ok(hrJdAiService.generate(title, company, city, salaryMin, salaryMax,
+                education, experienceYears, skills, style));
+    }
+
+    /**
+     * AI JD 分析
+     */
+    @PreAuthorize("hasRole('HR')")
+    @PostMapping("/ai/jd/analyze")
+    public Result<JdOptimizeVO> aiAnalyzeJd(@RequestBody Map<String, String> params) {
+        return Result.ok(hrJdAiService.analyze(params.get("content")));
+    }
+
+    /**
+     * AI JD 多轮优化
+     */
+    @PreAuthorize("hasRole('HR')")
+    @PostMapping("/ai/jd/optimize")
+    public Result<String> aiOptimizeJd(@RequestBody Map<String, Object> params) {
+        String content = (String) params.get("content");
+        @SuppressWarnings("unchecked")
+        List<Map<String, String>> rawHistory = (List<Map<String, String>>) params.get("history");
+        List<AiMessage> history = rawHistory != null
+                ? rawHistory.stream().map(m -> new AiMessage(m.get("role"), m.get("content"))).collect(Collectors.toList())
+                : Collections.emptyList();
+        return Result.ok(hrJdAiService.optimize(content, history));
+    }
+
+    /**
+     * AI 简历筛选 — 单份分析
+     */
+    @PreAuthorize("hasRole('HR')")
+    @GetMapping("/ai/resume/screen/{userId}")
+    public Result<ResumeScreenVO> aiScreenResume(@PathVariable Long userId,
+                                                  @RequestParam(required = false) Long jobId) {
+        return Result.ok(hrResumeAiService.screen(userId, jobId));
+    }
+
+    /**
+     * AI 简历筛选 — 批量排序
+     */
+    @PreAuthorize("hasRole('HR')")
+    @PostMapping("/ai/resume/rank")
+    public Result<List<ResumeScreenVO>> aiRankResumes(@RequestBody Map<String, Object> params) {
+        Long jobId = params.get("jobId") != null ? ((Number) params.get("jobId")).longValue() : null;
+        @SuppressWarnings("unchecked")
+        List<Number> rawIds = (List<Number>) params.get("applicantIds");
+        List<Long> applicantIds = rawIds != null
+                ? rawIds.stream().map(Number::longValue).collect(Collectors.toList())
+                : Collections.emptyList();
+        return Result.ok(hrResumeAiService.rankByMatch(jobId, applicantIds));
+    }
+
+    /**
+     * AI 面试问题生成
+     */
+    @PreAuthorize("hasRole('HR')")
+    @GetMapping("/ai/interview/questions")
+    public Result<InterviewQuestionVO> aiInterviewQuestions(@RequestParam Long jobId,
+                                                             @RequestParam(required = false) Long applicantId) {
+        return Result.ok(hrInterviewAiService.generateQuestions(jobId, applicantId));
     }
 
     private static String firstNonBlank(String a, String b) {

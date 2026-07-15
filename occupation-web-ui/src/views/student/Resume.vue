@@ -49,6 +49,11 @@
               :loading="polishing === 'selfIntro'"
               @click="polish('自我评价', form.selfIntro, v => (form.selfIntro = v), 'selfIntro')"
             >AI 润色这段</el-button>
+            <el-button
+              v-if="lastPolishKey === 'selfIntro' && lastPolishResult"
+              text type="warning" size="small" class="polish-btn"
+              @click="showPolishDialog('selfIntro')"
+            >查看润色结果</el-button>
           </el-form-item>
         </el-form>
       </el-card>
@@ -114,6 +119,11 @@
             :loading="polishing === 'project-' + i"
             @click="polish('项目经历', p.description, v => (p.description = v), 'project-' + i)"
           >AI 润色这段</el-button>
+          <el-button
+            v-if="lastPolishKey === 'project-' + i && lastPolishResult"
+            text type="warning" size="small" class="polish-btn"
+            @click="showPolishDialog('project-' + i)"
+          >查看润色结果</el-button>
         </div>
       </el-card>
 
@@ -148,6 +158,11 @@
             :loading="polishing === 'intern-' + i"
             @click="polish('实习经历', it.description, v => (it.description = v), 'intern-' + i)"
           >AI 润色这段</el-button>
+          <el-button
+            v-if="lastPolishKey === 'intern-' + i && lastPolishResult"
+            text type="warning" size="small" class="polish-btn"
+            @click="showPolishDialog('intern-' + i)"
+          >查看润色结果</el-button>
         </div>
       </el-card>
 
@@ -209,12 +224,72 @@
         <el-button type="primary" @click="reviewVisible = false">关闭</el-button>
       </template>
     </el-drawer>
+
+    <!-- ============ AI 润色聊天弹窗 ============ -->
+    <el-dialog
+      v-model="polishDialogVisible"
+      :title="'AI 润色 — ' + polishSection"
+      width="700px"
+      :close-on-click-modal="false"
+      destroy-on-close
+      @closed="onPolishDialogClosed"
+    >
+      <!-- 聊天消息区 -->
+      <div class="polish-chat" ref="polishChatRef">
+        <!-- 原文卡片 -->
+        <div class="polish-chat-card original">
+          <div class="polish-chat-label">原文</div>
+          <div class="polish-chat-text">{{ polishOriginal }}</div>
+        </div>
+        <!-- 对话历史 -->
+        <div
+          v-for="(msg, idx) in polishMessages"
+          :key="idx"
+          class="polish-chat-card"
+          :class="msg.role === 'assistant' ? 'ai' : 'user'"
+        >
+          <div class="polish-chat-label">
+            {{ msg.role === 'assistant' ? 'AI 润色后' : '你' }}
+          </div>
+          <div class="polish-chat-text">{{ msg.content }}</div>
+        </div>
+        <!-- 加载中 -->
+        <div v-if="polishChatting" class="polish-chat-card ai typing">
+          <div class="polish-chat-label">AI 正在润色...</div>
+          <div class="polish-chat-text"><el-icon class="is-loading"><span>⏳</span></el-icon></div>
+        </div>
+      </div>
+      <!-- 底部操作区 -->
+      <div class="polish-chat-footer">
+        <el-input
+          v-model="polishChatInput"
+          placeholder="告诉 AI 怎么改，如：再精简一点、突出技术栈、加点数据量化..."
+          maxlength="200"
+          :disabled="polishChatting"
+          @keyup.enter="sendPolishChat"
+        >
+          <template #append>
+            <el-button
+              :loading="polishChatting"
+              :disabled="!polishChatInput.trim()"
+              @click="sendPolishChat"
+            >发送</el-button>
+          </template>
+        </el-input>
+      </div>
+      <template #footer>
+        <el-button @click="polishDialogVisible = false">取消</el-button>
+        <el-button type="primary" :disabled="!latestPolishResult" @click="applyPolish">
+          应用最新润色结果
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { getResume, saveResume, aiReviewResume, aiPolishResume } from '@/api/student'
+import { ref, reactive, onMounted, nextTick } from 'vue'
+import { getResume, saveResume, aiReviewResume, aiPolishResume, aiPolishChat } from '@/api/student'
 import SkillTags from '@/components/SkillTags.vue'
 import { ElMessage } from 'element-plus'
 
@@ -229,6 +304,20 @@ const reviewing = ref(false)
 const polishing = ref('')
 const reviewVisible = ref(false)
 const review = ref(null)
+
+// ---- 润色聊天弹窗 ----
+const polishDialogVisible = ref(false)
+const polishOriginal = ref('')
+const polishSection = ref('')
+const polishApply = ref(null)        // 回调：把润色结果写回 form
+const lastPolishKey = ref('')
+const lastPolishResult = ref('')     // 保留最近一次润色结果，供"查看润色结果"按钮使用
+// 聊天相关
+const polishMessages = ref([])       // [{role:'user'|'assistant', content:'...'}]
+const polishChatInput = ref('')
+const polishChatting = ref(false)
+const polishChatRef = ref(null)      // 聊天区 DOM，用于自动滚动
+const latestPolishResult = ref('')   // 最新一轮 AI 润色结果
 
 const form = reactive({
   exists: false,
@@ -298,6 +387,7 @@ async function handleReview(refresh = false) {
   }
 }
 
+/** 点击"AI 润色这段"：调 AI 首次润色，拿到结果后弹出聊天窗口 */
 async function polish(section, text, apply, key) {
   if (!text || !text.trim()) {
     ElMessage.warning('请先填写内容再润色')
@@ -306,12 +396,93 @@ async function polish(section, text, apply, key) {
   polishing.value = key
   try {
     const { polished } = await aiPolishResume(section, text)
-    apply(polished)
-    ElMessage.success('已润色，请检查后再保存')
+    // 初始化弹窗状态
+    polishSection.value = section
+    polishOriginal.value = text.trim()
+    polishApply.value = apply
+    lastPolishKey.value = key
+    lastPolishResult.value = polished
+    latestPolishResult.value = polished
+    polishMessages.value = [
+      { role: 'assistant', content: polished }
+    ]
+    polishChatInput.value = ''
+    polishDialogVisible.value = true
+    await nextTick()
+    scrollPolishChatBottom()
   } catch {
-    /* 拦截器已提示（AI 未启用时后端返回明确原因） */
+    /* 拦截器已提示 */
   } finally {
     polishing.value = ''
+  }
+}
+
+/** 聊天窗口：发送新的润色指令 */
+async function sendPolishChat() {
+  const msg = polishChatInput.value.trim()
+  if (!msg || polishChatting.value) return
+  // 追加用户消息到聊天记录
+  polishMessages.value.push({ role: 'user', content: msg })
+  polishChatInput.value = ''
+  polishChatting.value = true
+  await nextTick()
+  scrollPolishChatBottom()
+  try {
+    // 构建传给后端的消息历史（不含刚加的这条 user 消息，后端会自己加）
+    const history = polishMessages.value.slice(0, -1)
+    const { reply } = await aiPolishChat(
+      polishSection.value,
+      polishOriginal.value,
+      history,
+      msg
+    )
+    // 追加 AI 回复
+    polishMessages.value.push({ role: 'assistant', content: reply })
+    latestPolishResult.value = reply
+    lastPolishResult.value = reply
+    await nextTick()
+    scrollPolishChatBottom()
+  } catch {
+    // 移除刚才追加的 user 消息（发送失败）
+    polishMessages.value.pop()
+    /* 拦截器已提示 */
+  } finally {
+    polishChatting.value = false
+  }
+}
+
+/** 弹窗中点击"应用最新润色结果" */
+function applyPolish() {
+  if (polishApply.value && latestPolishResult.value) {
+    polishApply.value(latestPolishResult.value)
+    ElMessage.success('已应用润色结果，请检查后再保存')
+  }
+  polishDialogVisible.value = false
+}
+
+/** 弹窗关闭时清理 */
+function onPolishDialogClosed() {
+  polishMessages.value = []
+  polishChatInput.value = ''
+  latestPolishResult.value = ''
+}
+
+/** 从"查看润色结果"按钮打开弹窗（复用上次结果） */
+function showPolishDialog(key) {
+  // 重新设置状态（如果之前关闭过）
+  if (polishMessages.value.length === 0 && lastPolishResult.value) {
+    polishMessages.value = [
+      { role: 'assistant', content: lastPolishResult.value }
+    ]
+    latestPolishResult.value = lastPolishResult.value
+  }
+  polishDialogVisible.value = true
+}
+
+/** 聊天区滚动到底部 */
+function scrollPolishChatBottom() {
+  if (polishChatRef.value) {
+    polishChatRef.value.scrollTop = polishChatRef.value.scrollHeight
   }
 }
 
@@ -364,6 +535,42 @@ onMounted(load)
 
 @media (max-width: 760px) {
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
+}
+
+/* ---- 润色聊天弹窗 ---- */
+.polish-chat {
+  max-height: 420px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 12px;
+  padding-right: 4px;
+}
+.polish-chat-card {
+  border-radius: 10px; padding: 12px 14px;
+  max-width: 85%;
+}
+.polish-chat-card.original {
+  background: #f5f5f5; border: 1px solid #e0e0e0;
+  max-width: 100%; align-self: stretch;
+}
+.polish-chat-card.user {
+  background: #ecf5ff; align-self: flex-end;
+}
+.polish-chat-card.ai {
+  background: #f0f9eb; align-self: flex-start;
+}
+.polish-chat-card.typing {
+  opacity: 0.7;
+}
+.polish-chat-label {
+  font-size: 11px; font-weight: 600; color: var(--app-ink-3);
+  margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.polish-chat-text {
+  font-size: 14px; line-height: 1.8; color: var(--app-ink);
+  white-space: pre-wrap; word-break: break-word;
+}
+.polish-chat-footer {
+  margin-top: 16px; padding-top: 12px;
+  border-top: 1px solid var(--app-stone);
 }
 
 .resume-avatar { display: flex; align-items: center; gap: 14px; }

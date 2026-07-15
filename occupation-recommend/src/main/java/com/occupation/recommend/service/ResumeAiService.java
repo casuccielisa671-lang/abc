@@ -1,6 +1,9 @@
 package com.occupation.recommend.service;
 
+import com.occupation.common.ai.AiMessage;
 import com.occupation.recommend.vo.ResumeReviewVO;
+
+import java.util.List;
 
 /**
  * 简历 AI 能力 — 诊断与润色
@@ -31,4 +34,18 @@ public interface ResumeAiService {
      * @return 润色后的文字
      */
     String polish(String section, String text);
+
+    /**
+     * 多轮润色聊天 — 支持用户持续提要求（如"再精简一点""突出技术栈"）。
+     * <p>
+     * 前端维护完整对话历史（含 system prompt 外的所有轮次），
+     * 后端负责拼接 system prompt 后发给大模型。
+     *
+     * @param section      所属板块
+     * @param originalText 原文（首次润色时传入，后续轮次可为空）
+     * @param history      对话历史（不含 system prompt）
+     * @param userMessage  本轮用户指令
+     * @return AI 回复（润色后的文字）
+     */
+    String polishChat(String section, String originalText, List<AiMessage> history, String userMessage);
 }

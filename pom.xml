@@ -40,6 +40,7 @@
         <jwt.version>4.4.0</jwt.version>
         <poi.version>5.2.5</poi.version>
         <flying-saucer.version>9.3.1</flying-saucer.version>
+        <flexmark.version>0.64.8</flexmark.version>
     </properties>
 
     <!-- ========== SpringBoot 父依赖 ========== -->
@@ -172,6 +173,13 @@
                 <groupId>org.xhtmlrenderer</groupId>
                 <artifactId>flying-saucer-pdf-itext5</artifactId>
                 <version>${flying-saucer.version}</version>
+            </dependency>
+
+            <!-- flexmark（Markdown → HTML，AI 报告渲染用） -->
+            <dependency>
+                <groupId>com.vladsch.flexmark</groupId>
+                <artifactId>flexmark-all</artifactId>
+                <version>${flexmark.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

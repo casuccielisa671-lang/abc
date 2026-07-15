@@ -42,6 +42,9 @@ public class ResumeReviewVO implements Serializable {
     /** true=大模型生成，false=规则降级 */
     private boolean aiGenerated;
 
+    /** 与同专业同龄人相比的竞争力评估（如 "前 30%"、"中等偏上"、"需大幅提升"） */
+    private String marketCompetitiveness;
+
     /** 一条改进建议：命中哪个板块、问题是什么、怎么改 */
     @Data
     public static class Suggestion implements Serializable {
@@ -53,5 +56,11 @@ public class ResumeReviewVO implements Serializable {
         private String issue;
 
         private String advice;
+
+        /** 优先级：高/中/低 */
+        private String priority;
+
+        /** 预计提升效果描述 */
+        private String expectedEffect;
     }
 }

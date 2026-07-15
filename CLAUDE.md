@@ -473,6 +473,57 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 - **报告下载已重新验证无误**：用真实数据库拉取，PDF/Word 下载字节与磁盘文件 sha256 完全一致；PDF 为 3 页、内嵌 SimSun 子集、51 个文字块。此前「下载打不开」的报告应为旧 jar 所致（见启动流程那节）
 - **未做**：浏览器里的人工点验（深色模式配色、图表重绘、简历表单与顾问对话的交互手感）；XXL-Job 分布式调度未跑通
 
+## ✅ 已合并 main 的 AI 功能到 v1-backup（2026-07-15 实施完成，前后端编译通过，**未 commit 待用户测**）
+
+**四轮总览（当前状态速查）：**
+| 轮次 | 做了什么 | 关键文件 |
+|---|---|---|
+| 第一轮 | 合并 6 个 AI 功能主体（②语义匹配跳过、④教学AI首轮误判、JD换AI版） | 见下方「6 个功能落地」 |
+| 第二轮 | 提示词深度升级（教师教学建议 / 学生求职报告 / 职业顾问） | `TeachingAiServiceImpl`/`StudentAiReportServiceImpl`/`CareerAdvisorServiceImpl` |
+| 第三轮 | 全量 AI 审计补漏（市场摘要）+ 删规则版 JD 孤儿 | `AiSummaryServiceImpl` + `HrTool*` 清理 |
+| 第四轮 | HR「智能排序」改 90%规则+10%AI 混合打分 | `HrResumeAiServiceImpl` |
+
+**全程硬约束（已守住）：`JobMatchServiceImpl`/`JobMatchService` 四轮累计 0 改动**（第四轮只 `scoreOne` 只读复用）；未带入 main 推荐算法（`CollaborativeFilter*/ContentBased*/HybridRecommend*`）；每轮 `mvn install -DskipTests` 全绿；**均未 commit、未做真实 AI 点验**（需配 `application-local.yml` 密钥 + `enabled:true` + 重启后端）。
+
+---
+
+把 `功能合并指导.md` 列的 AI 功能从 `origin/main` 合进本分支，**不影响本分支功能主体**。**硬约束（用户强调，已守住）：绝不改本分支的匹配分数计算规则**（`JobMatchServiceImpl` / `JobMatchService` **0 改动**），也**未带入 main 的推荐算法**（`CollaborativeFilter*/ContentBased*/HybridRecommend*`）。
+
+**6 个功能的实际落地（盘点本分支已有内容后）：**
+1. **AI 系统提示词** — 随各实现类的 `static final` 常量自动带入，无独立文件
+2. **语义匹配 SemanticMatch** — **用户拍板跳过**。它在 main 里**唯一用途**是被 `JobMatchServiceImpl` 调用给匹配分数加 `semanticBonus`（最多 +15），正好撞硬约束；且无独立页面入口。**未搬入** `SemanticMatch*` 任何文件
+3. **简历 AI 多轮润色** — 合并：`ResumeAiService.polishChat` + `ResumePolishChatDTO` + `/api/student/resume/ai-polish-chat`；诊断增强（`ResumeReviewVO` 加 `marketCompetitiveness`、`Suggestion.priority/expectedEffect`）；前端 `Resume.vue` 加润色聊天弹窗
+4. **教学建议 AI** — 见下方「第二轮」。（首轮误判：只 diff 了 `TeachingAiService` **接口**为空就以为无需合并，其实提示词在 **`TeachingAiServiceImpl`** 里，main 强很多）
+5. **HR 简历 AI 筛选/排序 + JD AI** — 合并：`HrResumeAiService`/`HrJdAiService`(+impl)、`ResumeScreenVO`/`JdOptimizeVO`(本分支已有同名同结构)、`HrController` 加 `/api/hr/ai/jd/**` 与 `/api/hr/ai/resume/**` 端点；前端 `hr/Applications.vue` 加「AI 分析/智能排序」。**JD 助手 `components/hr/JdOptimizeAssistant.vue` 用户拍板从本地规则版换成 main 的 AI 版**（props 一致、`JobManage.vue` 无需改），连带删掉孤儿 `utils/jdOptimizer.js`
+6. **HR 面试题生成** — 合并：`HrInterviewAiService`(+impl)、`InterviewQuestionVO`、`HrController` 加 `/api/hr/ai/interview/questions`；新页 `views/hr/tools/InterviewQuestions.vue` + 路由 `/hr/tools/interview-questions` + 菜单项
+
+**合并手法（关键：main 在多处共享文件上落后于本分支，不能整覆盖）：**
+- **纯新增/纯追加文件直接取**：`git checkout origin/main -- <path>`（3 对 HR AI service+impl、`ResumeScreenVO`/`InterviewQuestionVO`/`ResumePolishChatDTO`、以及 `ResumeAiService(Impl)`/`ResumeReviewVO`/`StudentResumeController`——经确认 `diff v1-backup origin/main` 纯追加、无本分支内容丢失、`InterviewQuestions.vue`、AI 版 `JdOptimizeAssistant.vue`）
+- **外科式只加片段、绝不整覆盖**（main 缺本分支的就业状态/面试字段/头像）：`HrController.java`（+3 service 字段 +6 端点，保留 `changeStatus(id,uid,dto)`/`employedElsewhere`/interview 字段）、`api/student.js`（只加 AI 函数，保留 `deleteAvatar`/`acceptOffer`/`getEmploymentStatus`/带 DTO 的 `changeApplicationStatus`）、`Resume.vue`（保留 `embedded`/证件照）、`MainLayout.vue`（只加 1 个菜单项）、`router/index.js`（只加 1 条路由）
+- **`hr/Applications.vue` 是特例**：main 是本分支的超集，仅差 `ACCEPTED` 两行 → checkout main 版后补回 `ACCEPTED`（STATUSES + statusTag）
+- **前置依赖已就位**：`app.ai` 配置在 `application.yml`、`AiChatClient`/`AiMessage` 本分支都有（main 仅多一个用不到的 `chat(msgs,temp,maxTokens)` 重载，4 个新 impl 均不用）
+- **`ApplicantDrawer.vue` 未改**：AI 筛选实际落在 `Applications.vue`，抽屉无 AI 逻辑
+- **验证**：`mvn install -DskipTests` 通过、`npm run build` 通过；`JobMatchServiceImpl/Service` 0 改动、无 `Semantic/Collaborative/ContentBased/HybridRecommend` 文件混入
+- **未做**：真实 AI 端到端点验（需配 `occupation-web/src/main/resources/application-local.yml` 密钥 + `enabled:true`，`mvn install -DskipTests && mvn spring-boot:run -pl occupation-web` + 起前端，逐一点验简历多轮润色 / HR「AI 分析·智能排序」/ HR 工具箱「AI 面试问题」/ 发布职位 JD AI 优化；AI 关时均降级为规则文案）
+
+**第二轮：AI 提示词深度升级（2026-07-15，用户反馈「教师/学生分析太肤浅」后补合并，编译通过、未 commit）**——首轮遗漏：提示词常量都在 **Impl** 里，首轮只 diff 了接口。三处「取 main 更优实现」，**均不碰匹配分数/推荐算法/其他功能**：
+- **教师教学建议 AI**（`TeachingAiServiceImpl`，取 main）：旧版 350 字单段 → **1000-1500 字 + 五大板块**（整体诊断/技能缺口/课程调整/校企合作/预期效果），注入课程改革建议，用 `chat(...,0.5,4000)`。依赖 `TeachingSuggestionVO.courseSuggestions`/`SkillGap.suggestion`（本分支已有）。
+- **学生求职分析报告**（`StudentAiReportServiceImpl`，取 main）：旧版 4 段纯文本 → **六大板块**（个人画像/市场定位/技能竞争力/薪资合理性/3条求职路线/90天行动计划），2000-3000 字 Markdown，`chat(...,0.5,6000)`，上下文加 Top3 匹配+市场技能+行业薪资。**连带引入 `report/export/MarkdownRenderer.java`（Markdown→PDF，flexmark）+ 根 pom 加 `flexmark.version=0.64.8` 版本管理 + report pom 加 `flexmark-all` 依赖**（首轮曾把 MarkdownRenderer 列进排除、现按需引入）。
+- **学生职业顾问对话**（`CareerAdvisorServiceImpl`，外科式只改 `ADVISOR_ROLE` 常量）：**保留本分支更丰富的 buildContext**（就业状态+实际岗位+简历经历，比 main 强，不回退），**只借 main 的输出指令**——300 字→**500 字 + 「先结论→分点→下一步」结构 + 「我该学什么」给学习路径**。准则 1-5（含就业状态权威那条）原样保留。
+- **前置**：`AiChatClient` 取 main 版（**纯追加** `chat(msgs,temp,maxTokens)` 3 参重载，旧调用传 null 行为不变，全局 `max-tokens=1200`）。教师 4000 / 学生报告 6000 靠此重载放开；顾问 500 字走全局 1200 够用。
+- **验证**：`mvn install -DskipTests` 全绿、`MarkdownRenderer.class` 生成、`JobMatch` 仍 0 改动。同样**未做真实 AI 点验**（教师端教学建议 AI 解读 / 学生「我的报告」求职分析 / 学生职业顾问对话）。
+
+**第三轮：全量 AI 审计补漏 + 孤儿清理（2026-07-15，用户要求「查其他 AI 有没有同样情况」，编译通过、未 commit）**——把 8 个用 `AiChatClient` 的实现类逐一 diff（**diff Impl 不是接口**），结论：6 个已取 main 一致、`CareerAdvisor.EXPLAIN_SYSTEM` 两分支相同，**唯一漏网 = `AiSummaryServiceImpl`（市场报告智能摘要）**：
+- **`AiSummaryServiceImpl`（取 main）**：300 字单段 → **600-800 字 + 四大板块**（整体趋势/行业城市热点/技能需求变化/对师生建议），上下文加薪资分布+月度趋势（近6期）。依赖 `DashboardVO.TrendItem`（period/jobCount/avgSalary，本分支已有）。影响面仅市场报告摘要（`ReportGeneratorServiceImpl` 调用）。
+- **孤儿清理（用户拍板删）**：JD 助手换 AI 版后，本分支**规则版 JD 后端已无人调用**（前端/测试 0 引用）→ 删 `HrToolController` 的 `/optimize-jd` 端点、`HrToolService.optimizeJd` 接口方法、`HrToolServiceImpl` 的 `optimizeJd`+7 个 JD 私有辅助（scoreDimension/score*×5/generateSuggestions）、`dto/JdOptimizeRequest.java` 整文件。**保留** `JdOptimizeVO`（AI 版 `HrJdAiService.analyze` 在用）、`compareTalents`/`benchmarkSalary`/`calcTalentScore`（人才对比/薪资竞争力工具，不受影响）。连同第一轮删的前端 `utils/jdOptimizer.js`，规则版 JD 前后端已彻底清干净。
+- **验证**：`mvn install -DskipTests` 全绿、`JdOptimizeRequest` 全仓 0 引用、`JobMatch` 仍 0 改动。
+
+**第四轮：HR「智能排序」改混合打分（2026-07-15，用户主动要求，编译通过、未 commit）**——原 `HrResumeAiServiceImpl.rankByMatch` 是 **100% 大模型主观打分**（不可复现、每次点可能跳；AI 挂了降级成「全 50 分不排序」）。改为**规则主导 + AI 微调**（用户拍板 90/10、15s 超时）：
+- **最终分 = 规则分 × 0.9 + AI 分 × 0.1**（常量 `AI_WEIGHT=0.10`）。规则分来自 **`JobMatchService.scoreOne(userId, jobId)`**——「对单个职位打分，与 match 同一套规则」，**只读复用、不改 `JobMatchServiceImpl` 打分逻辑**（硬约束仍守住），顺带让 HR 排序分与学生端推荐匹配分**口径一致**。
+- **AI 是可选增强**：`CompletableFuture.supplyAsync(askJson).get(15s)`，超时（`TimeoutException`）或失败即丢弃 AI、直接输出**纯规则排序**——无论 AI 是否可用都有靠谱排序（替代旧的「全 50」）。注意超时后台线程仍会把那次 HTTP 跑完（走 ForkJoinPool.commonPool，低并发可接受）。
+- **`screen()`（单个「AI 分析」弹窗）同步融合**：有 jobId 时展示分也按 90/10 融合，避免同一候选人在弹窗与排序列显示两个不同分；AI 关时降级也补规则分。删了旧 `fallbackRank`（全 50，已被规则排序取代）。新增私有 `ruleScore`/`blend`/`clamp`，注入 `JobMatchService`（无循环依赖）。
+- **权重/超时是常量**，想调改 `AI_WEIGHT`（如 0.20）与 `AI_RANK_TIMEOUT_SECONDS` 即可。**只动 `HrResumeAiServiceImpl`**，前端/接口/契约不变。`mvn install` 全绿、`JobMatch` 仍 0 改动。
+
 ## 下次接手前必读的三条
 
 1. **改了非 web 模块，先 `mvn install -DskipTests`**。`spring-boot:run -pl occupation-web` 从 `.m2` 取旧 jar。真实咬过人：曾有两个「bug」（学历不同步、报告下载打不开）在同一份代码上复现不出来，根因就是这个。`mvn clean compile` 治不了——它不往 `.m2` 装 jar
