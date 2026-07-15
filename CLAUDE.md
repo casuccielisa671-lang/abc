@@ -192,6 +192,7 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
   2. **上传直接 500**：`MultipartFile.transferTo(相对路径 File)` 对相对路径按 **servlet 临时目录**解析，与前面 `Files.createDirectories` 建的目录对不上 → `FileNotFound`。改用 `Files.copy(file.getInputStream(), targetPath)`（与 createDirectories 同一套路径解析）。
   3. **删除清不掉 DB**：`updateById` 默认 `FieldStrategy` **跳过 null 字段**，所以「把 avatar_url 设 null 再 save」清不掉列。新增 `StudentProfileService.clearAvatar` 用 `LambdaUpdateWrapper.set(avatarUrl, null)` **显式置空**。
 - **不堆积**：每次上传新 UUID 文件；**上传新头像时删掉被替换的旧文件**（每人最多 1 张）；新增 `DELETE /api/student/profile/avatar`（删磁盘文件 + `clearAvatar` 清 DB），`Profile.vue` 的「删除」改调它（原来只清前端字段、文件与 DB 都不动）。
+- **启动对账清理孤儿文件（2026-07-15）**：`docker-compose down -v` 只清数据库、**不动磁盘 `data/avatars/`**——重置后 `avatar_url` 归零但旧 png 还在磁盘、成永久孤儿越堆越多（上传时删旧的逻辑管不到，因为重置后 profile 没 avatar_url）。新增 `AvatarStartupCleaner`（recommend/config，`@EventListener(ApplicationReadyEvent)`）：启动时扫 `data/avatars/`，删掉**数据库里没有任何画像引用**的文件，使磁盘与库对齐。跨租户取引用走 `SysStudentProfileMapper.selectAllAvatarUrls()`（**方法级** `@InterceptorIgnore(tenantLine="true")`，启动时无租户上下文，普通查询会被过滤成 0 行）。只删无引用文件、被引用的保留（验证过：被引用 1 张保留、3 个孤儿删除）。
 
 ### HR 可见性边界（改动了原来的「全脱敏」设计）
 
