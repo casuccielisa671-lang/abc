@@ -7,32 +7,41 @@ import {
   PlaneGeometry,
   ShaderMaterial
 } from 'three'
-// sc-datav 同款热力库
 import heatmapJs from 'keli-heatmap.js'
 
-/** sc-datav Demo1 完全一致的热力渐变 */
-const SC_DATAV_GRADIENT = {
-  0.5: '#1fc2e1',
-  0.6: '#24d560',
-  0.7: '#9cd522',
-  0.8: '#f1e12a',
-  0.9: '#ffbf3a',
-  1.0: '#ff0000'
+/** 低门槛渐变，多城可见 */
+const HEAT_GRADIENT = {
+  0.05: '#1B4DB3',
+  0.2: '#2E86FF',
+  0.4: '#28C0D6',
+  0.55: '#8BE04E',
+  0.7: '#F7C948',
+  0.85: '#F97316',
+  1.0: '#ff4500'
 }
+
+const HEAT_RADIUS = 28
+/** 热力凸起高度 */
+const HEAT_Z_SCALE = 12
+/** 相对地形顶面上浮（过高易被深度测试裁掉） */
+const HEAT_FLOAT_ABOVE = 5.5
+const TEX_SIZE = 512
 
 function createHeatmapMaterial(maskTexture) {
   return new ShaderMaterial({
     transparent: true,
     side: DoubleSide,
     depthWrite: false,
+    // 悬浮热力不写深度也不测深度，避免抬高后被地形/动效层裁没
+    depthTest: false,
     uniforms: {
       heatMap: { value: null },
       greyMap: { value: null },
-      maskMap: { value: maskTexture || null },
-      useMask: { value: maskTexture ? 1.0 : 0.0 },
-      z_scale: { value: 4.0 },
+      maskMap: { value: null },
+      useMask: { value: 0.0 },
+      z_scale: { value: HEAT_Z_SCALE },
       u_color: { value: new Color('#ffffff') },
-      u_opacity: { value: 1.0 }
+      u_opacity: { value: 0.92 }
     },
     vertexShader: `
       varying vec2 vUv;
@@ -52,101 +61,109 @@ function createHeatmapMaterial(maskTexture) {
       #endif
       varying vec2 vUv;
       uniform sampler2D heatMap;
-      uniform sampler2D maskMap;
-      uniform float useMask;
-      uniform vec3 u_color;
       uniform float u_opacity;
+      uniform vec3 u_color;
       void main() {
         vec4 heat = texture2D(heatMap, vUv);
-        if (heat.a < 0.02) discard;
-        float alpha = heat.a * u_opacity;
-        if (useMask > 0.5) {
-          float maskAlpha = texture2D(maskMap, vUv).a;
-          if (maskAlpha < 0.08) discard;
-          alpha *= maskAlpha;
-        }
-        gl_FragColor = vec4(u_color * heat.rgb, alpha);
+        if (heat.a < 0.012) discard;
+        gl_FragColor = vec4(u_color * heat.rgb, heat.a * u_opacity);
       }
     `
   })
 }
 
-/** sc-datav heatmap.tsx — keli-heatmap.js 双通道绘制 */
-function renderScDatavHeatTextures(points, size, minVal, maxVal) {
-  const container = document.createElement('div')
-  container.style.cssText = 'position:absolute;top:-9999px;left:-9999px;'
-  document.body.appendChild(container)
+function renderHeatTextures(points, size, maxVal) {
+  const makeCanvasLayer = (gradient) => {
+    const container = document.createElement('div')
+    container.style.cssText = 'position:absolute;top:-9999px;left:-9999px;'
+    document.body.appendChild(container)
+    const layer = heatmapJs.create({
+      container,
+      gradient,
+      blur: 0.85,
+      radius: HEAT_RADIUS,
+      maxOpacity: 1,
+      width: size,
+      height: size
+    })
+    layer.setData({ max: Math.max(maxVal, 1), min: 0, data: points })
+    const texture = new CanvasTexture(layer._renderer.canvas)
+    texture.needsUpdate = true
+    document.body.removeChild(container)
+    return texture
+  }
 
-  const radius = 10
-  const heatmap = heatmapJs.create({
-    container,
-    gradient: SC_DATAV_GRADIENT,
-    blur: 1,
-    radius,
-    maxOpacity: 1,
-    width: size,
-    height: size
-  })
-
-  const greymap = heatmapJs.create({
-    container,
-    gradient: { 0.0: 'black', 1.0: 'white' },
-    radius,
-    maxOpacity: 1,
-    width: size,
-    height: size
-  })
-
-  heatmap.setData({ max: maxVal, min: minVal, data: points })
-  greymap.setData({ max: maxVal, min: minVal, data: points })
-
-  const heatTexture = new CanvasTexture(heatmap._renderer.canvas)
-  heatTexture.needsUpdate = true
-  const greyTexture = new CanvasTexture(greymap._renderer.canvas)
-  greyTexture.needsUpdate = true
-
-  document.body.removeChild(container)
-
-  return { heatTexture, greyTexture }
+  return {
+    heatTexture: makeCanvasLayer(HEAT_GRADIENT),
+    greyTexture: makeCanvasLayer({ 0.0: 'black', 1.0: 'white' })
+  }
 }
 
-function projectHeatPoints(projection, heatPoints, size) {
+/**
+ * 投影到与地形相同的局部坐标 (x, -y)，再按全国 bbox 归一化到热力画布。
+ * CanvasTexture 默认 flipY=true：画布自上而下的 cy 应对齐到 UV.v = 1 - cy/size。
+ */
+function projectHeatPoints(projection, heatPoints, size, bbox) {
+  const minX = bbox.min.x
+  const minY = bbox.min.y
+  const w = Math.max(bbox.max.x - bbox.min.x, 1)
+  const h = Math.max(bbox.max.y - bbox.min.y, 1)
+
   return heatPoints.map((p) => {
-    const [x = 0, y = 0] = projection([p.longitude, p.latitude]) ?? [0, 0]
+    const raw = projection([p.longitude, p.latitude])
+    const px = raw?.[0] ?? 0
+    const py = raw?.[1] ?? 0
+    // 与标签 / 地形一致
+    const lx = px
+    const ly = -py
+    const u = (lx - minX) / w
+    const v = (ly - minY) / h
     return {
-      x: Math.floor(x + size / 2),
-      y: Math.floor(y + size / 2),
+      x: Math.floor(Math.min(size - 1, Math.max(0, u * size))),
+      // flipY：顶边 cy=0 → v=1，故 cy = (1-v)*size
+      y: Math.floor(Math.min(size - 1, Math.max(0, (1 - v) * size))),
       value: Number(p.gatherValue ?? p.value) || 0
     }
   })
 }
 
 /**
- * sc-datav 结构：热力 mesh 放在 map group 内 position-z = depth+1，无额外 rotation
+ * 热力面与地形 bbox 对齐，UV 与省界贴图一致，避免「只有北京」错位假象
  */
 export function createHeatmapMesh(projection, heatPoints, options = {}) {
-  const { size = 500, depth = 6, maskTexture = null } = options
+  const {
+    size = TEX_SIZE,
+    depth = 6,
+    maskTexture = null,
+    bbox = null
+  } = options
+
+  if (!bbox) {
+    throw new Error('createHeatmapMesh: bbox 必填，否则热力无法与地图对齐')
+  }
+
   const values = heatPoints.map((p) => Number(p.gatherValue ?? p.value) || 0)
-  const minVal = values.length ? Math.min(...values) : 0
-  const maxVal = values.length ? Math.max(...values, minVal + 1) : 1
+  const maxVal = values.length ? Math.max(...values, 1) : 1
 
-  const projected = projectHeatPoints(projection, heatPoints, size)
-  const { heatTexture, greyTexture } = renderScDatavHeatTextures(
-    projected,
-    size,
-    minVal,
-    maxVal
-  )
+  const projected = projectHeatPoints(projection, heatPoints, size, bbox)
+  const { heatTexture, greyTexture } = renderHeatTextures(projected, size, maxVal)
 
-  const material = createHeatmapMaterial(maskTexture)
+  const material = createHeatmapMaterial(null)
   material.uniforms.heatMap.value = heatTexture
   material.uniforms.greyMap.value = greyTexture
 
-  const group = new Group()
-  group.position.z = depth + 1
+  const mapW = Math.max(bbox.max.x - bbox.min.x, 1)
+  const mapH = Math.max(bbox.max.y - bbox.min.y, 1)
+  const cx = (bbox.min.x + bbox.max.x) / 2
+  const cy = (bbox.min.y + bbox.max.y) / 2
 
-  const mesh = new Mesh(new PlaneGeometry(size, size, 300, 300), material)
-  mesh.renderOrder = 11
+  const group = new Group()
+  group.position.z = depth + HEAT_FLOAT_ABOVE
+
+  const mesh = new Mesh(new PlaneGeometry(mapW, mapH, 300, 300), material)
+  mesh.position.set(cx, cy, 0)
+  mesh.renderOrder = 50
+  mesh.frustumCulled = false
   group.add(mesh)
 
   return {
@@ -159,11 +176,11 @@ export function createHeatmapMesh(projection, heatPoints, options = {}) {
       mesh.geometry.dispose()
     },
     update(nextPoints) {
-      const nextValues = nextPoints.map((p) => Number(p.gatherValue ?? p.value) || 0)
-      const nMin = Math.min(...nextValues)
-      const nMax = Math.max(...nextValues, nMin + 1)
-      const nextProjected = projectHeatPoints(projection, nextPoints, size)
-      const canvases = renderScDatavHeatTextures(nextProjected, size, nMin, nMax)
+      const list = nextPoints || []
+      const nextValues = list.map((p) => Number(p.gatherValue ?? p.value) || 0)
+      const nMax = nextValues.length ? Math.max(...nextValues, 1) : 1
+      const nextProjected = projectHeatPoints(projection, list, size, bbox)
+      const canvases = renderHeatTextures(nextProjected, size, nMax)
       material.uniforms.heatMap.value.dispose()
       material.uniforms.greyMap.value.dispose()
       material.uniforms.heatMap.value = canvases.heatTexture

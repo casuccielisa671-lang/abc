@@ -26,9 +26,9 @@ export function computeShapeUV(geometry, bbox) {
   geometry.setAttribute('uv', new Float32BufferAttribute(uv, 2))
 }
 
-/** sc-datav city.tsx — map + normalMap 顶面，extrude 侧面 */
+/** sc-datav：卫星贴图 + 高度/法线 */
 export function createTerrainMaterial(textures) {
-  const { borderTex, normalTex, heightTex, satelliteTex } = textures
+  const { borderTex, normalTex, heightTex, satelliteTex } = textures || {}
   return new MeshStandardMaterial({
     map: satelliteTex || borderTex || null,
     normalMap: normalTex || heightTex || null,
@@ -64,21 +64,31 @@ function buildRegionGroup(region, bbox, topMaterial, sideMaterial, depth) {
   side.receiveShadow = true
   root.add(side)
 
-  const edges = new LineSegments(
-    new EdgesGeometry(shapeGeo),
-    new LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.32 })
+  const edgeGeo = new EdgesGeometry(shapeGeo)
+  // 底层描边加粗感：深色底线 + 浅色高亮（WebGL 线宽常锁 1，用双线叠层）
+  const edgeUnder = new LineSegments(
+    edgeGeo,
+    new LineBasicMaterial({ color: '#5a3d1a', transparent: true, opacity: 0.95 })
   )
-  edges.position.z = depth + 0.2
-  root.add(edges)
+  edgeUnder.position.z = depth + 0.22
+  root.add(edgeUnder)
+
+  const edgeOver = new LineSegments(
+    edgeGeo.clone(),
+    new LineBasicMaterial({ color: '#fff8ec', transparent: true, opacity: 1 })
+  )
+  edgeOver.position.z = depth + 0.32
+  edgeOver.scale.set(1.0015, 1.0015, 1)
+  root.add(edgeOver)
 
   let currentLift = 1
   let targetLift = 1
 
   root.setHover = (active) => {
-    targetLift = active ? 1.5 : 1
+    targetLift = active ? 2.35 : 1
   }
   root.tickLift = () => {
-    currentLift += (targetLift - currentLift) * 0.1
+    currentLift += (targetLift - currentLift) * 0.16
     root.scale.z = currentLift
   }
   root.mesh = top

@@ -13,7 +13,6 @@
     "axios": "^1.6.0",
     "d3-geo": "^3.1.1",
     "echarts": "^5.5.0",
-    "echarts-gl": "^2.1.0",
     "element-plus": "^2.5.0",
     "keli-heatmap.js": "^2.0.18",
     "pinia": "^2.1.0",
