@@ -107,17 +107,8 @@
               {{ aiGenerated ? 'AI 生成' : '规则化生成（AI 未启用）' }}
             </el-tag>
             <span class="muted">可直接编辑，或用下方指令让 AI 再改一版</span>
-            <el-radio-group v-model="viewMode" size="small" class="view-toggle">
-              <el-radio-button label="preview">预览</el-radio-button>
-              <el-radio-button label="edit">编辑</el-radio-button>
-            </el-radio-group>
           </div>
-
-          <!-- 预览模式：渲染 Markdown，没有 ** / #### 残留 -->
-          <div v-if="viewMode === 'preview'" class="md-preview" v-html="renderedContent" />
-
-          <!-- 编辑模式：保留原始 Markdown 文本，便于手动改写 -->
-          <el-input v-else v-model="content" type="textarea" :rows="14" placeholder="报告正文（Markdown）" />
+          <el-input v-model="content" type="textarea" :rows="12" placeholder="报告正文" />
 
           <div class="refine">
             <el-input v-model="instruction" placeholder="让 AI 修改，如：把技能提升建议写得更具体" @keyup.enter="refine" />
@@ -147,7 +138,6 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { marked } from 'marked'
 import { ElMessage } from 'element-plus'
 import {
   previewAiReport, saveAiReport, getMyReports, downloadMyReport,
@@ -157,12 +147,7 @@ import { toList, toTotal } from '@/utils/list'
 import { formatTime } from '@/utils/format'
 import { saveBlob } from '@/utils/download'
 
-// Markdown → HTML（前端预览用）；后端导出 PDF 时也会再渲染一次
-marked.setOptions({ breaks: true, gfm: true })
-
 const activeTab = ref('mine')
-const viewMode = ref('preview')   // 'preview' 渲染 Markdown，'edit' 显示原文便于手动改
-const renderedContent = computed(() => marked.parse(content.value || ''))
 
 // ---- ① 我的 AI 报告 ----
 const records = ref([])
@@ -241,7 +226,6 @@ function openGen() {
   history.value = []
   reportName.value = '我的求职分析报告'
   fileType.value = 'PDF'
-  viewMode.value = 'preview'
   genVisible.value = true
 }
 
@@ -296,54 +280,4 @@ onMounted(() => {
 .foot-left { display: flex; gap: 10px; }
 .tab-badge :deep(.el-badge__content) { top: 6px; }
 .dot :deep(.el-badge__content.is-dot) { top: 6px; right: -2px; }
-
-/* Markdown 预览样式：与后端 PDF CSS 对齐，避免浏览器与导出 PDF 视觉差异 */
-.view-toggle { margin-left: auto; }
-.md-preview {
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: 6px;
-  padding: 18px 22px;
-  min-height: 280px;
-  max-height: 480px;
-  overflow-y: auto;
-  background: #fff;
-  line-height: 1.85;
-  color: #1f2937;
-  font-size: 13.5px;
-}
-.md-preview :deep(h1),
-.md-preview :deep(h2),
-.md-preview :deep(h3),
-.md-preview :deep(h4) { font-weight: 600; line-height: 1.4; }
-.md-preview :deep(h2) {
-  font-size: 17px; margin: 18px 0 10px; padding-left: 10px;
-  border-left: 4px solid #2563eb; color: #1e3a8a;
-}
-.md-preview :deep(h3) { font-size: 15px; margin: 14px 0 8px; color: #1e40af; }
-.md-preview :deep(h4) { font-size: 14px; margin: 10px 0 6px; color: #374151; }
-.md-preview :deep(p) { margin: 8px 0; }
-.md-preview :deep(ul),
-.md-preview :deep(ol) { margin: 6px 0 6px 22px; padding: 0; }
-.md-preview :deep(li) { margin: 3px 0; }
-.md-preview :deep(strong) { color: #0f172a; font-weight: 700; }
-.md-preview :deep(code) {
-  background: #f3f4f6; padding: 1px 6px; border-radius: 3px;
-  font-family: Consolas, monospace; color: #be185d;
-}
-.md-preview :deep(pre) {
-  background: #1e293b; color: #e2e8f0; padding: 12px;
-  border-radius: 6px; overflow: auto;
-}
-.md-preview :deep(table) {
-  border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 12.5px;
-}
-.md-preview :deep(th),
-.md-preview :deep(td) {
-  border: 1px solid #d1d5db; padding: 6px 10px; text-align: left;
-}
-.md-preview :deep(th) { background: #f3f4f6; font-weight: 600; }
-.md-preview :deep(blockquote) {
-  border-left: 4px solid #cbd5e1; color: #475569;
-  margin: 8px 0; padding: 6px 14px; background: #f8fafc;
-}
 </style>

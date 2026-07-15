@@ -172,6 +172,28 @@ public class MockJobPageProcessor extends JobPageProcessor {
     }
 
     /**
+     * 加载并构建全部 mock 职位消息，不发送 Kafka。
+     * 供 CrawlerService 同步清洗入库使用（绕开 Kafka 异步链路，采集完立即可查）。
+     */
+    public List<JobDataMessage> collectAll() {
+        if (allRecords == null) {
+            loadData();
+        }
+        List<JobDataMessage> jobs = new ArrayList<>();
+        if (allRecords.isEmpty()) {
+            log.warn("模拟数据为空，跳过采集");
+            return jobs;
+        }
+        for (JSONObject record : allRecords) {
+            String rawContent = JSON.toJSONString(record);
+            JobDataMessage message = buildMessage(record.getString("sourceUrl"), rawContent);
+            jobs.add(message);
+            addJob(message);
+        }
+        return jobs;
+    }
+
+    /**
      * 直接处理所有 mock 数据（不通过 Spider 框架）
      * 加载 JSON 数据 → 构建 JobDataMessage → 通过 Pipeline 发送到 Kafka
      */

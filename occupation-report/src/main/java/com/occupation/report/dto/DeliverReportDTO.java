@@ -15,10 +15,10 @@ public class DeliverReportDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /** 范围类型：ALL=全体 / MAJOR=专业 / GRADE=入学年级 / CLASS=班级 */
+    /** 范围类型：ALL=全体 / MAJOR=专业 / GRADE=入学年级 / CLASS=班级 / SELF=仅自己可见（撤回全部下发） */
     @NotBlank(message = "请选择发送范围")
     private String targetType;
 
-    /** 范围值：MAJOR=专业名、GRADE=年级数字、CLASS=班级 id；ALL 可为空 */
+    /** 范围值：MAJOR=专业名、GRADE=年级数字、CLASS=班级 id；ALL / SELF 可为空 */
     private String targetValue;
 }

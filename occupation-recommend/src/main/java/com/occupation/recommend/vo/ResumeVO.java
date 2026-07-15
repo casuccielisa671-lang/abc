@@ -22,6 +22,9 @@ public class ResumeVO implements Serializable {
     /** 简历是否已创建。false 时其余字段为空，前端展示引导填写 */
     private boolean exists;
 
+    /** 证件照 URL — 唯一来源是个人画像（`sys_student_profile.avatar_url`），简历只读展示，不在此上传 */
+    private String avatarUrl;
+
     private String contactPhone;
     private String contactEmail;
     private String jobIntention;

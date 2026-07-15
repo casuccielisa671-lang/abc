@@ -101,7 +101,7 @@ public class TeacherToolServiceImpl implements TeacherToolService {
                         .map(e -> {
                             ClassCompareVO.Destination d = new ClassCompareVO.Destination();
                             d.setJobCategory(e.getKey());
-                            d.setRatio(totalApplies > 0 ? Math.round(e.getValue() * 10000.0 / totalApplies) / 100.0 : 0);
+                            d.setRatio(totalApplies > 0 ? Math.round(e.getValue() * 10000.0 / totalApplies) / 100.0 : 0.0);
                             return d;
                         })
                         .collect(Collectors.toList());

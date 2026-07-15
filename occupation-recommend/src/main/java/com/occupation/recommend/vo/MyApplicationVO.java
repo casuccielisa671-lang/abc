@@ -39,6 +39,12 @@ public class MyApplicationVO implements Serializable {
     private LocalDateTime appliedAt;
     private LocalDateTime statusChangedAt;
 
+    /** 面试信息（status=INTERVIEW 时非空），学生端渲染成面试通知卡 */
+    private LocalDateTime interviewTime;
+    private String interviewPlace;
+    private String interviewContact;
+    private String interviewContent;
+
     public static MyApplicationVO of(JobApplication app, JobDetailVO job) {
         MyApplicationVO vo = new MyApplicationVO();
         vo.applicationId = app.getId();
@@ -46,6 +52,10 @@ public class MyApplicationVO implements Serializable {
         vo.appliedAt = app.getAppliedAt();
         vo.statusChangedAt = app.getStatusChangedAt();
         vo.status = app.getStatus();
+        vo.interviewTime = app.getInterviewTime();
+        vo.interviewPlace = app.getInterviewPlace();
+        vo.interviewContact = app.getInterviewContact();
+        vo.interviewContent = app.getInterviewContent();
 
         ApplicationStatus st = ApplicationStatus.valueOf(app.getStatus());
         vo.statusLabel = st.getLabel();

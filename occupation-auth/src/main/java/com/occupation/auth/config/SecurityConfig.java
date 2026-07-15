@@ -46,6 +46,8 @@ public class SecurityConfig {
             .antMatchers("/api/open/**").permitAll()
             // 新闻资讯：公开内容，无需登录即可浏览
             .antMatchers("/api/news/**").permitAll()
+            // 证件照静态图片：<img> 标签加载不会带 JWT，文件名是随机 UUID 不可枚举，公开可读
+            .antMatchers("/api/avatars/**").permitAll()
             // Knife4j / OpenAPI 接口文档
             .antMatchers("/doc.html", "/v3/api-docs/**", "/webjars/**", "/favicon.ico").permitAll()
             .anyRequest().authenticated()

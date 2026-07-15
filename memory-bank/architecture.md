@@ -3,8 +3,8 @@
 > 本文档记录项目当前的架构状态，由 AI 在每完成一个 Step 后自动更新。
 > 包含：模块状态、数据库 Schema、API 接口、部署组件。
 
-> **最后更新**: 2026-07-14（推荐算法升级：协同过滤 + 内容推荐）
-> **状态**: 四端功能与工具箱已落地 — 数据管道(采集→清洗→统计)贯通 + 中等规模种子数据 + Docker 生产部署链路就绪 + AI 能力全面升级 + 混合推荐引擎(规则+语义+CF+CB)
+> **最后更新**: 2026-07-14（官方公开报告采集优化轮）
+> **状态**: 四端功能与工具箱已落地 — 数据管道(采集→清洗→统计)贯通 + 中等规模种子数据 + Docker 生产部署链路就绪
 > **⚠️ 重要**: 本轮起以 `docs/项目开发说明书.md` 为唯一权威开发指南（含架构、分工、待办清单）；
 > 技术栈已收敛：HDFS/Hive/HBase/Neo4j/ES 移出必做范围，Spark 以可插拔接口预留（AnalysisJobService），
 > 调度默认 Spring @Scheduled；XXL-Job 不再作为当前必需组件。
@@ -17,10 +17,10 @@
 | --------------------------- | -------- | ---------------------------- |
 | occupation-common           | ✅ 已实现 | 统一响应 + 异常处理 + BaseEntity + 多租户 + 分页 + 13张表SQL + Kafka管道 |
 | occupation-auth             | ✅ 已实现 | JWT 签发/校验 + 登录接口 + JwtAuthenticationFilter + SecurityConfig |
-| occupation-crawler          | ✅ 已实现 | WebMagic 爬虫框架 + CrawlerTask/CrawlerLog + MOCK/OFFICIAL_PUBLIC/STACK_OVERFLOW_SURVEY 采集 + 完成状态自动回写；资讯拉取归属 recommend/news 模块 |
+| occupation-crawler          | ✅ 已实现 | WebMagic 爬虫框架 + CrawlerTask/CrawlerLog + MOCK/OFFICIAL_PUBLIC 岗位采集 + 完成状态自动回写；资讯拉取归属 recommend/news 模块 |
 | occupation-analysis         | ✅ 已实现 | Dashboard 5维度查询 + 职位分页查询 + Controller API |
 | occupation-report           | ✅ 框架落地 | 模板 CRUD + 生成引擎(六步) + AI 摘要(LLM+降级) + PDF/Word 导出器 + 下载接口 |
-| occupation-recommend        | ✅ 框架落地 | 画像 CRUD + 混合推荐引擎(规则打分+语义匹配+协同过滤+内容推荐) + 推送 + 行为闭环 + 教师/HR 接口 + 每日推送调度 + SemanticMatchService + CollaborativeFilterService + ContentBasedRecommendService |
+| occupation-recommend        | ✅ 框架落地 | 画像 CRUD + 匹配算法(四维打分) + 推送 + 行为闭环 + 教师/HR 接口 + 每日推送调度 |
 | occupation-api              | ✅ 框架落地 | Token 签发(Redis) + 校验/限流拦截器 + 开放数据接口(职位/大盘/技能/行业) |
 | occupation-web              | ✅ 已运行 | Application + HealthController + 2 项测试通过 |
 | occupation-web-ui (Vue 3)   | ✅ 已实现 | 四角色页面 + 工具箱主界面/悬浮入口 + 资讯/报告/职位/画像等页面 |
@@ -50,7 +50,6 @@
 | 采集管道 | `occupation-crawler/.../processor/JobPipeline.java` | ✅ WebMagic Pipeline → Kafka 发送 |
 | 模拟爬虫 | `occupation-crawler/.../processor/MockJobPageProcessor.java` | ✅ 本地 JSON 模拟采集链路 |
 | 官方公开采集器 | `occupation-crawler/.../processor/OfficialPublicJobProcessor.java` | ✅ robots.txt 校验 + 低频采集公开招聘公告 |
-| 调查 CSV 采集器 | `occupation-crawler/.../processor/StackOverflowSurveyProcessor.java` | ✅ 公开 CSV 调查导入，转为开发者生态样本岗位 |
 | 资讯兼容采集器 | `OfficialReportProcessor` / `InfoQNewsProcessor` / `OsChinaNewsProcessor` / `NewsPageProcessor` | ✅ 历史兼容入口；新建资讯推荐通过 `AdminNewsController.pull-rss` 写入 news 表，不作为数据面板采集任务 |
 | 采集 Service | `occupation-crawler/.../service/impl/CrawlerServiceImpl.java` | ✅ 启停管理 + 多源路由 + 状态跟踪 |
 | 采集管理 API | `occupation-crawler/.../controller/CrawlerController.java` | ✅ CRUD + 启停 + 日志查询 |
@@ -283,35 +282,5 @@ com.occupation.<模块名>
 - 真实采集任务改为事务提交后异步启动，并在 Spider 完成后自动回写 `crawler_log.end_time / record_count / status`，避免日志长期停留在 `RUNNING + 0`。
 - 外部资讯默认源从 Google News 改为开源中国 RSS，并在关键词无命中时回退最新资讯。
 - 生产部署改为后端/前端 Docker 镜像内自动构建；新增 `.dockerignore`、`Dockerfile.frontend`、`scripts/reset-dev-db.ps1` 和 `docs/部署与同步说明.md`，降低 GitHub 同步和云服务器部署误差。
-- 重新划清"数据采集"和"行业资讯"边界：数据采集任务默认只保留 MOCK 与 `OFFICIAL_PUBLIC` 岗位/公告采集，用于行业热度、城市分布等数据面板；行业资讯由 recommend/news 模块的 `/api/admin/news/pull-rss` 拉取并通过 `/api/news` 展示给四类角色。
+- 重新划清“数据采集”和“行业资讯”边界：数据采集任务默认只保留 MOCK 与 `OFFICIAL_PUBLIC` 岗位/公告采集，用于行业热度、城市分布等数据面板；行业资讯由 recommend/news 模块的 `/api/admin/news/pull-rss` 拉取并通过 `/api/news` 展示给四类角色。
 - 行业资讯增加空库基础资讯、分类兜底和 RSS 自动分类，避免某个方向筛选无数据时四端首页资讯卡片显示空白。
-### 2026-07-14 采集稳定性补充
-
-- `OFFICIAL_PUBLIC` 管理端"立即采集一次"改为同步直采链路：短超时访问公开岗位页，解析后同时写入 `raw_job_data` 并调用 `DataCleanService` 直接清洗到 `job_detail`，不再依赖 WebMagic 异步状态轮询或 Kafka 消费完成度来判断本次任务是否结束。
-- `OfficialPublicDirectCollector` 新增自动翻页功能：每次采集自动跟随"下一页"链接，支持 4 种翻页模式（rel=next、class=next、文本"下一页"、pageNo 自增），最大 50 页，翻页间隔 1.5~3.5s 随机延迟，`visitedUrls` 去重防循环。
-### 2026-07-14 AI 能力全面升级
-
-- **AiProperties.maxTokens** 从 1200 提升到 3000（全局默认），支持更长的分析输出。
-- **新增 SemanticMatchService**（JD-简历语义匹配）：调用 DeepSeek 做 JD 文本与简历文本的语义相似度计算，弥补字符串匹配中 "Java" 和 "Spring Boot" 被视为无关技能的问题。结果缓存 Redis 24 小时，AI 不可用时降级返回空结果。
-- **JobMatchServiceImpl 升级**：在原有四维打分（技能40+城市25+薪资20+学历15）基础上增加语义匹配维度（+15分），总分裁剪回 0~100。
-- **AiSummaryServiceImpl 升级**：报告摘要从 300 字升级到 600-800 字，按四大板块组织（整体趋势→行业城市热点→技能需求变化→建议），增加薪资分布和月度趋势数据注入。
-- **ResumeAiServiceImpl + ResumeReviewVO 升级**：summary 80-120字，strengths/weaknesses 3-5条各50字，suggestions 4-6条增加 priority 和 expectedEffect 字段，新增 marketCompetitiveness 竞争力评估。
-- **StudentAiReportServiceImpl 升级**：报告结构从 3 板块升级到 6 大板块（个人画像→市场定位→技能竞争力→薪资合理性→3条求职路线→90天行动计划），温度从 0.7 调为 0.5，增加行业薪资参考数据注入。
-- **TeachingAiServiceImpl 升级**：从 350 字升级到 600-800 字，按五大板块组织（整体诊断→3个技能缺口→课程调整→校企合作→预期效果与评估指标）。
-- **CareerAdvisorServiceImpl 升级**：字数从 300 升级到 500，新增 2 条行为准则（回答结构要求、学习路径要求），上下文注入匹配分最高的 3 个职位及缺失技能。
-
-### 2026-07-14 推荐算法升级：协同过滤 + 内容推荐
-
-- **新增 ContentBasedRecommendService**（基于内容的推荐）：TF-IDF 技能向量化 + 余弦相似度计算职位间相似度。支持 `similarJobs(jobId, topN)`（看了这个职位的人还看了...）和 `recommendByUserHistory(userId, topN)`（基于用户投递/收藏历史推荐技能相似的职位）。
-- **新增 CollaborativeFilterService**（User-Based 协同过滤）：基于学生 APPLY/FAVORITE 行为构建用户-职位交互矩阵，余弦相似度找 Top K 邻居，聚合邻居交互过的职位按相似度加权推荐。冷启动用户自动跳过。
-- **新增 HybridRecommendService**（混合推荐引擎）：融合三种策略 — 规则打分+语义匹配（70%）+ 协同过滤（15%）+ 内容推荐（15%），加权合并去重后返回 Top N。
-- **RecommendController 升级**：推荐入口从 `JobMatchService` 切换到 `HybridRecommendService`，保留 `JobMatchService.scoreOne()` 供单职位打分使用。
-
-## 变更记录 — 2026-07-14 报告 Markdown 渲染 + 报告截断修复
-
-- 新增 occupation-report/src/main/java/com/occupation/report/export/MarkdownRenderer.java：flexmark-all 封装的 Markdown→XHTML 渲染器（含表格扩展、软换行、think 标签清洗）。
-- 改造 StudentAiReportServiceImpl.renderHtml()：调用 MarkdownRenderer 把 AI 输出（/####//* 列表 等）转成合规 XHTML，再嵌入带样式的 HTML 模板（h2 蓝竖条/列表/表格/引用块）。
-- AiChatClient 新增重载 chat(messages, temperature, maxTokens)：学生报告调用时显式传 4000 token（全局默认 3000 经常截断六大板块）。
-- StudentAiReportServiceImpl.ROLE prompt 追加输出格式硬性要求：Markdown 二级标题/三级、四级/严禁代码块/严禁 <think>/整篇 1800-2400 字/截断必须在完整句子处。
-- 前端 occupation-web-ui/src/views/student/Reports.vue 新增 marked 依赖（12.0.2），把 textarea 改为「预览 / 编辑」双模式（默认预览），预览区 CSS 与 PDF 导出样式对齐。
-- 根 pom 与 occupation-report/pom.xml 增加 lexmark.version=0.64.8 依赖版本锁定。

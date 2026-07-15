@@ -31,4 +31,7 @@ public class TeacherOverviewVO implements Serializable {
 
     /** 自主联系总数：学生对采集来的外部岗位表达的求职意向 */
     private long totalContacts;
+
+    /** 已就业学生数（有 ACCEPTED 投递）—— 就业率 = employedCount / totalStudents */
+    private long employedCount;
 }

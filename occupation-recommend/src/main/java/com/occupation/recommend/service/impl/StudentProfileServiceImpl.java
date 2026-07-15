@@ -2,6 +2,7 @@ package com.occupation.recommend.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.occupation.recommend.dto.ProfileSaveDTO;
 import com.occupation.recommend.entity.SysStudentProfile;
@@ -58,6 +59,14 @@ public class StudentProfileServiceImpl implements StudentProfileService {
             profileMapper.updateById(profile);
         }
         log.info("学生画像已保存: userId={}, isNew={}", userId, isNew);
+    }
+
+    @Override
+    public void clearAvatar(Long userId) {
+        // 显式 set(null)：updateById 默认 FieldStrategy 会跳过 null 字段，清不掉列
+        profileMapper.update(null, new LambdaUpdateWrapper<SysStudentProfile>()
+                .eq(SysStudentProfile::getUserId, userId)
+                .set(SysStudentProfile::getAvatarUrl, null));
     }
 
     @Override

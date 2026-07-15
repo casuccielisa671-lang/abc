@@ -32,8 +32,8 @@ public class AiProperties {
     /** 采样温度。0 最确定，1 最发散。报告/诊断类走低温，对话类可高一些 */
     private double temperature = 0.3;
 
-    /** 单次回复上限（token）。中文约 1 token ≈ 1.5 字。升级到 3000 以支持更长的分析输出 */
-    private int maxTokens = 3000;
+    /** 单次回复上限（token）。中文约 1 token ≈ 1.5 字 */
+    private int maxTokens = 1200;
 
     /** 建立连接超时（毫秒） */
     private int connectTimeoutMs = 5_000;

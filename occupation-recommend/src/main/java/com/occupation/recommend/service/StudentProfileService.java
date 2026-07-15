@@ -24,6 +24,9 @@ public interface StudentProfileService {
      */
     void saveProfile(Long userId, ProfileSaveDTO dto);
 
+    /** 清空证件照 URL（显式置 NULL，绕开 updateById 跳过 null 字段的问题） */
+    void clearAvatar(Long userId);
+
     /**
      * 当前租户内全部学生画像（教师端统计 / 每日推送任务使用）
      */

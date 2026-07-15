@@ -24,12 +24,13 @@
         <!-- 跨模块：直接操作 News 表（资讯爬虫入库） -->
         <dependency>
             <groupId>com.occupation</groupId>
-            <artifactId>occupation-analysis</artifactId>
+            <artifactId>occupation-recommend</artifactId>
         </dependency>
 
+        <!-- 跨模块：MOCK 采集同步清洗入库（DataCleanService） -->
         <dependency>
             <groupId>com.occupation</groupId>
-            <artifactId>occupation-recommend</artifactId>
+            <artifactId>occupation-analysis</artifactId>
         </dependency>
 
         <!-- WebMagic 爬虫框架 -->

@@ -174,7 +174,7 @@ public class HrController {
     @PutMapping("/applications/{id}/status")
     public Result<Void> changeApplicationStatus(@PathVariable Long id,
                                                 @RequestBody @Validated ApplicationStatusDTO dto) {
-        applicationService.changeStatus(id, UserContextHolder.getUserId(), dto.getStatus(), dto.getHrNote());
+        applicationService.changeStatus(id, UserContextHolder.getUserId(), dto);
         return Result.ok();
     }
 
@@ -215,6 +215,7 @@ public class HrController {
         vo.setUserId(userId);
         vo.setUsername(user.getUsername());
         vo.setRealName(user.getRealName());
+        vo.setEmployedElsewhere(applicationService.isEmployed(userId));
 
         // 简历里填了求职专用联系方式就用它，否则回落到账号信息
         ResumeVO resume = resumeService.getByUserId(userId);
@@ -255,6 +256,10 @@ public class HrController {
             aj.setStatusLabel(st.getLabel());
             aj.setTerminal(st.isTerminal());
             aj.setHrNote(a.getHrNote());
+            aj.setInterviewTime(a.getInterviewTime());
+            aj.setInterviewPlace(a.getInterviewPlace());
+            aj.setInterviewContact(a.getInterviewContact());
+            aj.setInterviewContent(a.getInterviewContent());
             if (job != null) {
                 aj.setJobTitle(job.getTitle());
                 aj.setJobCity(job.getCity());

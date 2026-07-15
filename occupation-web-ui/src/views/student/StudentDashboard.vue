@@ -4,17 +4,21 @@
     <section class="welcome">
       <div class="hi">
         你好，{{ displayName }} 👋
+        <span class="emp-badge" :class="empStatus.toLowerCase()">{{ empLabel }}</span>
         <small>{{ profileSub }}</small>
       </div>
       <div class="prog">
-        <div class="ring" :style="{ '--p': completeness }">
+        <div class="ring" :class="{ full: completeness === 100 }" :style="{ '--p': completeness }">
           <span>{{ completeness }}%</span>
         </div>
         <div class="ptxt">
           <b>画像完善度 {{ completeness }}%</b>
-          <span>补齐后推荐更准</span>
+          <span>{{ completeness === 100 ? '已全部完善' : '补齐后推荐更准' }}</span>
         </div>
-        <el-button type="primary" @click="go('/student/profile')">去完善</el-button>
+        <el-button
+          :type="completeness === 100 ? 'success' : 'danger'"
+          @click="go('/student/profile')"
+        >{{ completeness === 100 ? '已完善' : '去完善' }}</el-button>
       </div>
     </section>
 
@@ -95,16 +99,16 @@
         </div>
       </div>
 
-      <!-- 能力画像 -->
+      <!-- 能力画像（我的技能 vs 目标岗位；目标在职位信息「目标岗位」标签里选，此处是缩影） -->
       <div class="tile t-skill">
         <div class="tile-h">
           <span class="t">能力画像</span>
-          <span class="a" @click="go('/student/profile')">我的技能 vs 目标岗位</span>
+          <span class="a" @click="go('/student/jobs?tab=target')">我的技能 vs 目标岗位</span>
         </div>
-        <div v-if="skillMatch.req.length" class="skill-body">
+        <div v-if="targetStore.target && skillMatch.req.length" class="skill-body">
           <div class="skill-cover">
             <div class="cov-num">{{ skillCoverage }}<small>%</small></div>
-            <div class="cov-lab">技能覆盖<br>「{{ topMatch.job.title }}」</div>
+            <div class="cov-lab">技能覆盖<br>「{{ targetStore.target.title }}」</div>
           </div>
           <div class="skill-cols">
             <div class="scol">
@@ -123,8 +127,13 @@
             </div>
           </div>
         </div>
-        <div v-else class="empty-mini">完善画像与推荐后展示能力对比</div>
+        <div v-else class="empty-mini clickable" @click="go('/student/jobs?tab=target')">
+          未选择目标岗位 · 点这里去选一个 →
+        </div>
       </div>
+
+      <!-- 最新消息 -->
+      <div class="tile t-msg"><MessageTile /></div>
 
       <!-- 行业资讯 -->
       <NewsTile class="t-news" />
@@ -139,9 +148,13 @@ import { useUserStore } from '@/store/user'
 import { getProfile, getRecommend, getMyApplications, getFavorites, getResume } from '@/api/student'
 import { toList } from '@/utils/list'
 import { parseSkills } from '@/utils/skills'
+import { useTargetJobStore } from '@/store/targetJob'
+import { skillGap } from '@/utils/skillGap'
 import { salaryRange } from '@/utils/format'
+import { employmentLabel } from '@/utils/employment'
 import MapHeroTile from '@/components/home/MapHeroTile.vue'
 import NewsTile from '@/components/home/NewsTile.vue'
+import MessageTile from '@/components/home/MessageTile.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -167,13 +180,14 @@ const completeness = computed(() => {
   const p = profile.value
   if (!p) return 0
   let filled = 0
-  const total = 6
+  const total = 7
   if (p.major) filled++
   if (parseSkills(p.skills).length) filled++
   if (p.expectedCity) filled++
   if (p.expectedIndustry) filled++
   if (p.educationLevel) filled++
   if (p.expectedSalaryMin || p.expectedSalaryMax) filled++
+  if (p.avatarUrl) filled++   // 证件照也计入完整度
   return Math.round((filled / total) * 100)
 })
 
@@ -189,6 +203,16 @@ const applyStats = computed(() => {
   }
 })
 const favCount = computed(() => favorites.value.length)
+
+/** 就业状态徽章（从投递派生，与后端口径一致） */
+const empStatus = computed(() => {
+  const apps = applications.value
+  if (!apps.length) return 'IDLE'
+  if (apps.some(a => a.status === 'ACCEPTED')) return 'EMPLOYED'
+  if (apps.some(a => a.status === 'OFFER')) return 'OFFERED'
+  return 'SEEKING'
+})
+const empLabel = computed(() => employmentLabel(empStatus.value))
 const todos = computed(() => {
   const t = []
   if (completeness.value < 100) t.push({ label: '完善个人画像', to: '/student/profile' })
@@ -197,19 +221,14 @@ const todos = computed(() => {
 })
 const recoTop = computed(() => recommend.value.slice(0, 4))
 
+// 能力画像卡改用「目标岗位」store（学生在职位信息「目标岗位」标签里选，两处呼应）；不预设
+const targetStore = useTargetJobStore()
 const skillMatch = computed(() => {
-  const top = topMatch.value
-  if (!top) return { req: [], have: [], miss: [] }
-  const req = parseSkills(top.job?.skills)
-  const missSet = new Set((top.missingSkills || []).map(s => s.toLowerCase()))
-  const miss = req.filter(s => missSet.has(s.toLowerCase()))
-  const have = req.filter(s => !missSet.has(s.toLowerCase()))
-  return { req, have, miss }
+  const t = targetStore.target
+  if (!t) return { req: [], have: [], miss: [] }
+  return skillGap(t.skills, profile.value?.skills)
 })
-const skillCoverage = computed(() => {
-  const m = skillMatch.value
-  return m.req.length ? Math.round((m.have.length / m.req.length) * 100) : 0
-})
+const skillCoverage = computed(() => skillMatch.value.coverage || 0)
 
 const AV_COLORS = [
   'linear-gradient(135deg,#2563EB,#5B60F0)', 'linear-gradient(135deg,#0E9F6E,#15A34A)',
@@ -223,6 +242,7 @@ function avatarBg(name) {
 
 onMounted(() => {
   loading.value = true
+  targetStore.load()   // 载入当前账号选定的目标岗位（能力画像卡据此显示）
   getProfile().then(d => { profile.value = d }).catch(() => {})
   getResume().then(d => { resumeExists.value = !!d?.exists }).catch(() => {})
   getMyApplications().then(d => { applications.value = toList(d) }).catch(() => {})
@@ -243,11 +263,19 @@ onMounted(() => {
 }
 .welcome .hi { font-size: 19px; font-weight: 700; }
 .welcome .hi small { display: block; font-size: 12.5px; font-weight: 500; color: var(--color-text-tertiary); margin-top: 3px; }
+.emp-badge { font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; margin-left: 8px; vertical-align: middle; }
+.emp-badge.employed { background: var(--color-success-lighter); color: var(--color-success); }
+.emp-badge.offered { background: var(--color-warning-lighter); color: var(--color-warning); }
+.emp-badge.seeking { background: var(--color-primary-lighter); color: var(--color-primary); }
+.emp-badge.idle { background: var(--color-bg-secondary); color: var(--color-text-tertiary); }
 .prog { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+/* 画像完善度：未满=红，满 100=绿 */
 .ring { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center;
-  background: conic-gradient(var(--color-primary) calc(var(--p) * 1%), var(--color-bg-tertiary) 0); }
+  background: conic-gradient(var(--color-danger) calc(var(--p) * 1%), var(--color-bg-tertiary) 0); }
+.ring.full { background: conic-gradient(var(--color-success) calc(var(--p) * 1%), var(--color-bg-tertiary) 0); }
 .ring span { width: 40px; height: 40px; border-radius: 50%; background: var(--color-surface);
-  display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--color-primary); }
+  display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--color-danger); }
+.ring.full span { color: var(--color-success); }
 .ptxt { font-size: 13px; color: var(--color-text-secondary); line-height: 1.4; }
 .ptxt b { display: block; color: var(--color-text-primary); }
 
@@ -265,6 +293,7 @@ onMounted(() => {
 .t-map { grid-column: span 2; grid-row: span 2; }
 .t-reco { grid-column: span 2; grid-row: span 2; }
 .t-skill { grid-column: span 2; grid-row: span 2; }
+.t-msg { grid-column: span 4; grid-row: span 2; }
 .t-news { grid-column: span 4; grid-row: span 2;
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 14px;
   padding: 16px; box-shadow: var(--shadow-sm); }

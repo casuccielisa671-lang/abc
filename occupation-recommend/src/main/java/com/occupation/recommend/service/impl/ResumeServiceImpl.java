@@ -6,7 +6,9 @@ import com.occupation.recommend.dto.ResumeSaveDTO;
 import com.occupation.recommend.entity.StudentResume;
 import com.occupation.recommend.mapper.StudentResumeMapper;
 import com.occupation.recommend.model.ResumeSection;
+import com.occupation.recommend.entity.SysStudentProfile;
 import com.occupation.recommend.service.ResumeService;
+import com.occupation.recommend.service.StudentProfileService;
 import com.occupation.recommend.vo.ResumeReviewVO;
 import com.occupation.recommend.vo.ResumeVO;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +38,7 @@ import java.util.stream.Collectors;
 public class ResumeServiceImpl implements ResumeService {
 
     private final StudentResumeMapper resumeMapper;
+    private final StudentProfileService profileService;
 
     @Override
     public StudentResume findByUserId(Long userId) {
@@ -45,7 +48,13 @@ public class ResumeServiceImpl implements ResumeService {
 
     @Override
     public ResumeVO getByUserId(Long userId) {
-        return toVO(findByUserId(userId));
+        ResumeVO vo = toVO(findByUserId(userId));
+        // 证件照唯一来源是个人画像（student 只在画像里传/改），简历只读展示，HR 端也据此拿到照片
+        SysStudentProfile profile = profileService.getByUserId(userId);
+        if (profile != null) {
+            vo.setAvatarUrl(profile.getAvatarUrl());
+        }
+        return vo;
     }
 
     @Override

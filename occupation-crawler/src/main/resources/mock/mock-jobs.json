@@ -1,2346 +1,1947 @@
 [
   {
-    "title": "Python后端开发工程师（校招）",
-    "company": "星河智能科技有限公司",
-    "city": "杭州",
-    "industry": "互联网/IT",
-    "salaryMin": 9500,
-    "salaryMax": 13500,
-    "education": "硕士",
-    "experience": "应届生",
-    "skills": [
-      "Linux",
-      "Redis",
-      "MySQL"
-    ],
-    "description": "星河智能科技有限公司诚聘Python后端开发工程师。工作地点：杭州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Linux、Redis、MySQL；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-07-05",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/01"
-  },
-  {
-    "title": "前端开发工程师",
-    "company": "优点生活电子商务有限公司",
-    "city": "深圳",
-    "industry": "互联网/IT",
-    "salaryMin": 8000,
-    "salaryMax": 12000,
-    "education": "专科",
-    "experience": "1-3年",
-    "skills": [
-      "CSS",
-      "TypeScript",
-      "Vue"
-    ],
-    "description": "优点生活电子商务有限公司诚聘前端开发工程师。工作地点：深圳。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 CSS、TypeScript、Vue；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-07-04",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/02"
-  },
-  {
-    "title": "大数据开发工程师",
-    "company": "蓝汛网络科技有限公司",
-    "city": "杭州",
-    "industry": "大数据",
-    "salaryMin": 21000,
-    "salaryMax": 31000,
-    "education": "硕士",
-    "experience": "3-5年",
-    "skills": [
-      "Hive",
-      "Java",
-      "Spark",
-      "Kafka"
-    ],
-    "description": "蓝汛网络科技有限公司诚聘大数据开发工程师。工作地点：杭州。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Hive、Java、Spark、Kafka；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-06-30",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/03"
-  },
-  {
-    "title": "数据分析师",
-    "company": "天工数据科技有限公司",
-    "city": "广州",
-    "industry": "大数据",
-    "salaryMin": 6500,
-    "salaryMax": 9500,
-    "education": "专科",
-    "experience": "经验不限",
-    "skills": [
-      "SQL",
-      "Tableau",
-      "Python",
-      "Excel",
-      "数据分析"
-    ],
-    "description": "天工数据科技有限公司诚聘数据分析师。工作地点：广州。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 SQL、Tableau、Python、Excel、数据分析；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-30",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/04"
-  },
-  {
-    "title": "算法工程师（校招）",
-    "company": "天工数据科技有限公司",
-    "city": "北京",
-    "industry": "人工智能",
-    "salaryMin": 11500,
-    "salaryMax": 17000,
-    "education": "专科",
-    "experience": "应届生",
-    "skills": [
-      "PyTorch",
-      "深度学习",
-      "机器学习"
-    ],
-    "description": "天工数据科技有限公司诚聘算法工程师。工作地点：北京。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 PyTorch、深度学习、机器学习；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-07-07",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/05"
-  },
-  {
-    "title": "自然语言处理工程师（校招）",
-    "company": "优点生活电子商务有限公司",
-    "city": "广州",
-    "industry": "人工智能",
-    "salaryMin": 15000,
-    "salaryMax": 22000,
-    "education": "硕士",
-    "experience": "应届生",
-    "skills": [
-      "深度学习",
-      "NLP",
-      "机器学习"
-    ],
-    "description": "优点生活电子商务有限公司诚聘自然语言处理工程师。工作地点：广州。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 深度学习、NLP、机器学习；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-06-29",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/06"
-  },
-  {
-    "title": "测试开发工程师",
-    "company": "天工数据科技有限公司",
-    "city": "成都",
-    "industry": "互联网/IT",
-    "salaryMin": 9000,
-    "salaryMax": 13000,
-    "education": "专科",
-    "experience": "3-5年",
-    "skills": [
-      "Python",
-      "Git",
-      "Linux"
-    ],
-    "description": "天工数据科技有限公司诚聘测试开发工程师。工作地点：成都。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Python、Git、Linux；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-06-13",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/07"
-  },
-  {
-    "title": "运维开发工程师",
-    "company": "启明星辰网络安全有限公司",
-    "city": "苏州",
-    "industry": "互联网/IT",
-    "salaryMin": 18000,
-    "salaryMax": 26500,
-    "education": "硕士",
-    "experience": "3-5年",
-    "skills": [
-      "Python",
-      "Linux",
-      "Docker",
-      "Kubernetes"
-    ],
-    "description": "启明星辰网络安全有限公司诚聘运维开发工程师。工作地点：苏州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Python、Linux、Docker、Kubernetes；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-06-12",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/08"
-  },
-  {
-    "title": "信息安全工程师",
-    "company": "星河智能科技有限公司",
-    "city": "广州",
-    "industry": "互联网/IT",
-    "salaryMin": 13000,
-    "salaryMax": 19000,
-    "education": "专科",
-    "experience": "3-5年",
-    "skills": [
-      "Docker",
-      "Linux",
-      "网络安全"
-    ],
-    "description": "星河智能科技有限公司诚聘信息安全工程师。工作地点：广州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Docker、Linux、网络安全；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-07-06",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/09"
-  },
-  {
-    "title": "嵌入式软件工程师",
-    "company": "锐思智能装备有限公司",
-    "city": "武汉",
-    "industry": "智能制造",
-    "salaryMin": 6500,
-    "salaryMax": 9500,
-    "education": "专科",
-    "experience": "经验不限",
-    "skills": [
-      "C++",
-      "单片机",
-      "Linux"
-    ],
-    "description": "锐思智能装备有限公司诚聘嵌入式软件工程师。工作地点：武汉。岗位职责：参与智能制造方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 C++、单片机、Linux；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-07-06",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/10"
-  },
-  {
-    "title": "风控数据分析师",
-    "company": "优点生活电子商务有限公司",
-    "city": "苏州",
-    "industry": "金融",
-    "salaryMin": 10500,
-    "salaryMax": 16000,
-    "education": "本科",
-    "experience": "经验不限",
-    "skills": [
-      "数理统计",
-      "数据分析",
-      "Python"
-    ],
-    "description": "优点生活电子商务有限公司诚聘风控数据分析师。工作地点：苏州。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 数理统计、数据分析、Python；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-07-06",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/11"
-  },
-  {
-    "title": "量化研究员",
-    "company": "鲲鹏智算科技有限公司",
-    "city": "苏州",
-    "industry": "金融",
-    "salaryMin": 14500,
-    "salaryMax": 21000,
-    "education": "专科",
-    "experience": "1-3年",
-    "skills": [
-      "Python",
-      "数据分析",
-      "数理统计"
-    ],
-    "description": "鲲鹏智算科技有限公司诚聘量化研究员。工作地点：苏州。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Python、数据分析、数理统计；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-06-14",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/12"
-  },
-  {
-    "title": "产品经理",
-    "company": "启明星辰网络安全有限公司",
-    "city": "苏州",
-    "industry": "互联网/IT",
-    "salaryMin": 12500,
-    "salaryMax": 18500,
-    "education": "专科",
-    "experience": "3-5年",
-    "skills": [
-      "Axure",
-      "数据分析",
-      "产品设计"
-    ],
-    "description": "启明星辰网络安全有限公司诚聘产品经理。工作地点：苏州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Axure、数据分析、产品设计；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-06-11",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/13"
-  },
-  {
-    "title": "用户运营专员",
-    "company": "中鑫金融科技有限公司",
-    "city": "武汉",
-    "industry": "电子商务",
-    "salaryMin": 7500,
-    "salaryMax": 11000,
-    "education": "硕士",
-    "experience": "1-3年",
-    "skills": [
-      "Excel",
-      "用户运营",
-      "数据分析"
-    ],
-    "description": "中鑫金融科技有限公司诚聘用户运营专员。工作地点：武汉。岗位职责：参与电子商务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Excel、用户运营、数据分析；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-07-05",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/14"
-  },
-  {
-    "title": "课程研发工程师（校招）",
-    "company": "中鑫金融科技有限公司",
-    "city": "上海",
-    "industry": "教育",
-    "salaryMin": 9000,
-    "salaryMax": 13000,
-    "education": "硕士",
-    "experience": "应届生",
-    "skills": [
-      "Python",
-      "Java",
-      "数据分析"
-    ],
-    "description": "中鑫金融科技有限公司诚聘课程研发工程师。工作地点：上海。岗位职责：参与教育方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Python、Java、数据分析；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-06-15",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/15"
-  },
-  {
-    "title": "游戏服务端开发",
-    "company": "启明星辰网络安全有限公司",
-    "city": "成都",
-    "industry": "游戏",
-    "salaryMin": 20500,
-    "salaryMax": 30500,
-    "education": "硕士",
-    "experience": "3-5年",
-    "skills": [
-      "C++",
-      "Linux",
-      "Redis",
-      "分布式"
-    ],
-    "description": "启明星辰网络安全有限公司诚聘游戏服务端开发。工作地点：成都。岗位职责：参与游戏方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 C++、Linux、Redis、分布式；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-07-01",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/16"
-  },
-  {
-    "title": "医疗数据工程师（校招）",
-    "company": "锐思智能装备有限公司",
-    "city": "武汉",
-    "industry": "医疗健康",
-    "salaryMin": 6500,
-    "salaryMax": 10000,
-    "education": "本科",
-    "experience": "应届生",
-    "skills": [
-      "SQL",
-      "Python",
-      "数据分析"
-    ],
-    "description": "锐思智能装备有限公司诚聘医疗数据工程师。工作地点：武汉。岗位职责：参与医疗健康方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 SQL、Python、数据分析；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-06-18",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/17"
-  },
-  {
-    "title": "Java后端开发工程师",
-    "company": "蓝汛网络科技有限公司",
-    "city": "杭州",
-    "industry": "互联网/IT",
-    "salaryMin": 11500,
-    "salaryMax": 16500,
-    "education": "硕士",
-    "experience": "经验不限",
-    "skills": [
-      "微服务",
-      "Git",
-      "MySQL"
-    ],
-    "description": "蓝汛网络科技有限公司诚聘Java后端开发工程师。工作地点：杭州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 微服务、Git、MySQL；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-30",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/18"
-  },
-  {
     "title": "Python后端开发工程师",
-    "company": "中鑫金融科技有限公司",
-    "city": "苏州",
-    "industry": "互联网/IT",
-    "salaryMin": 12000,
-    "salaryMax": 17500,
-    "education": "专科",
-    "experience": "3-5年",
-    "skills": [
-      "MySQL",
-      "Redis",
-      "Linux",
-      "Python",
-      "Django"
-    ],
-    "description": "中鑫金融科技有限公司诚聘Python后端开发工程师。工作地点：苏州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 MySQL、Redis、Linux、Python、Django；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-06-15",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/19"
-  },
-  {
-    "title": "前端开发工程师",
-    "company": "启明星辰网络安全有限公司",
+    "company": "恒峰医疗科技有限公司",
     "city": "北京",
-    "industry": "互联网/IT",
-    "salaryMin": 8000,
-    "salaryMax": 11500,
-    "education": "专科",
-    "experience": "经验不限",
-    "skills": [
-      "CSS",
-      "Vue",
-      "JavaScript",
-      "Git",
-      "TypeScript"
-    ],
-    "description": "启明星辰网络安全有限公司诚聘前端开发工程师。工作地点：北京。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 CSS、Vue、JavaScript、Git、TypeScript；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-07-06",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/20"
-  },
-  {
-    "title": "大数据开发工程师",
-    "company": "万联云服信息技术有限公司",
-    "city": "上海",
-    "industry": "大数据",
-    "salaryMin": 11000,
-    "salaryMax": 16500,
-    "education": "专科",
-    "experience": "经验不限",
-    "skills": [
-      "Hadoop",
-      "Kafka",
-      "Java",
-      "Spark"
-    ],
-    "description": "万联云服信息技术有限公司诚聘大数据开发工程师。工作地点：上海。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Hadoop、Kafka、Java、Spark；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-16",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/21"
-  },
-  {
-    "title": "数据分析师",
-    "company": "优点生活电子商务有限公司",
-    "city": "杭州",
-    "industry": "大数据",
-    "salaryMin": 9000,
-    "salaryMax": 13500,
-    "education": "硕士",
-    "experience": "经验不限",
-    "skills": [
-      "数据分析",
-      "Excel",
-      "Python",
-      "Tableau"
-    ],
-    "description": "优点生活电子商务有限公司诚聘数据分析师。工作地点：杭州。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 数据分析、Excel、Python、Tableau；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-07-01",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/22"
-  },
-  {
-    "title": "算法工程师（校招）",
-    "company": "启明星辰网络安全有限公司",
-    "city": "深圳",
-    "industry": "人工智能",
-    "salaryMin": 15000,
-    "salaryMax": 22000,
-    "education": "硕士",
-    "experience": "应届生",
-    "skills": [
-      "PyTorch",
-      "深度学习",
-      "Python",
-      "机器学习"
-    ],
-    "description": "启明星辰网络安全有限公司诚聘算法工程师。工作地点：深圳。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 PyTorch、深度学习、Python、机器学习；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-07-04",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/23"
-  },
-  {
-    "title": "自然语言处理工程师（校招）",
-    "company": "优点生活电子商务有限公司",
-    "city": "武汉",
-    "industry": "人工智能",
-    "salaryMin": 13500,
-    "salaryMax": 20000,
-    "education": "硕士",
-    "experience": "应届生",
-    "skills": [
-      "NLP",
-      "Python",
-      "机器学习"
-    ],
-    "description": "优点生活电子商务有限公司诚聘自然语言处理工程师。工作地点：武汉。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 NLP、Python、机器学习；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-06-14",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/24"
-  },
-  {
-    "title": "测试开发工程师",
-    "company": "锐思智能装备有限公司",
-    "city": "北京",
-    "industry": "互联网/IT",
-    "salaryMin": 8000,
-    "salaryMax": 11500,
-    "education": "专科",
-    "experience": "经验不限",
-    "skills": [
-      "Selenium",
-      "Git",
-      "Linux"
-    ],
-    "description": "锐思智能装备有限公司诚聘测试开发工程师。工作地点：北京。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Selenium、Git、Linux；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-07-01",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/25"
-  },
-  {
-    "title": "运维开发工程师（校招）",
-    "company": "星河智能科技有限公司",
-    "city": "南京",
-    "industry": "互联网/IT",
-    "salaryMin": 6500,
-    "salaryMax": 9500,
-    "education": "专科",
-    "experience": "应届生",
-    "skills": [
-      "Docker",
-      "Python",
-      "Linux"
-    ],
-    "description": "星河智能科技有限公司诚聘运维开发工程师。工作地点：南京。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Docker、Python、Linux；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-07-02",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/26"
-  },
-  {
-    "title": "信息安全工程师",
-    "company": "中鑫金融科技有限公司",
-    "city": "深圳",
-    "industry": "互联网/IT",
-    "salaryMin": 15000,
-    "salaryMax": 22000,
-    "education": "硕士",
-    "experience": "经验不限",
-    "skills": [
-      "网络安全",
-      "Python",
-      "Docker",
-      "Linux"
-    ],
-    "description": "中鑫金融科技有限公司诚聘信息安全工程师。工作地点：深圳。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 网络安全、Python、Docker、Linux；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-16",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/27"
-  },
-  {
-    "title": "嵌入式软件工程师",
-    "company": "博远医疗信息技术有限公司",
-    "city": "北京",
-    "industry": "智能制造",
-    "salaryMin": 12500,
-    "salaryMax": 18000,
-    "education": "专科",
-    "experience": "3-5年",
-    "skills": [
-      "C++",
-      "Linux",
-      "单片机"
-    ],
-    "description": "博远医疗信息技术有限公司诚聘嵌入式软件工程师。工作地点：北京。岗位职责：参与智能制造方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 C++、Linux、单片机；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-07-09",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/28"
-  },
-  {
-    "title": "风控数据分析师",
-    "company": "蓝汛网络科技有限公司",
-    "city": "上海",
-    "industry": "金融",
-    "salaryMin": 12500,
-    "salaryMax": 18500,
-    "education": "本科",
-    "experience": "经验不限",
-    "skills": [
-      "Python",
-      "数据分析",
-      "数理统计",
-      "SQL"
-    ],
-    "description": "蓝汛网络科技有限公司诚聘风控数据分析师。工作地点：上海。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Python、数据分析、数理统计、SQL；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-27",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/29"
-  },
-  {
-    "title": "量化研究员",
-    "company": "星河智能科技有限公司",
-    "city": "杭州",
-    "industry": "金融",
-    "salaryMin": 23500,
-    "salaryMax": 35000,
-    "education": "硕士",
-    "experience": "1-3年",
-    "skills": [
-      "Python",
-      "数据分析",
-      "数理统计"
-    ],
-    "description": "星河智能科技有限公司诚聘量化研究员。工作地点：杭州。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Python、数据分析、数理统计；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-06-16",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/30"
-  },
-  {
-    "title": "产品经理",
-    "company": "博远医疗信息技术有限公司",
-    "city": "武汉",
-    "industry": "互联网/IT",
-    "salaryMin": 12500,
-    "salaryMax": 18500,
-    "education": "本科",
-    "experience": "3-5年",
-    "skills": [
-      "Axure",
-      "产品设计",
-      "项目管理"
-    ],
-    "description": "博远医疗信息技术有限公司诚聘产品经理。工作地点：武汉。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Axure、产品设计、项目管理；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-07-07",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/31"
-  },
-  {
-    "title": "用户运营专员",
-    "company": "蓝汛网络科技有限公司",
-    "city": "杭州",
-    "industry": "电子商务",
-    "salaryMin": 8000,
-    "salaryMax": 12000,
-    "education": "硕士",
-    "experience": "1-3年",
-    "skills": [
-      "用户运营",
-      "Excel",
-      "文案策划"
-    ],
-    "description": "蓝汛网络科技有限公司诚聘用户运营专员。工作地点：杭州。岗位职责：参与电子商务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 用户运营、Excel、文案策划；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-07-03",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/32"
-  },
-  {
-    "title": "课程研发工程师",
-    "company": "天工数据科技有限公司",
-    "city": "南京",
-    "industry": "教育",
-    "salaryMin": 6500,
-    "salaryMax": 9500,
-    "education": "专科",
-    "experience": "经验不限",
-    "skills": [
-      "Java",
-      "数据分析",
-      "Python"
-    ],
-    "description": "天工数据科技有限公司诚聘课程研发工程师。工作地点：南京。岗位职责：参与教育方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Java、数据分析、Python；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-24",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/33"
-  },
-  {
-    "title": "游戏服务端开发",
-    "company": "天工数据科技有限公司",
-    "city": "苏州",
-    "industry": "游戏",
-    "salaryMin": 14000,
-    "salaryMax": 20500,
-    "education": "专科",
-    "experience": "3-5年",
-    "skills": [
-      "分布式",
-      "Redis",
-      "C++",
-      "Linux"
-    ],
-    "description": "天工数据科技有限公司诚聘游戏服务端开发。工作地点：苏州。岗位职责：参与游戏方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 分布式、Redis、C++、Linux；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-07-02",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/34"
-  },
-  {
-    "title": "医疗数据工程师（校招）",
-    "company": "天工数据科技有限公司",
-    "city": "上海",
-    "industry": "医疗健康",
-    "salaryMin": 8500,
-    "salaryMax": 12000,
-    "education": "专科",
-    "experience": "应届生",
-    "skills": [
-      "Python",
-      "数据分析",
-      "SQL"
-    ],
-    "description": "天工数据科技有限公司诚聘医疗数据工程师。工作地点：上海。岗位职责：参与医疗健康方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Python、数据分析、SQL；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-07-03",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/35"
-  },
-  {
-    "title": "Java后端开发工程师",
-    "company": "中鑫金融科技有限公司",
-    "city": "广州",
     "industry": "互联网/IT",
     "salaryMin": 10500,
     "salaryMax": 15500,
-    "education": "硕士",
-    "experience": "经验不限",
-    "skills": [
-      "微服务",
-      "Java",
-      "Redis",
-      "Spring Boot",
-      "MySQL"
-    ],
-    "description": "中鑫金融科技有限公司诚聘Java后端开发工程师。工作地点：广州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 微服务、Java、Redis、Spring Boot、MySQL；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-18",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/36"
-  },
-  {
-    "title": "Python后端开发工程师",
-    "company": "鲲鹏智算科技有限公司",
-    "city": "北京",
-    "industry": "互联网/IT",
-    "salaryMin": 10000,
-    "salaryMax": 14500,
     "education": "本科",
     "experience": "经验不限",
     "skills": [
-      "Redis",
+      "Linux",
       "Python",
-      "MySQL",
-      "Django"
+      "Django",
+      "Redis",
+      "MySQL"
     ],
-    "description": "鲲鹏智算科技有限公司诚聘Python后端开发工程师。工作地点：北京。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Redis、Python、MySQL、Django；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-07-09",
+    "description": "恒峰医疗科技有限公司诚聘Python后端开发工程师。工作地点：北京。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Linux、Python、Django、Redis、MySQL；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-05-27",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/37"
+    "sourceUrl": "https://mock.local/job/001"
   },
   {
     "title": "前端开发工程师",
-    "company": "博远医疗信息技术有限公司",
-    "city": "杭州",
+    "company": "昇腾云计算有限公司",
+    "city": "西安",
     "industry": "互联网/IT",
-    "salaryMin": 9000,
-    "salaryMax": 13000,
-    "education": "本科",
-    "experience": "经验不限",
-    "skills": [
-      "CSS",
-      "Vue",
-      "JavaScript",
-      "TypeScript"
-    ],
-    "description": "博远医疗信息技术有限公司诚聘前端开发工程师。工作地点：杭州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 CSS、Vue、JavaScript、TypeScript；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-21",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/38"
-  },
-  {
-    "title": "大数据开发工程师",
-    "company": "中鑫金融科技有限公司",
-    "city": "深圳",
-    "industry": "大数据",
-    "salaryMin": 18500,
-    "salaryMax": 27000,
-    "education": "本科",
-    "experience": "3-5年",
-    "skills": [
-      "Spark",
-      "Hive",
-      "Java",
-      "Hadoop"
-    ],
-    "description": "中鑫金融科技有限公司诚聘大数据开发工程师。工作地点：深圳。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Spark、Hive、Java、Hadoop；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-06-21",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/39"
-  },
-  {
-    "title": "数据分析师",
-    "company": "启明星辰网络安全有限公司",
-    "city": "成都",
-    "industry": "大数据",
-    "salaryMin": 7000,
-    "salaryMax": 10500,
-    "education": "本科",
-    "experience": "经验不限",
-    "skills": [
-      "Excel",
-      "Python",
-      "Tableau",
-      "数据分析"
-    ],
-    "description": "启明星辰网络安全有限公司诚聘数据分析师。工作地点：成都。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Excel、Python、Tableau、数据分析；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-07-07",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/40"
-  },
-  {
-    "title": "算法工程师",
-    "company": "锐思智能装备有限公司",
-    "city": "苏州",
-    "industry": "人工智能",
-    "salaryMin": 16000,
-    "salaryMax": 23000,
+    "salaryMin": 8500,
+    "salaryMax": 12500,
     "education": "硕士",
     "experience": "经验不限",
     "skills": [
-      "PyTorch",
-      "Python",
-      "机器学习"
+      "Git",
+      "CSS",
+      "Vue",
+      "JavaScript"
     ],
-    "description": "锐思智能装备有限公司诚聘算法工程师。工作地点：苏州。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 PyTorch、Python、机器学习；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-07-01",
+    "description": "昇腾云计算有限公司诚聘前端开发工程师。工作地点：西安。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Git、CSS、Vue、JavaScript；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-03-06",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/41"
+    "sourceUrl": "https://mock.local/job/002"
   },
   {
-    "title": "自然语言处理工程师",
-    "company": "中鑫金融科技有限公司",
-    "city": "广州",
-    "industry": "人工智能",
-    "salaryMin": 24500,
-    "salaryMax": 36500,
-    "education": "本科",
-    "experience": "3-5年",
+    "title": "Go开发工程师",
+    "company": "绿能新能源科技有限公司",
+    "city": "杭州",
+    "industry": "互联网/IT",
+    "salaryMin": 13500,
+    "salaryMax": 19500,
+    "education": "硕士",
+    "experience": "经验不限",
     "skills": [
-      "Python",
-      "NLP",
-      "深度学习"
+      "Redis",
+      "Go",
+      "微服务"
     ],
-    "description": "中鑫金融科技有限公司诚聘自然语言处理工程师。工作地点：广州。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Python、NLP、深度学习；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-07-08",
+    "description": "绿能新能源科技有限公司诚聘Go开发工程师。工作地点：杭州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Redis、Go、微服务；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-03-14",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/42"
+    "sourceUrl": "https://mock.local/job/003"
   },
   {
     "title": "测试开发工程师",
-    "company": "蓝汛网络科技有限公司",
-    "city": "成都",
+    "company": "明道信息技术有限公司",
+    "city": "武汉",
     "industry": "互联网/IT",
-    "salaryMin": 7000,
-    "salaryMax": 10500,
-    "education": "本科",
-    "experience": "经验不限",
+    "salaryMin": 8500,
+    "salaryMax": 13000,
+    "education": "专科",
+    "experience": "3-5年",
     "skills": [
-      "Linux",
-      "Git",
       "Selenium",
-      "Python"
+      "Git",
+      "Linux"
     ],
-    "description": "蓝汛网络科技有限公司诚聘测试开发工程师。工作地点：成都。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Linux、Git、Selenium、Python；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-15",
+    "description": "明道信息技术有限公司诚聘测试开发工程师。工作地点：武汉。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Selenium、Git、Linux；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-03-18",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/43"
+    "sourceUrl": "https://mock.local/job/004"
   },
   {
     "title": "运维开发工程师",
-    "company": "慧学在线教育科技有限公司",
+    "company": "卓越数据科技有限公司",
     "city": "杭州",
     "industry": "互联网/IT",
-    "salaryMin": 9000,
-    "salaryMax": 13500,
-    "education": "专科",
-    "experience": "经验不限",
-    "skills": [
-      "Kubernetes",
-      "Python",
-      "Linux",
-      "Docker"
-    ],
-    "description": "慧学在线教育科技有限公司诚聘运维开发工程师。工作地点：杭州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Kubernetes、Python、Linux、Docker；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-15",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/44"
-  },
-  {
-    "title": "信息安全工程师",
-    "company": "天工数据科技有限公司",
-    "city": "杭州",
-    "industry": "互联网/IT",
-    "salaryMin": 16000,
-    "salaryMax": 23500,
+    "salaryMin": 18500,
+    "salaryMax": 27500,
     "education": "硕士",
-    "experience": "1-3年",
+    "experience": "3-5年",
     "skills": [
       "Docker",
       "Python",
-      "网络安全",
-      "Linux"
+      "Linux",
+      "Kubernetes"
     ],
-    "description": "天工数据科技有限公司诚聘信息安全工程师。工作地点：杭州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Docker、Python、网络安全、Linux；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-06-16",
+    "description": "卓越数据科技有限公司诚聘运维开发工程师。工作地点：杭州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Docker、Python、Linux、Kubernetes；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-03-10",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/45"
+    "sourceUrl": "https://mock.local/job/005"
   },
   {
-    "title": "嵌入式软件工程师",
-    "company": "慧学在线教育科技有限公司",
-    "city": "上海",
-    "industry": "智能制造",
-    "salaryMin": 11000,
-    "salaryMax": 16000,
-    "education": "本科",
-    "experience": "1-3年",
-    "skills": [
-      "C++",
-      "单片机",
-      "Linux"
-    ],
-    "description": "慧学在线教育科技有限公司诚聘嵌入式软件工程师。工作地点：上海。岗位职责：参与智能制造方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 C++、单片机、Linux；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-06-18",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/46"
-  },
-  {
-    "title": "风控数据分析师（校招）",
-    "company": "慧学在线教育科技有限公司",
-    "city": "北京",
-    "industry": "金融",
-    "salaryMin": 9000,
-    "salaryMax": 13000,
-    "education": "专科",
-    "experience": "应届生",
-    "skills": [
-      "数理统计",
-      "数据分析",
-      "Python"
-    ],
-    "description": "慧学在线教育科技有限公司诚聘风控数据分析师。工作地点：北京。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 数理统计、数据分析、Python；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-06-19",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/47"
-  },
-  {
-    "title": "量化研究员",
-    "company": "蓝汛网络科技有限公司",
-    "city": "成都",
-    "industry": "金融",
-    "salaryMin": 19000,
-    "salaryMax": 28000,
+    "title": "信息安全工程师",
+    "company": "领航互联网络有限公司",
+    "city": "武汉",
+    "industry": "互联网/IT",
+    "salaryMin": 12000,
+    "salaryMax": 17500,
     "education": "硕士",
     "experience": "经验不限",
     "skills": [
       "Python",
-      "数据分析",
-      "数理统计"
+      "Docker",
+      "网络安全"
     ],
-    "description": "蓝汛网络科技有限公司诚聘量化研究员。工作地点：成都。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Python、数据分析、数理统计；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-26",
+    "description": "领航互联网络有限公司诚聘信息安全工程师。工作地点：武汉。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Python、Docker、网络安全；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-07-09",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/48"
+    "sourceUrl": "https://mock.local/job/006"
   },
   {
-    "title": "产品经理",
-    "company": "中鑫金融科技有限公司",
+    "title": "大数据开发工程师",
+    "company": "翼动游戏网络有限公司",
+    "city": "武汉",
+    "industry": "大数据",
+    "salaryMin": 18500,
+    "salaryMax": 27500,
+    "education": "硕士",
+    "experience": "3-5年",
+    "skills": [
+      "Hadoop",
+      "Kafka",
+      "Spark",
+      "Java",
+      "Hive"
+    ],
+    "description": "翼动游戏网络有限公司诚聘大数据开发工程师。工作地点：武汉。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Hadoop、Kafka、Spark、Java、Hive；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-04-21",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/007"
+  },
+  {
+    "title": "数据分析师",
+    "company": "恒峰医疗科技有限公司",
     "city": "上海",
-    "industry": "互联网/IT",
-    "salaryMin": 14500,
-    "salaryMax": 21000,
+    "industry": "大数据",
+    "salaryMin": 11000,
+    "salaryMax": 16500,
     "education": "硕士",
     "experience": "1-3年",
     "skills": [
-      "项目管理",
-      "产品设计",
-      "Axure",
-      "数据分析"
+      "Excel",
+      "数据分析",
+      "Python",
+      "SQL"
     ],
-    "description": "中鑫金融科技有限公司诚聘产品经理。工作地点：上海。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 项目管理、产品设计、Axure、数据分析；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-06-14",
+    "description": "恒峰医疗科技有限公司诚聘数据分析师。工作地点：上海。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Excel、数据分析、Python、SQL；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-03-07",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/49"
+    "sourceUrl": "https://mock.local/job/008"
+  },
+  {
+    "title": "数据仓库工程师（校招）",
+    "company": "昇腾云计算有限公司",
+    "city": "深圳",
+    "industry": "大数据",
+    "salaryMin": 9000,
+    "salaryMax": 13500,
+    "education": "本科",
+    "experience": "应届生",
+    "skills": [
+      "Hive",
+      "SQL",
+      "数据建模"
+    ],
+    "description": "昇腾云计算有限公司诚聘数据仓库工程师。工作地点：深圳。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Hive、SQL、数据建模；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-06-11",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/009"
+  },
+  {
+    "title": "算法工程师",
+    "company": "绿能新能源科技有限公司",
+    "city": "杭州",
+    "industry": "人工智能",
+    "salaryMin": 14500,
+    "salaryMax": 21500,
+    "education": "专科",
+    "experience": "1-3年",
+    "skills": [
+      "深度学习",
+      "Python",
+      "机器学习"
+    ],
+    "description": "绿能新能源科技有限公司诚聘算法工程师。工作地点：杭州。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 深度学习、Python、机器学习；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-03-13",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/010"
+  },
+  {
+    "title": "自然语言处理工程师（校招）",
+    "company": "优学在线教育有限公司",
+    "city": "成都",
+    "industry": "人工智能",
+    "salaryMin": 12500,
+    "salaryMax": 18500,
+    "education": "硕士",
+    "experience": "应届生",
+    "skills": [
+      "机器学习",
+      "Python",
+      "深度学习"
+    ],
+    "description": "优学在线教育有限公司诚聘自然语言处理工程师。工作地点：成都。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 机器学习、Python、深度学习；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-05-19",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/011"
+  },
+  {
+    "title": "计算机视觉工程师",
+    "company": "卓越数据科技有限公司",
+    "city": "深圳",
+    "industry": "人工智能",
+    "salaryMin": 17500,
+    "salaryMax": 25500,
+    "education": "本科",
+    "experience": "1-3年",
+    "skills": [
+      "计算机视觉",
+      "TensorFlow",
+      "深度学习",
+      "Python"
+    ],
+    "description": "卓越数据科技有限公司诚聘计算机视觉工程师。工作地点：深圳。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 计算机视觉、TensorFlow、深度学习、Python；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-07-02",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/012"
+  },
+  {
+    "title": "风控数据分析师（校招）",
+    "company": "鼎新软件技术有限公司",
+    "city": "成都",
+    "industry": "金融",
+    "salaryMin": 8000,
+    "salaryMax": 11500,
+    "education": "本科",
+    "experience": "应届生",
+    "skills": [
+      "Python",
+      "SQL",
+      "数理统计"
+    ],
+    "description": "鼎新软件技术有限公司诚聘风控数据分析师。工作地点：成都。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Python、SQL、数理统计；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-03-20",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/013"
+  },
+  {
+    "title": "量化研究员",
+    "company": "卓越数据科技有限公司",
+    "city": "杭州",
+    "industry": "金融",
+    "salaryMin": 23500,
+    "salaryMax": 34500,
+    "education": "专科",
+    "experience": "3-5年",
+    "skills": [
+      "数据分析",
+      "Python",
+      "数理统计"
+    ],
+    "description": "卓越数据科技有限公司诚聘量化研究员。工作地点：杭州。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 数据分析、Python、数理统计；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-06-03",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/014"
   },
   {
     "title": "用户运营专员",
-    "company": "恒达信息技术股份有限公司",
-    "city": "北京",
+    "company": "睿达工业智能有限公司",
+    "city": "成都",
     "industry": "电子商务",
-    "salaryMin": 6500,
-    "salaryMax": 9500,
+    "salaryMin": 5500,
+    "salaryMax": 8000,
     "education": "专科",
     "experience": "1-3年",
     "skills": [
       "文案策划",
-      "数据分析",
-      "Excel"
+      "用户运营",
+      "数据分析"
     ],
-    "description": "恒达信息技术股份有限公司诚聘用户运营专员。工作地点：北京。岗位职责：参与电子商务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 文案策划、数据分析、Excel；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-07-08",
+    "description": "睿达工业智能有限公司诚聘用户运营专员。工作地点：成都。岗位职责：参与电子商务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 文案策划、用户运营、数据分析；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-04-09",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/50"
+    "sourceUrl": "https://mock.local/job/015"
+  },
+  {
+    "title": "电商产品经理（校招）",
+    "company": "优学在线教育有限公司",
+    "city": "上海",
+    "industry": "电子商务",
+    "salaryMin": 9500,
+    "salaryMax": 14500,
+    "education": "硕士",
+    "experience": "应届生",
+    "skills": [
+      "Axure",
+      "数据分析",
+      "项目管理"
+    ],
+    "description": "优学在线教育有限公司诚聘电商产品经理。工作地点：上海。岗位职责：参与电子商务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Axure、数据分析、项目管理；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-06-06",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/016"
   },
   {
     "title": "课程研发工程师",
-    "company": "优点生活电子商务有限公司",
-    "city": "苏州",
+    "company": "卓越数据科技有限公司",
+    "city": "广州",
     "industry": "教育",
+    "salaryMin": 7000,
+    "salaryMax": 10500,
+    "education": "专科",
+    "experience": "1-3年",
+    "skills": [
+      "Java",
+      "数据分析",
+      "Python"
+    ],
+    "description": "卓越数据科技有限公司诚聘课程研发工程师。工作地点：广州。岗位职责：参与教育方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Java、数据分析、Python；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-05-17",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/017"
+  },
+  {
+    "title": "游戏服务端开发",
+    "company": "智橙科技有限公司",
+    "city": "北京",
+    "industry": "游戏",
+    "salaryMin": 18000,
+    "salaryMax": 26500,
+    "education": "专科",
+    "experience": "3-5年",
+    "skills": [
+      "C++",
+      "分布式",
+      "Redis",
+      "Linux"
+    ],
+    "description": "智橙科技有限公司诚聘游戏服务端开发。工作地点：北京。岗位职责：参与游戏方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 C++、分布式、Redis、Linux；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-06-14",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/018"
+  },
+  {
+    "title": "嵌入式软件工程师",
+    "company": "康泰健康信息有限公司",
+    "city": "广州",
+    "industry": "智能制造",
     "salaryMin": 9500,
     "salaryMax": 14000,
     "education": "硕士",
+    "experience": "经验不限",
+    "skills": [
+      "C++",
+      "单片机",
+      "Linux"
+    ],
+    "description": "康泰健康信息有限公司诚聘嵌入式软件工程师。工作地点：广州。岗位职责：参与智能制造方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 C++、单片机、Linux；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-03-10",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/019"
+  },
+  {
+    "title": "工业软件开发工程师",
+    "company": "微谷科技有限公司",
+    "city": "苏州",
+    "industry": "智能制造",
+    "salaryMin": 13000,
+    "salaryMax": 19000,
+    "education": "硕士",
+    "experience": "3-5年",
+    "skills": [
+      "Linux",
+      "Java",
+      "MySQL"
+    ],
+    "description": "微谷科技有限公司诚聘工业软件开发工程师。工作地点：苏州。岗位职责：参与智能制造方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Linux、Java、MySQL；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-07-09",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/020"
+  },
+  {
+    "title": "医疗数据分析师",
+    "company": "昇腾云计算有限公司",
+    "city": "深圳",
+    "industry": "医疗健康",
+    "salaryMin": 15000,
+    "salaryMax": 22000,
+    "education": "硕士",
+    "experience": "1-3年",
+    "skills": [
+      "Python",
+      "SQL",
+      "数据分析"
+    ],
+    "description": "昇腾云计算有限公司诚聘医疗数据分析师。工作地点：深圳。岗位职责：参与医疗健康方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Python、SQL、数据分析；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-05-15",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/021"
+  },
+  {
+    "title": "医疗信息系统工程师（校招）",
+    "company": "翼动游戏网络有限公司",
+    "city": "南京",
+    "industry": "医疗健康",
+    "salaryMin": 7500,
+    "salaryMax": 11500,
+    "education": "硕士",
+    "experience": "应届生",
+    "skills": [
+      "Java",
+      "MySQL",
+      "Linux"
+    ],
+    "description": "翼动游戏网络有限公司诚聘医疗信息系统工程师。工作地点：南京。岗位职责：参与医疗健康方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Java、MySQL、Linux；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-07-06",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/022"
+  },
+  {
+    "title": "电池管理系统工程师（校招）",
+    "company": "慧通信息科技有限公司",
+    "city": "北京",
+    "industry": "新能源",
+    "salaryMin": 10000,
+    "salaryMax": 14500,
+    "education": "本科",
+    "experience": "应届生",
+    "skills": [
+      "单片机",
+      "C++",
+      "数据分析"
+    ],
+    "description": "慧通信息科技有限公司诚聘电池管理系统工程师。工作地点：北京。岗位职责：参与新能源方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 单片机、C++、数据分析；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-07-08",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/023"
+  },
+  {
+    "title": "能源数据分析师",
+    "company": "明道信息技术有限公司",
+    "city": "上海",
+    "industry": "新能源",
+    "salaryMin": 10500,
+    "salaryMax": 15500,
+    "education": "专科",
+    "experience": "3-5年",
+    "skills": [
+      "数据分析",
+      "Python",
+      "SQL"
+    ],
+    "description": "明道信息技术有限公司诚聘能源数据分析师。工作地点：上海。岗位职责：参与新能源方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 数据分析、Python、SQL；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-06-05",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/024"
+  },
+  {
+    "title": "SaaS后端开发工程师",
+    "company": "康泰健康信息有限公司",
+    "city": "上海",
+    "industry": "企业服务",
+    "salaryMin": 17000,
+    "salaryMax": 25000,
+    "education": "本科",
+    "experience": "3-5年",
+    "skills": [
+      "微服务",
+      "Java",
+      "MySQL"
+    ],
+    "description": "康泰健康信息有限公司诚聘SaaS后端开发工程师。工作地点：上海。岗位职责：参与企业服务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 微服务、Java、MySQL；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-06-14",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/025"
+  },
+  {
+    "title": "ERP实施顾问",
+    "company": "昇腾云计算有限公司",
+    "city": "深圳",
+    "industry": "企业服务",
+    "salaryMin": 11000,
+    "salaryMax": 16000,
+    "education": "硕士",
+    "experience": "经验不限",
+    "skills": [
+      "项目管理",
+      "ERP",
+      "SQL"
+    ],
+    "description": "昇腾云计算有限公司诚聘ERP实施顾问。工作地点：深圳。岗位职责：参与企业服务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 项目管理、ERP、SQL；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-03-13",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/026"
+  },
+  {
+    "title": "Java后端开发工程师",
+    "company": "优学在线教育有限公司",
+    "city": "南京",
+    "industry": "互联网/IT",
+    "salaryMin": 7000,
+    "salaryMax": 10500,
+    "education": "专科",
+    "experience": "经验不限",
+    "skills": [
+      "Git",
+      "Java",
+      "Redis",
+      "微服务"
+    ],
+    "description": "优学在线教育有限公司诚聘Java后端开发工程师。工作地点：南京。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Git、Java、Redis、微服务；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-05-26",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/027"
+  },
+  {
+    "title": "Python后端开发工程师",
+    "company": "千寻网络科技有限公司",
+    "city": "西安",
+    "industry": "互联网/IT",
+    "salaryMin": 6500,
+    "salaryMax": 9500,
+    "education": "专科",
+    "experience": "经验不限",
+    "skills": [
+      "Redis",
+      "Django",
+      "Python"
+    ],
+    "description": "千寻网络科技有限公司诚聘Python后端开发工程师。工作地点：西安。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Redis、Django、Python；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-03-24",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/028"
+  },
+  {
+    "title": "前端开发工程师",
+    "company": "恒峰医疗科技有限公司",
+    "city": "西安",
+    "industry": "互联网/IT",
+    "salaryMin": 10500,
+    "salaryMax": 15000,
+    "education": "本科",
+    "experience": "3-5年",
+    "skills": [
+      "Git",
+      "CSS",
+      "Vue",
+      "JavaScript",
+      "TypeScript"
+    ],
+    "description": "恒峰医疗科技有限公司诚聘前端开发工程师。工作地点：西安。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Git、CSS、Vue、JavaScript、TypeScript；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-06-22",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/029"
+  },
+  {
+    "title": "Go开发工程师",
+    "company": "慧通信息科技有限公司",
+    "city": "杭州",
+    "industry": "互联网/IT",
+    "salaryMin": 13500,
+    "salaryMax": 20000,
+    "education": "专科",
+    "experience": "3-5年",
+    "skills": [
+      "Redis",
+      "微服务",
+      "MySQL"
+    ],
+    "description": "慧通信息科技有限公司诚聘Go开发工程师。工作地点：杭州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Redis、微服务、MySQL；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-04-08",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/030"
+  },
+  {
+    "title": "测试开发工程师",
+    "company": "鼎新软件技术有限公司",
+    "city": "苏州",
+    "industry": "互联网/IT",
+    "salaryMin": 11500,
+    "salaryMax": 17000,
+    "education": "本科",
+    "experience": "3-5年",
+    "skills": [
+      "Python",
+      "Selenium",
+      "Linux"
+    ],
+    "description": "鼎新软件技术有限公司诚聘测试开发工程师。工作地点：苏州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Python、Selenium、Linux；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-05-23",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/031"
+  },
+  {
+    "title": "运维开发工程师（校招）",
+    "company": "优学在线教育有限公司",
+    "city": "北京",
+    "industry": "互联网/IT",
+    "salaryMin": 9500,
+    "salaryMax": 14000,
+    "education": "本科",
+    "experience": "应届生",
+    "skills": [
+      "Docker",
+      "Linux",
+      "Python",
+      "Kubernetes"
+    ],
+    "description": "优学在线教育有限公司诚聘运维开发工程师。工作地点：北京。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Docker、Linux、Python、Kubernetes；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-04-15",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/032"
+  },
+  {
+    "title": "信息安全工程师",
+    "company": "优学在线教育有限公司",
+    "city": "成都",
+    "industry": "互联网/IT",
+    "salaryMin": 11500,
+    "salaryMax": 17000,
+    "education": "专科",
+    "experience": "3-5年",
+    "skills": [
+      "Linux",
+      "Python",
+      "Docker",
+      "网络安全"
+    ],
+    "description": "优学在线教育有限公司诚聘信息安全工程师。工作地点：成都。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Linux、Python、Docker、网络安全；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-04-22",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/033"
+  },
+  {
+    "title": "大数据开发工程师",
+    "company": "睿达工业智能有限公司",
+    "city": "上海",
+    "industry": "大数据",
+    "salaryMin": 16000,
+    "salaryMax": 23500,
+    "education": "硕士",
+    "experience": "经验不限",
+    "skills": [
+      "Java",
+      "Hive",
+      "Hadoop",
+      "Kafka"
+    ],
+    "description": "睿达工业智能有限公司诚聘大数据开发工程师。工作地点：上海。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Java、Hive、Hadoop、Kafka；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-06-13",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/034"
+  },
+  {
+    "title": "数据分析师",
+    "company": "鼎新软件技术有限公司",
+    "city": "成都",
+    "industry": "大数据",
+    "salaryMin": 13500,
+    "salaryMax": 19500,
+    "education": "硕士",
+    "experience": "3-5年",
+    "skills": [
+      "Excel",
+      "数据分析",
+      "Python",
+      "Tableau",
+      "SQL"
+    ],
+    "description": "鼎新软件技术有限公司诚聘数据分析师。工作地点：成都。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Excel、数据分析、Python、Tableau、SQL；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-04-15",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/035"
+  },
+  {
+    "title": "数据仓库工程师",
+    "company": "鼎新软件技术有限公司",
+    "city": "西安",
+    "industry": "大数据",
+    "salaryMin": 7000,
+    "salaryMax": 10500,
+    "education": "专科",
+    "experience": "经验不限",
+    "skills": [
+      "数据建模",
+      "SQL",
+      "Hive",
+      "Spark"
+    ],
+    "description": "鼎新软件技术有限公司诚聘数据仓库工程师。工作地点：西安。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 数据建模、SQL、Hive、Spark；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-04-05",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/036"
+  },
+  {
+    "title": "算法工程师",
+    "company": "微谷科技有限公司",
+    "city": "南京",
+    "industry": "人工智能",
+    "salaryMin": 14000,
+    "salaryMax": 20500,
+    "education": "本科",
+    "experience": "经验不限",
+    "skills": [
+      "Python",
+      "深度学习",
+      "PyTorch",
+      "机器学习"
+    ],
+    "description": "微谷科技有限公司诚聘算法工程师。工作地点：南京。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Python、深度学习、PyTorch、机器学习；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-06-02",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/037"
+  },
+  {
+    "title": "自然语言处理工程师",
+    "company": "康泰健康信息有限公司",
+    "city": "杭州",
+    "industry": "人工智能",
+    "salaryMin": 19000,
+    "salaryMax": 28000,
+    "education": "本科",
+    "experience": "1-3年",
+    "skills": [
+      "NLP",
+      "机器学习",
+      "深度学习",
+      "Python"
+    ],
+    "description": "康泰健康信息有限公司诚聘自然语言处理工程师。工作地点：杭州。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 NLP、机器学习、深度学习、Python；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-07-04",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/038"
+  },
+  {
+    "title": "计算机视觉工程师",
+    "company": "昇腾云计算有限公司",
+    "city": "西安",
+    "industry": "人工智能",
+    "salaryMin": 13000,
+    "salaryMax": 19500,
+    "education": "本科",
+    "experience": "1-3年",
+    "skills": [
+      "TensorFlow",
+      "Python",
+      "计算机视觉"
+    ],
+    "description": "昇腾云计算有限公司诚聘计算机视觉工程师。工作地点：西安。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 TensorFlow、Python、计算机视觉；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-07-02",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/039"
+  },
+  {
+    "title": "风控数据分析师（校招）",
+    "company": "慧通信息科技有限公司",
+    "city": "杭州",
+    "industry": "金融",
+    "salaryMin": 7000,
+    "salaryMax": 10500,
+    "education": "专科",
+    "experience": "应届生",
+    "skills": [
+      "数据分析",
+      "SQL",
+      "Python",
+      "数理统计"
+    ],
+    "description": "慧通信息科技有限公司诚聘风控数据分析师。工作地点：杭州。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 数据分析、SQL、Python、数理统计；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-05-25",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/040"
+  },
+  {
+    "title": "量化研究员",
+    "company": "睿达工业智能有限公司",
+    "city": "上海",
+    "industry": "金融",
+    "salaryMin": 17500,
+    "salaryMax": 25500,
+    "education": "专科",
+    "experience": "经验不限",
+    "skills": [
+      "数据分析",
+      "Python",
+      "数理统计"
+    ],
+    "description": "睿达工业智能有限公司诚聘量化研究员。工作地点：上海。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 数据分析、Python、数理统计；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-05-21",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/041"
+  },
+  {
+    "title": "用户运营专员",
+    "company": "优学在线教育有限公司",
+    "city": "北京",
+    "industry": "电子商务",
+    "salaryMin": 7000,
+    "salaryMax": 10500,
+    "education": "专科",
+    "experience": "1-3年",
+    "skills": [
+      "数据分析",
+      "文案策划",
+      "Excel"
+    ],
+    "description": "优学在线教育有限公司诚聘用户运营专员。工作地点：北京。岗位职责：参与电子商务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 数据分析、文案策划、Excel；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-04-25",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/042"
+  },
+  {
+    "title": "电商产品经理",
+    "company": "睿达工业智能有限公司",
+    "city": "苏州",
+    "industry": "电子商务",
+    "salaryMin": 9500,
+    "salaryMax": 14500,
+    "education": "硕士",
+    "experience": "经验不限",
+    "skills": [
+      "项目管理",
+      "产品设计",
+      "数据分析",
+      "Axure"
+    ],
+    "description": "睿达工业智能有限公司诚聘电商产品经理。工作地点：苏州。岗位职责：参与电子商务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 项目管理、产品设计、数据分析、Axure；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-04-07",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/043"
+  },
+  {
+    "title": "课程研发工程师",
+    "company": "微谷科技有限公司",
+    "city": "杭州",
+    "industry": "教育",
+    "salaryMin": 8000,
+    "salaryMax": 11500,
+    "education": "专科",
     "experience": "1-3年",
     "skills": [
       "Python",
       "数据分析",
       "Java"
     ],
-    "description": "优点生活电子商务有限公司诚聘课程研发工程师。工作地点：苏州。岗位职责：参与教育方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Python、数据分析、Java；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-07-06",
+    "description": "微谷科技有限公司诚聘课程研发工程师。工作地点：杭州。岗位职责：参与教育方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Python、数据分析、Java；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-05-25",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/51"
+    "sourceUrl": "https://mock.local/job/044"
   },
   {
     "title": "游戏服务端开发（校招）",
-    "company": "天工数据科技有限公司",
-    "city": "杭州",
+    "company": "恒峰医疗科技有限公司",
+    "city": "武汉",
     "industry": "游戏",
-    "salaryMin": 10000,
-    "salaryMax": 15000,
-    "education": "本科",
+    "salaryMin": 7000,
+    "salaryMax": 10000,
+    "education": "专科",
     "experience": "应届生",
     "skills": [
       "分布式",
       "C++",
-      "Linux"
+      "Linux",
+      "Redis"
     ],
-    "description": "天工数据科技有限公司诚聘游戏服务端开发。工作地点：杭州。岗位职责：参与游戏方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 分布式、C++、Linux；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-07-01",
+    "description": "恒峰医疗科技有限公司诚聘游戏服务端开发。工作地点：武汉。岗位职责：参与游戏方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 分布式、C++、Linux、Redis；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-04-27",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/52"
+    "sourceUrl": "https://mock.local/job/045"
   },
   {
-    "title": "医疗数据工程师",
-    "company": "慧学在线教育科技有限公司",
-    "city": "广州",
-    "industry": "医疗健康",
-    "salaryMin": 13000,
-    "salaryMax": 19000,
+    "title": "嵌入式软件工程师",
+    "company": "慧通信息科技有限公司",
+    "city": "南京",
+    "industry": "智能制造",
+    "salaryMin": 7500,
+    "salaryMax": 10500,
+    "education": "专科",
+    "experience": "经验不限",
+    "skills": [
+      "Linux",
+      "单片机",
+      "C++"
+    ],
+    "description": "慧通信息科技有限公司诚聘嵌入式软件工程师。工作地点：南京。岗位职责：参与智能制造方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Linux、单片机、C++；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-05-19",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/046"
+  },
+  {
+    "title": "工业软件开发工程师",
+    "company": "慧通信息科技有限公司",
+    "city": "杭州",
+    "industry": "智能制造",
+    "salaryMin": 9000,
+    "salaryMax": 13500,
     "education": "硕士",
     "experience": "经验不限",
+    "skills": [
+      "MySQL",
+      "Linux",
+      "Java"
+    ],
+    "description": "慧通信息科技有限公司诚聘工业软件开发工程师。工作地点：杭州。岗位职责：参与智能制造方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 MySQL、Linux、Java；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-07-09",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/047"
+  },
+  {
+    "title": "医疗数据分析师（校招）",
+    "company": "恒峰医疗科技有限公司",
+    "city": "北京",
+    "industry": "医疗健康",
+    "salaryMin": 7500,
+    "salaryMax": 11000,
+    "education": "专科",
+    "experience": "应届生",
+    "skills": [
+      "数据分析",
+      "SQL",
+      "Python"
+    ],
+    "description": "恒峰医疗科技有限公司诚聘医疗数据分析师。工作地点：北京。岗位职责：参与医疗健康方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 数据分析、SQL、Python；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-05-24",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/048"
+  },
+  {
+    "title": "医疗信息系统工程师",
+    "company": "汇金融科技服务有限公司",
+    "city": "北京",
+    "industry": "医疗健康",
+    "salaryMin": 11500,
+    "salaryMax": 17000,
+    "education": "专科",
+    "experience": "3-5年",
+    "skills": [
+      "MySQL",
+      "Linux",
+      "Java"
+    ],
+    "description": "汇金融科技服务有限公司诚聘医疗信息系统工程师。工作地点：北京。岗位职责：参与医疗健康方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 MySQL、Linux、Java；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-07-04",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/049"
+  },
+  {
+    "title": "电池管理系统工程师（校招）",
+    "company": "恒峰医疗科技有限公司",
+    "city": "南京",
+    "industry": "新能源",
+    "salaryMin": 6000,
+    "salaryMax": 9000,
+    "education": "专科",
+    "experience": "应届生",
+    "skills": [
+      "单片机",
+      "数据分析",
+      "C++"
+    ],
+    "description": "恒峰医疗科技有限公司诚聘电池管理系统工程师。工作地点：南京。岗位职责：参与新能源方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 单片机、数据分析、C++；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-03-10",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/050"
+  },
+  {
+    "title": "能源数据分析师",
+    "company": "康泰健康信息有限公司",
+    "city": "杭州",
+    "industry": "新能源",
+    "salaryMin": 9000,
+    "salaryMax": 13500,
+    "education": "本科",
+    "experience": "1-3年",
     "skills": [
       "SQL",
       "数据分析",
       "Python"
     ],
-    "description": "慧学在线教育科技有限公司诚聘医疗数据工程师。工作地点：广州。岗位职责：参与医疗健康方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 SQL、数据分析、Python；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-30",
+    "description": "康泰健康信息有限公司诚聘能源数据分析师。工作地点：杭州。岗位职责：参与新能源方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 SQL、数据分析、Python；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-05-12",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/53"
+    "sourceUrl": "https://mock.local/job/051"
   },
   {
-    "title": "Java后端开发工程师",
-    "company": "蓝汛网络科技有限公司",
+    "title": "SaaS后端开发工程师",
+    "company": "云链电商科技有限公司",
     "city": "广州",
-    "industry": "互联网/IT",
-    "salaryMin": 9000,
-    "salaryMax": 13000,
-    "education": "本科",
-    "experience": "经验不限",
+    "industry": "企业服务",
+    "salaryMin": 18000,
+    "salaryMax": 26000,
+    "education": "硕士",
+    "experience": "3-5年",
     "skills": [
-      "Spring Boot",
-      "Git",
-      "Redis"
+      "Java",
+      "微服务",
+      "MySQL"
     ],
-    "description": "蓝汛网络科技有限公司诚聘Java后端开发工程师。工作地点：广州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Spring Boot、Git、Redis；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-22",
+    "description": "云链电商科技有限公司诚聘SaaS后端开发工程师。工作地点：广州。岗位职责：参与企业服务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Java、微服务、MySQL；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-06-18",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/54"
+    "sourceUrl": "https://mock.local/job/052"
+  },
+  {
+    "title": "ERP实施顾问",
+    "company": "领航互联网络有限公司",
+    "city": "北京",
+    "industry": "企业服务",
+    "salaryMin": 12500,
+    "salaryMax": 18500,
+    "education": "硕士",
+    "experience": "1-3年",
+    "skills": [
+      "SQL",
+      "ERP",
+      "项目管理"
+    ],
+    "description": "领航互联网络有限公司诚聘ERP实施顾问。工作地点：北京。岗位职责：参与企业服务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 SQL、ERP、项目管理；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-07-02",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/053"
+  },
+  {
+    "title": "Java后端开发工程师（校招）",
+    "company": "慧通信息科技有限公司",
+    "city": "成都",
+    "industry": "互联网/IT",
+    "salaryMin": 7000,
+    "salaryMax": 10000,
+    "education": "本科",
+    "experience": "应届生",
+    "skills": [
+      "Redis",
+      "MySQL",
+      "Java",
+      "Git",
+      "微服务"
+    ],
+    "description": "慧通信息科技有限公司诚聘Java后端开发工程师。工作地点：成都。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Redis、MySQL、Java、Git、微服务；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-03-21",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/054"
   },
   {
     "title": "Python后端开发工程师",
-    "company": "优点生活电子商务有限公司",
-    "city": "杭州",
+    "company": "绿能新能源科技有限公司",
+    "city": "南京",
     "industry": "互联网/IT",
-    "salaryMin": 9000,
-    "salaryMax": 13500,
-    "education": "专科",
-    "experience": "1-3年",
+    "salaryMin": 8500,
+    "salaryMax": 12500,
+    "education": "本科",
+    "experience": "经验不限",
     "skills": [
-      "MySQL",
-      "Linux",
       "Redis",
-      "Python"
+      "Linux",
+      "Django",
+      "Python",
+      "MySQL"
     ],
-    "description": "优点生活电子商务有限公司诚聘Python后端开发工程师。工作地点：杭州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 MySQL、Linux、Redis、Python；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-06-11",
+    "description": "绿能新能源科技有限公司诚聘Python后端开发工程师。工作地点：南京。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Redis、Linux、Django、Python、MySQL；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-06-02",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/55"
+    "sourceUrl": "https://mock.local/job/055"
   },
   {
     "title": "前端开发工程师",
-    "company": "启明星辰网络安全有限公司",
-    "city": "上海",
+    "company": "绿能新能源科技有限公司",
+    "city": "杭州",
     "industry": "互联网/IT",
-    "salaryMin": 11000,
-    "salaryMax": 16500,
-    "education": "硕士",
-    "experience": "经验不限",
-    "skills": [
-      "JavaScript",
-      "TypeScript",
-      "Git",
-      "CSS",
-      "Vue"
-    ],
-    "description": "启明星辰网络安全有限公司诚聘前端开发工程师。工作地点：上海。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 JavaScript、TypeScript、Git、CSS、Vue；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-07-04",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/56"
-  },
-  {
-    "title": "大数据开发工程师",
-    "company": "恒达信息技术股份有限公司",
-    "city": "北京",
-    "industry": "大数据",
     "salaryMin": 15500,
-    "salaryMax": 23000,
-    "education": "本科",
-    "experience": "1-3年",
+    "salaryMax": 22500,
+    "education": "硕士",
+    "experience": "3-5年",
     "skills": [
-      "Hive",
-      "Java",
-      "Hadoop",
-      "Kafka"
+      "Vue",
+      "CSS",
+      "Git",
+      "TypeScript",
+      "JavaScript"
     ],
-    "description": "恒达信息技术股份有限公司诚聘大数据开发工程师。工作地点：北京。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Hive、Java、Hadoop、Kafka；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-06-15",
+    "description": "绿能新能源科技有限公司诚聘前端开发工程师。工作地点：杭州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Vue、CSS、Git、TypeScript、JavaScript；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-04-11",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/57"
+    "sourceUrl": "https://mock.local/job/056"
   },
   {
-    "title": "数据分析师",
-    "company": "天工数据科技有限公司",
-    "city": "广州",
-    "industry": "大数据",
+    "title": "Go开发工程师",
+    "company": "明道信息技术有限公司",
+    "city": "西安",
+    "industry": "互联网/IT",
     "salaryMin": 7500,
     "salaryMax": 11000,
     "education": "专科",
     "experience": "1-3年",
     "skills": [
-      "数据分析",
-      "Tableau",
-      "Python",
-      "Excel",
-      "SQL"
+      "Go",
+      "MySQL",
+      "Redis",
+      "微服务"
     ],
-    "description": "天工数据科技有限公司诚聘数据分析师。工作地点：广州。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 数据分析、Tableau、Python、Excel、SQL；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-06-14",
+    "description": "明道信息技术有限公司诚聘Go开发工程师。工作地点：西安。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Go、MySQL、Redis、微服务；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-05-23",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/58"
+    "sourceUrl": "https://mock.local/job/057"
   },
   {
-    "title": "算法工程师",
-    "company": "中鑫金融科技有限公司",
-    "city": "武汉",
+    "title": "测试开发工程师",
+    "company": "康泰健康信息有限公司",
+    "city": "西安",
+    "industry": "互联网/IT",
+    "salaryMin": 6000,
+    "salaryMax": 9000,
+    "education": "专科",
+    "experience": "1-3年",
+    "skills": [
+      "Linux",
+      "Python",
+      "Selenium",
+      "Git"
+    ],
+    "description": "康泰健康信息有限公司诚聘测试开发工程师。工作地点：西安。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Linux、Python、Selenium、Git；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-07-09",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/058"
+  },
+  {
+    "title": "运维开发工程师",
+    "company": "绿能新能源科技有限公司",
+    "city": "杭州",
+    "industry": "互联网/IT",
+    "salaryMin": 10500,
+    "salaryMax": 15500,
+    "education": "本科",
+    "experience": "经验不限",
+    "skills": [
+      "Kubernetes",
+      "Docker",
+      "Linux"
+    ],
+    "description": "绿能新能源科技有限公司诚聘运维开发工程师。工作地点：杭州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Kubernetes、Docker、Linux；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-07-04",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/059"
+  },
+  {
+    "title": "信息安全工程师（校招）",
+    "company": "领航互联网络有限公司",
+    "city": "杭州",
+    "industry": "互联网/IT",
+    "salaryMin": 7500,
+    "salaryMax": 11500,
+    "education": "专科",
+    "experience": "应届生",
+    "skills": [
+      "Linux",
+      "Docker",
+      "网络安全",
+      "Python"
+    ],
+    "description": "领航互联网络有限公司诚聘信息安全工程师。工作地点：杭州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Linux、Docker、网络安全、Python；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-06-07",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/060"
+  },
+  {
+    "title": "大数据开发工程师",
+    "company": "昇腾云计算有限公司",
+    "city": "南京",
+    "industry": "大数据",
+    "salaryMin": 11500,
+    "salaryMax": 17000,
+    "education": "本科",
+    "experience": "经验不限",
+    "skills": [
+      "Hive",
+      "Spark",
+      "Kafka",
+      "Hadoop",
+      "Java"
+    ],
+    "description": "昇腾云计算有限公司诚聘大数据开发工程师。工作地点：南京。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Hive、Spark、Kafka、Hadoop、Java；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-07-09",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/061"
+  },
+  {
+    "title": "数据分析师",
+    "company": "明道信息技术有限公司",
+    "city": "深圳",
+    "industry": "大数据",
+    "salaryMin": 7000,
+    "salaryMax": 10500,
+    "education": "专科",
+    "experience": "经验不限",
+    "skills": [
+      "数据分析",
+      "Python",
+      "Excel"
+    ],
+    "description": "明道信息技术有限公司诚聘数据分析师。工作地点：深圳。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 数据分析、Python、Excel；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-05-27",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/062"
+  },
+  {
+    "title": "数据仓库工程师",
+    "company": "昇腾云计算有限公司",
+    "city": "深圳",
+    "industry": "大数据",
+    "salaryMin": 10500,
+    "salaryMax": 15500,
+    "education": "本科",
+    "experience": "经验不限",
+    "skills": [
+      "数据建模",
+      "Spark",
+      "SQL",
+      "Hive"
+    ],
+    "description": "昇腾云计算有限公司诚聘数据仓库工程师。工作地点：深圳。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 数据建模、Spark、SQL、Hive；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-05-07",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/063"
+  },
+  {
+    "title": "算法工程师（校招）",
+    "company": "卓越数据科技有限公司",
+    "city": "上海",
     "industry": "人工智能",
+    "salaryMin": 11000,
+    "salaryMax": 16500,
+    "education": "专科",
+    "experience": "应届生",
+    "skills": [
+      "PyTorch",
+      "机器学习",
+      "深度学习",
+      "Python"
+    ],
+    "description": "卓越数据科技有限公司诚聘算法工程师。工作地点：上海。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 PyTorch、机器学习、深度学习、Python；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-06-03",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/064"
+  },
+  {
+    "title": "自然语言处理工程师",
+    "company": "云链电商科技有限公司",
+    "city": "广州",
+    "industry": "人工智能",
+    "salaryMin": 22000,
+    "salaryMax": 32000,
+    "education": "本科",
+    "experience": "3-5年",
+    "skills": [
+      "深度学习",
+      "Python",
+      "NLP",
+      "机器学习"
+    ],
+    "description": "云链电商科技有限公司诚聘自然语言处理工程师。工作地点：广州。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 深度学习、Python、NLP、机器学习；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-06-27",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/065"
+  },
+  {
+    "title": "计算机视觉工程师",
+    "company": "昇腾云计算有限公司",
+    "city": "广州",
+    "industry": "人工智能",
+    "salaryMin": 15500,
+    "salaryMax": 22500,
+    "education": "硕士",
+    "experience": "经验不限",
+    "skills": [
+      "计算机视觉",
+      "TensorFlow",
+      "Python",
+      "深度学习"
+    ],
+    "description": "昇腾云计算有限公司诚聘计算机视觉工程师。工作地点：广州。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 计算机视觉、TensorFlow、Python、深度学习；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-03-02",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/066"
+  },
+  {
+    "title": "风控数据分析师（校招）",
+    "company": "千寻网络科技有限公司",
+    "city": "上海",
+    "industry": "金融",
+    "salaryMin": 9500,
+    "salaryMax": 14000,
+    "education": "本科",
+    "experience": "应届生",
+    "skills": [
+      "Python",
+      "SQL",
+      "数据分析"
+    ],
+    "description": "千寻网络科技有限公司诚聘风控数据分析师。工作地点：上海。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Python、SQL、数据分析；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-04-21",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/067"
+  },
+  {
+    "title": "量化研究员",
+    "company": "智橙科技有限公司",
+    "city": "深圳",
+    "industry": "金融",
+    "salaryMin": 15000,
+    "salaryMax": 22000,
+    "education": "专科",
+    "experience": "经验不限",
+    "skills": [
+      "数据分析",
+      "数理统计",
+      "Python"
+    ],
+    "description": "智橙科技有限公司诚聘量化研究员。工作地点：深圳。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 数据分析、数理统计、Python；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-06-26",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/068"
+  },
+  {
+    "title": "用户运营专员（校招）",
+    "company": "千寻网络科技有限公司",
+    "city": "深圳",
+    "industry": "电子商务",
+    "salaryMin": 4500,
+    "salaryMax": 7000,
+    "education": "专科",
+    "experience": "应届生",
+    "skills": [
+      "文案策划",
+      "数据分析",
+      "用户运营",
+      "Excel"
+    ],
+    "description": "千寻网络科技有限公司诚聘用户运营专员。工作地点：深圳。岗位职责：参与电子商务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 文案策划、数据分析、用户运营、Excel；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-06-17",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/069"
+  },
+  {
+    "title": "电商产品经理",
+    "company": "卓越数据科技有限公司",
+    "city": "北京",
+    "industry": "电子商务",
+    "salaryMin": 16000,
+    "salaryMax": 23500,
+    "education": "本科",
+    "experience": "3-5年",
+    "skills": [
+      "产品设计",
+      "Axure",
+      "项目管理"
+    ],
+    "description": "卓越数据科技有限公司诚聘电商产品经理。工作地点：北京。岗位职责：参与电子商务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 产品设计、Axure、项目管理；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-05-11",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/070"
+  },
+  {
+    "title": "课程研发工程师",
+    "company": "睿达工业智能有限公司",
+    "city": "北京",
+    "industry": "教育",
+    "salaryMin": 12000,
+    "salaryMax": 17500,
+    "education": "专科",
+    "experience": "3-5年",
+    "skills": [
+      "Python",
+      "数据分析",
+      "Java"
+    ],
+    "description": "睿达工业智能有限公司诚聘课程研发工程师。工作地点：北京。岗位职责：参与教育方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Python、数据分析、Java；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-06-09",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/071"
+  },
+  {
+    "title": "游戏服务端开发",
+    "company": "绿能新能源科技有限公司",
+    "city": "上海",
+    "industry": "游戏",
+    "salaryMin": 17500,
+    "salaryMax": 26000,
+    "education": "硕士",
+    "experience": "1-3年",
+    "skills": [
+      "C++",
+      "Linux",
+      "Redis"
+    ],
+    "description": "绿能新能源科技有限公司诚聘游戏服务端开发。工作地点：上海。岗位职责：参与游戏方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 C++、Linux、Redis；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-04-10",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/072"
+  },
+  {
+    "title": "嵌入式软件工程师（校招）",
+    "company": "领航互联网络有限公司",
+    "city": "上海",
+    "industry": "智能制造",
+    "salaryMin": 7000,
+    "salaryMax": 10000,
+    "education": "专科",
+    "experience": "应届生",
+    "skills": [
+      "C++",
+      "Linux",
+      "单片机"
+    ],
+    "description": "领航互联网络有限公司诚聘嵌入式软件工程师。工作地点：上海。岗位职责：参与智能制造方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 C++、Linux、单片机；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-03-07",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/073"
+  },
+  {
+    "title": "工业软件开发工程师",
+    "company": "汇金融科技服务有限公司",
+    "city": "苏州",
+    "industry": "智能制造",
+    "salaryMin": 10000,
+    "salaryMax": 14500,
+    "education": "专科",
+    "experience": "3-5年",
+    "skills": [
+      "Linux",
+      "Java",
+      "MySQL"
+    ],
+    "description": "汇金融科技服务有限公司诚聘工业软件开发工程师。工作地点：苏州。岗位职责：参与智能制造方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Linux、Java、MySQL；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-06-24",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/074"
+  },
+  {
+    "title": "医疗数据分析师（校招）",
+    "company": "慧通信息科技有限公司",
+    "city": "广州",
+    "industry": "医疗健康",
+    "salaryMin": 9500,
+    "salaryMax": 13500,
+    "education": "硕士",
+    "experience": "应届生",
+    "skills": [
+      "Python",
+      "数据分析",
+      "SQL"
+    ],
+    "description": "慧通信息科技有限公司诚聘医疗数据分析师。工作地点：广州。岗位职责：参与医疗健康方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Python、数据分析、SQL；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-03-09",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/075"
+  },
+  {
+    "title": "医疗信息系统工程师",
+    "company": "领航互联网络有限公司",
+    "city": "成都",
+    "industry": "医疗健康",
+    "salaryMin": 8000,
+    "salaryMax": 12000,
+    "education": "本科",
+    "experience": "经验不限",
+    "skills": [
+      "Linux",
+      "MySQL",
+      "Java"
+    ],
+    "description": "领航互联网络有限公司诚聘医疗信息系统工程师。工作地点：成都。岗位职责：参与医疗健康方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Linux、MySQL、Java；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-05-23",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/076"
+  },
+  {
+    "title": "电池管理系统工程师",
+    "company": "星云智能科技有限公司",
+    "city": "苏州",
+    "industry": "新能源",
+    "salaryMin": 13500,
+    "salaryMax": 20000,
+    "education": "硕士",
+    "experience": "1-3年",
+    "skills": [
+      "C++",
+      "数据分析",
+      "单片机"
+    ],
+    "description": "星云智能科技有限公司诚聘电池管理系统工程师。工作地点：苏州。岗位职责：参与新能源方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 C++、数据分析、单片机；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-03-16",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/077"
+  },
+  {
+    "title": "能源数据分析师",
+    "company": "优学在线教育有限公司",
+    "city": "杭州",
+    "industry": "新能源",
+    "salaryMin": 6500,
+    "salaryMax": 9500,
+    "education": "专科",
+    "experience": "经验不限",
+    "skills": [
+      "SQL",
+      "Python",
+      "数据分析"
+    ],
+    "description": "优学在线教育有限公司诚聘能源数据分析师。工作地点：杭州。岗位职责：参与新能源方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 SQL、Python、数据分析；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-07-08",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/078"
+  },
+  {
+    "title": "SaaS后端开发工程师",
+    "company": "康泰健康信息有限公司",
+    "city": "西安",
+    "industry": "企业服务",
+    "salaryMin": 8500,
+    "salaryMax": 13000,
+    "education": "硕士",
+    "experience": "经验不限",
+    "skills": [
+      "微服务",
+      "Java",
+      "MySQL"
+    ],
+    "description": "康泰健康信息有限公司诚聘SaaS后端开发工程师。工作地点：西安。岗位职责：参与企业服务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 微服务、Java、MySQL；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-03-25",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/079"
+  },
+  {
+    "title": "ERP实施顾问",
+    "company": "云链电商科技有限公司",
+    "city": "苏州",
+    "industry": "企业服务",
+    "salaryMin": 6000,
+    "salaryMax": 8500,
+    "education": "专科",
+    "experience": "经验不限",
+    "skills": [
+      "ERP",
+      "SQL",
+      "项目管理"
+    ],
+    "description": "云链电商科技有限公司诚聘ERP实施顾问。工作地点：苏州。岗位职责：参与企业服务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 ERP、SQL、项目管理；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-04-05",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/080"
+  },
+  {
+    "title": "Java后端开发工程师",
+    "company": "绿能新能源科技有限公司",
+    "city": "北京",
+    "industry": "互联网/IT",
+    "salaryMin": 12000,
+    "salaryMax": 17500,
+    "education": "本科",
+    "experience": "1-3年",
+    "skills": [
+      "Spring Boot",
+      "Java",
+      "微服务"
+    ],
+    "description": "绿能新能源科技有限公司诚聘Java后端开发工程师。工作地点：北京。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Spring Boot、Java、微服务；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-05-06",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/081"
+  },
+  {
+    "title": "Python后端开发工程师（校招）",
+    "company": "康泰健康信息有限公司",
+    "city": "杭州",
+    "industry": "互联网/IT",
+    "salaryMin": 10000,
+    "salaryMax": 14500,
+    "education": "硕士",
+    "experience": "应届生",
+    "skills": [
+      "Redis",
+      "Python",
+      "Linux"
+    ],
+    "description": "康泰健康信息有限公司诚聘Python后端开发工程师。工作地点：杭州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Redis、Python、Linux；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-04-20",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/082"
+  },
+  {
+    "title": "前端开发工程师",
+    "company": "领航互联网络有限公司",
+    "city": "武汉",
+    "industry": "互联网/IT",
+    "salaryMin": 7000,
+    "salaryMax": 10000,
+    "education": "专科",
+    "experience": "1-3年",
+    "skills": [
+      "CSS",
+      "JavaScript",
+      "Vue",
+      "Git",
+      "TypeScript"
+    ],
+    "description": "领航互联网络有限公司诚聘前端开发工程师。工作地点：武汉。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 CSS、JavaScript、Vue、Git、TypeScript；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-03-22",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/083"
+  },
+  {
+    "title": "Go开发工程师",
+    "company": "恒峰医疗科技有限公司",
+    "city": "南京",
+    "industry": "互联网/IT",
+    "salaryMin": 8000,
+    "salaryMax": 11500,
+    "education": "专科",
+    "experience": "经验不限",
+    "skills": [
+      "Go",
+      "Redis",
+      "MySQL"
+    ],
+    "description": "恒峰医疗科技有限公司诚聘Go开发工程师。工作地点：南京。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Go、Redis、MySQL；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-05-14",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/084"
+  },
+  {
+    "title": "测试开发工程师",
+    "company": "鼎新软件技术有限公司",
+    "city": "西安",
+    "industry": "互联网/IT",
+    "salaryMin": 10500,
+    "salaryMax": 15500,
+    "education": "本科",
+    "experience": "3-5年",
+    "skills": [
+      "Git",
+      "Selenium",
+      "Python"
+    ],
+    "description": "鼎新软件技术有限公司诚聘测试开发工程师。工作地点：西安。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Git、Selenium、Python；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-05-15",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/085"
+  },
+  {
+    "title": "运维开发工程师",
+    "company": "微谷科技有限公司",
+    "city": "上海",
+    "industry": "互联网/IT",
+    "salaryMin": 16000,
+    "salaryMax": 23500,
+    "education": "本科",
+    "experience": "3-5年",
+    "skills": [
+      "Kubernetes",
+      "Python",
+      "Docker",
+      "Linux"
+    ],
+    "description": "微谷科技有限公司诚聘运维开发工程师。工作地点：上海。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Kubernetes、Python、Docker、Linux；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-03-18",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/086"
+  },
+  {
+    "title": "信息安全工程师",
+    "company": "恒峰医疗科技有限公司",
+    "city": "北京",
+    "industry": "互联网/IT",
     "salaryMin": 12500,
     "salaryMax": 18500,
     "education": "本科",
     "experience": "经验不限",
     "skills": [
-      "Python",
-      "深度学习",
-      "机器学习"
-    ],
-    "description": "中鑫金融科技有限公司诚聘算法工程师。工作地点：武汉。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Python、深度学习、机器学习；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-17",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/59"
-  },
-  {
-    "title": "自然语言处理工程师",
-    "company": "星河智能科技有限公司",
-    "city": "深圳",
-    "industry": "人工智能",
-    "salaryMin": 18000,
-    "salaryMax": 26000,
-    "education": "本科",
-    "experience": "经验不限",
-    "skills": [
-      "机器学习",
-      "深度学习",
-      "NLP",
-      "Python"
-    ],
-    "description": "星河智能科技有限公司诚聘自然语言处理工程师。工作地点：深圳。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 机器学习、深度学习、NLP、Python；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-07-01",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/60"
-  },
-  {
-    "title": "测试开发工程师（校招）",
-    "company": "万联云服信息技术有限公司",
-    "city": "杭州",
-    "industry": "互联网/IT",
-    "salaryMin": 5500,
-    "salaryMax": 8000,
-    "education": "专科",
-    "experience": "应届生",
-    "skills": [
-      "Selenium",
-      "Linux",
-      "Python"
-    ],
-    "description": "万联云服信息技术有限公司诚聘测试开发工程师。工作地点：杭州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Selenium、Linux、Python；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-06-17",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/61"
-  },
-  {
-    "title": "运维开发工程师",
-    "company": "鲲鹏智算科技有限公司",
-    "city": "北京",
-    "industry": "互联网/IT",
-    "salaryMin": 16500,
-    "salaryMax": 24500,
-    "education": "本科",
-    "experience": "3-5年",
-    "skills": [
-      "Python",
-      "Linux",
-      "Kubernetes"
-    ],
-    "description": "鲲鹏智算科技有限公司诚聘运维开发工程师。工作地点：北京。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Python、Linux、Kubernetes；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-07-03",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/62"
-  },
-  {
-    "title": "信息安全工程师（校招）",
-    "company": "慧学在线教育科技有限公司",
-    "city": "北京",
-    "industry": "互联网/IT",
-    "salaryMin": 11500,
-    "salaryMax": 17000,
-    "education": "硕士",
-    "experience": "应届生",
-    "skills": [
-      "Python",
       "Linux",
       "Docker",
       "网络安全"
     ],
-    "description": "慧学在线教育科技有限公司诚聘信息安全工程师。工作地点：北京。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Python、Linux、Docker、网络安全；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-07-08",
+    "description": "恒峰医疗科技有限公司诚聘信息安全工程师。工作地点：北京。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Linux、Docker、网络安全；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-03-10",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/63"
+    "sourceUrl": "https://mock.local/job/087"
   },
   {
-    "title": "嵌入式软件工程师",
-    "company": "天工数据科技有限公司",
-    "city": "南京",
-    "industry": "智能制造",
-    "salaryMin": 12500,
-    "salaryMax": 18000,
+    "title": "大数据开发工程师",
+    "company": "明道信息技术有限公司",
+    "city": "西安",
+    "industry": "大数据",
+    "salaryMin": 10500,
+    "salaryMax": 15000,
     "education": "本科",
+    "experience": "1-3年",
+    "skills": [
+      "Hadoop",
+      "Hive",
+      "Java",
+      "Kafka",
+      "Spark"
+    ],
+    "description": "明道信息技术有限公司诚聘大数据开发工程师。工作地点：西安。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Hadoop、Hive、Java、Kafka、Spark；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-05-04",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/088"
+  },
+  {
+    "title": "数据分析师",
+    "company": "绿能新能源科技有限公司",
+    "city": "北京",
+    "industry": "大数据",
+    "salaryMin": 8000,
+    "salaryMax": 11500,
+    "education": "专科",
+    "experience": "经验不限",
+    "skills": [
+      "SQL",
+      "Tableau",
+      "数据分析"
+    ],
+    "description": "绿能新能源科技有限公司诚聘数据分析师。工作地点：北京。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 SQL、Tableau、数据分析；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-04-10",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/089"
+  },
+  {
+    "title": "数据仓库工程师",
+    "company": "康泰健康信息有限公司",
+    "city": "南京",
+    "industry": "大数据",
+    "salaryMin": 10000,
+    "salaryMax": 15000,
+    "education": "本科",
+    "experience": "1-3年",
+    "skills": [
+      "Spark",
+      "Hive",
+      "数据建模"
+    ],
+    "description": "康泰健康信息有限公司诚聘数据仓库工程师。工作地点：南京。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Spark、Hive、数据建模；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-03-16",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/090"
+  },
+  {
+    "title": "算法工程师",
+    "company": "昇腾云计算有限公司",
+    "city": "北京",
+    "industry": "人工智能",
+    "salaryMin": 19500,
+    "salaryMax": 28500,
+    "education": "专科",
     "experience": "3-5年",
     "skills": [
-      "单片机",
-      "C++",
-      "Linux"
+      "Python",
+      "PyTorch",
+      "深度学习",
+      "机器学习"
     ],
-    "description": "天工数据科技有限公司诚聘嵌入式软件工程师。工作地点：南京。岗位职责：参与智能制造方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 单片机、C++、Linux；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-07-01",
+    "description": "昇腾云计算有限公司诚聘算法工程师。工作地点：北京。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Python、PyTorch、深度学习、机器学习；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-03-11",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/64"
+    "sourceUrl": "https://mock.local/job/091"
+  },
+  {
+    "title": "自然语言处理工程师",
+    "company": "慧通信息科技有限公司",
+    "city": "南京",
+    "industry": "人工智能",
+    "salaryMin": 16500,
+    "salaryMax": 24500,
+    "education": "硕士",
+    "experience": "经验不限",
+    "skills": [
+      "机器学习",
+      "深度学习",
+      "NLP"
+    ],
+    "description": "慧通信息科技有限公司诚聘自然语言处理工程师。工作地点：南京。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 机器学习、深度学习、NLP；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-07-03",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/092"
+  },
+  {
+    "title": "计算机视觉工程师",
+    "company": "微谷科技有限公司",
+    "city": "苏州",
+    "industry": "人工智能",
+    "salaryMin": 11500,
+    "salaryMax": 17000,
+    "education": "专科",
+    "experience": "1-3年",
+    "skills": [
+      "Python",
+      "深度学习",
+      "计算机视觉"
+    ],
+    "description": "微谷科技有限公司诚聘计算机视觉工程师。工作地点：苏州。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Python、深度学习、计算机视觉；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-04-14",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/093"
   },
   {
     "title": "风控数据分析师",
-    "company": "鲲鹏智算科技有限公司",
-    "city": "广州",
+    "company": "汇金融科技服务有限公司",
+    "city": "北京",
     "industry": "金融",
     "salaryMin": 14500,
     "salaryMax": 21500,
     "education": "专科",
     "experience": "3-5年",
     "skills": [
+      "数据分析",
+      "Python",
+      "SQL"
+    ],
+    "description": "汇金融科技服务有限公司诚聘风控数据分析师。工作地点：北京。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 数据分析、Python、SQL；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-05-26",
+    "source": "MOCK",
+    "sourceUrl": "https://mock.local/job/094"
+  },
+  {
+    "title": "量化研究员（校招）",
+    "company": "昇腾云计算有限公司",
+    "city": "西安",
+    "industry": "金融",
+    "salaryMin": 10000,
+    "salaryMax": 14500,
+    "education": "专科",
+    "experience": "应届生",
+    "skills": [
       "Python",
       "数据分析",
       "数理统计"
     ],
-    "description": "鲲鹏智算科技有限公司诚聘风控数据分析师。工作地点：广州。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Python、数据分析、数理统计；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-06-22",
+    "description": "昇腾云计算有限公司诚聘量化研究员。工作地点：西安。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Python、数据分析、数理统计；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
+    "publishDate": "2026-05-11",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/65"
-  },
-  {
-    "title": "量化研究员",
-    "company": "博远医疗信息技术有限公司",
-    "city": "成都",
-    "industry": "金融",
-    "salaryMin": 17000,
-    "salaryMax": 25000,
-    "education": "本科",
-    "experience": "1-3年",
-    "skills": [
-      "数理统计",
-      "Python",
-      "数据分析"
-    ],
-    "description": "博远医疗信息技术有限公司诚聘量化研究员。工作地点：成都。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 数理统计、Python、数据分析；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-07-07",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/66"
-  },
-  {
-    "title": "产品经理",
-    "company": "锐思智能装备有限公司",
-    "city": "苏州",
-    "industry": "互联网/IT",
-    "salaryMin": 7500,
-    "salaryMax": 11000,
-    "education": "专科",
-    "experience": "经验不限",
-    "skills": [
-      "数据分析",
-      "项目管理",
-      "Axure"
-    ],
-    "description": "锐思智能装备有限公司诚聘产品经理。工作地点：苏州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 数据分析、项目管理、Axure；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-24",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/67"
+    "sourceUrl": "https://mock.local/job/095"
   },
   {
     "title": "用户运营专员",
-    "company": "启明星辰网络安全有限公司",
-    "city": "西安",
+    "company": "微谷科技有限公司",
+    "city": "北京",
     "industry": "电子商务",
-    "salaryMin": 4500,
-    "salaryMax": 6500,
-    "education": "专科",
-    "experience": "经验不限",
-    "skills": [
-      "文案策划",
-      "用户运营",
-      "数据分析"
-    ],
-    "description": "启明星辰网络安全有限公司诚聘用户运营专员。工作地点：西安。岗位职责：参与电子商务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 文案策划、用户运营、数据分析；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-07-01",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/68"
-  },
-  {
-    "title": "课程研发工程师（校招）",
-    "company": "星河智能科技有限公司",
-    "city": "杭州",
-    "industry": "教育",
-    "salaryMin": 6500,
-    "salaryMax": 9500,
-    "education": "本科",
-    "experience": "应届生",
-    "skills": [
-      "数据分析",
-      "Java",
-      "Python"
-    ],
-    "description": "星河智能科技有限公司诚聘课程研发工程师。工作地点：杭州。岗位职责：参与教育方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 数据分析、Java、Python；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-06-11",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/69"
-  },
-  {
-    "title": "游戏服务端开发（校招）",
-    "company": "恒达信息技术股份有限公司",
-    "city": "成都",
-    "industry": "游戏",
-    "salaryMin": 8000,
-    "salaryMax": 11500,
-    "education": "专科",
-    "experience": "应届生",
-    "skills": [
-      "Redis",
-      "分布式",
-      "C++"
-    ],
-    "description": "恒达信息技术股份有限公司诚聘游戏服务端开发。工作地点：成都。岗位职责：参与游戏方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Redis、分布式、C++；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-06-10",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/70"
-  },
-  {
-    "title": "医疗数据工程师",
-    "company": "恒达信息技术股份有限公司",
-    "city": "北京",
-    "industry": "医疗健康",
-    "salaryMin": 13000,
-    "salaryMax": 19500,
-    "education": "硕士",
-    "experience": "经验不限",
-    "skills": [
-      "SQL",
-      "数据分析",
-      "Python"
-    ],
-    "description": "恒达信息技术股份有限公司诚聘医疗数据工程师。工作地点：北京。岗位职责：参与医疗健康方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 SQL、数据分析、Python；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-07-06",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/71"
-  },
-  {
-    "title": "Java后端开发工程师（校招）",
-    "company": "天工数据科技有限公司",
-    "city": "南京",
-    "industry": "互联网/IT",
-    "salaryMin": 7500,
-    "salaryMax": 11000,
-    "education": "本科",
-    "experience": "应届生",
-    "skills": [
-      "MySQL",
-      "微服务",
-      "Redis",
-      "Git",
-      "Spring Boot"
-    ],
-    "description": "天工数据科技有限公司诚聘Java后端开发工程师。工作地点：南京。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 MySQL、微服务、Redis、Git、Spring Boot；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-07-09",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/72"
-  },
-  {
-    "title": "Python后端开发工程师（校招）",
-    "company": "万联云服信息技术有限公司",
-    "city": "北京",
-    "industry": "互联网/IT",
-    "salaryMin": 11000,
-    "salaryMax": 16000,
-    "education": "硕士",
-    "experience": "应届生",
-    "skills": [
-      "Linux",
-      "Django",
-      "MySQL"
-    ],
-    "description": "万联云服信息技术有限公司诚聘Python后端开发工程师。工作地点：北京。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Linux、Django、MySQL；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-07-03",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/73"
-  },
-  {
-    "title": "前端开发工程师",
-    "company": "慧学在线教育科技有限公司",
-    "city": "西安",
-    "industry": "互联网/IT",
     "salaryMin": 9000,
     "salaryMax": 13500,
-    "education": "硕士",
-    "experience": "1-3年",
-    "skills": [
-      "CSS",
-      "JavaScript",
-      "Git",
-      "TypeScript"
-    ],
-    "description": "慧学在线教育科技有限公司诚聘前端开发工程师。工作地点：西安。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 CSS、JavaScript、Git、TypeScript；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-07-04",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/74"
-  },
-  {
-    "title": "大数据开发工程师",
-    "company": "博远医疗信息技术有限公司",
-    "city": "深圳",
-    "industry": "大数据",
-    "salaryMin": 24500,
-    "salaryMax": 36000,
-    "education": "硕士",
+    "education": "专科",
     "experience": "3-5年",
     "skills": [
-      "Kafka",
-      "Spark",
-      "Hadoop",
-      "Java",
-      "Hive"
-    ],
-    "description": "博远医疗信息技术有限公司诚聘大数据开发工程师。工作地点：深圳。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Kafka、Spark、Hadoop、Java、Hive；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-07-01",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/75"
-  },
-  {
-    "title": "数据分析师",
-    "company": "鲲鹏智算科技有限公司",
-    "city": "苏州",
-    "industry": "大数据",
-    "salaryMin": 13000,
-    "salaryMax": 19500,
-    "education": "硕士",
-    "experience": "3-5年",
-    "skills": [
-      "数据分析",
-      "Python",
-      "SQL",
-      "Tableau",
+      "用户运营",
+      "文案策划",
       "Excel"
     ],
-    "description": "鲲鹏智算科技有限公司诚聘数据分析师。工作地点：苏州。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 数据分析、Python、SQL、Tableau、Excel；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-06-21",
+    "description": "微谷科技有限公司诚聘用户运营专员。工作地点：北京。岗位职责：参与电子商务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 用户运营、文案策划、Excel；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-03-27",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/76"
+    "sourceUrl": "https://mock.local/job/096"
   },
   {
-    "title": "算法工程师（校招）",
-    "company": "锐思智能装备有限公司",
-    "city": "杭州",
-    "industry": "人工智能",
-    "salaryMin": 14500,
-    "salaryMax": 21000,
-    "education": "硕士",
-    "experience": "应届生",
-    "skills": [
-      "PyTorch",
-      "深度学习",
-      "Python"
-    ],
-    "description": "锐思智能装备有限公司诚聘算法工程师。工作地点：杭州。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 PyTorch、深度学习、Python；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-07-08",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/77"
-  },
-  {
-    "title": "自然语言处理工程师（校招）",
-    "company": "鲲鹏智算科技有限公司",
-    "city": "广州",
-    "industry": "人工智能",
-    "salaryMin": 10000,
-    "salaryMax": 15000,
-    "education": "专科",
-    "experience": "应届生",
-    "skills": [
-      "NLP",
-      "Python",
-      "深度学习"
-    ],
-    "description": "鲲鹏智算科技有限公司诚聘自然语言处理工程师。工作地点：广州。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 NLP、Python、深度学习；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-07-01",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/78"
-  },
-  {
-    "title": "测试开发工程师",
-    "company": "恒达信息技术股份有限公司",
-    "city": "上海",
-    "industry": "互联网/IT",
-    "salaryMin": 9500,
-    "salaryMax": 14000,
-    "education": "本科",
-    "experience": "经验不限",
-    "skills": [
-      "Selenium",
-      "Python",
-      "Linux",
-      "Git"
-    ],
-    "description": "恒达信息技术股份有限公司诚聘测试开发工程师。工作地点：上海。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Selenium、Python、Linux、Git；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-15",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/79"
-  },
-  {
-    "title": "运维开发工程师",
-    "company": "慧学在线教育科技有限公司",
-    "city": "南京",
-    "industry": "互联网/IT",
-    "salaryMin": 11500,
-    "salaryMax": 16500,
-    "education": "硕士",
-    "experience": "经验不限",
-    "skills": [
-      "Linux",
-      "Docker",
-      "Kubernetes",
-      "Python"
-    ],
-    "description": "慧学在线教育科技有限公司诚聘运维开发工程师。工作地点：南京。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Linux、Docker、Kubernetes、Python；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-07-07",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/80"
-  },
-  {
-    "title": "信息安全工程师",
-    "company": "恒达信息技术股份有限公司",
-    "city": "成都",
-    "industry": "互联网/IT",
-    "salaryMin": 9000,
-    "salaryMax": 13000,
-    "education": "专科",
-    "experience": "1-3年",
-    "skills": [
-      "Linux",
-      "网络安全",
-      "Docker"
-    ],
-    "description": "恒达信息技术股份有限公司诚聘信息安全工程师。工作地点：成都。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Linux、网络安全、Docker；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-06-16",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/81"
-  },
-  {
-    "title": "嵌入式软件工程师",
-    "company": "优点生活电子商务有限公司",
-    "city": "南京",
-    "industry": "智能制造",
-    "salaryMin": 10500,
-    "salaryMax": 15500,
-    "education": "专科",
-    "experience": "3-5年",
-    "skills": [
-      "C++",
-      "单片机",
-      "Linux"
-    ],
-    "description": "优点生活电子商务有限公司诚聘嵌入式软件工程师。工作地点：南京。岗位职责：参与智能制造方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 C++、单片机、Linux；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-07-06",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/82"
-  },
-  {
-    "title": "风控数据分析师",
-    "company": "天工数据科技有限公司",
-    "city": "西安",
-    "industry": "金融",
-    "salaryMin": 11500,
-    "salaryMax": 17000,
-    "education": "硕士",
-    "experience": "经验不限",
-    "skills": [
-      "Python",
-      "SQL",
-      "数据分析",
-      "数理统计"
-    ],
-    "description": "天工数据科技有限公司诚聘风控数据分析师。工作地点：西安。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Python、SQL、数据分析、数理统计；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-07-06",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/83"
-  },
-  {
-    "title": "量化研究员",
-    "company": "中鑫金融科技有限公司",
-    "city": "西安",
-    "industry": "金融",
-    "salaryMin": 13000,
-    "salaryMax": 19500,
-    "education": "专科",
-    "experience": "经验不限",
-    "skills": [
-      "数理统计",
-      "数据分析",
-      "Python"
-    ],
-    "description": "中鑫金融科技有限公司诚聘量化研究员。工作地点：西安。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 数理统计、数据分析、Python；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-07-02",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/84"
-  },
-  {
-    "title": "产品经理",
-    "company": "优点生活电子商务有限公司",
-    "city": "北京",
-    "industry": "互联网/IT",
-    "salaryMin": 18000,
-    "salaryMax": 26000,
+    "title": "电商产品经理",
+    "company": "康泰健康信息有限公司",
+    "city": "武汉",
+    "industry": "电子商务",
+    "salaryMin": 12000,
+    "salaryMax": 17500,
     "education": "本科",
     "experience": "3-5年",
     "skills": [
-      "Axure",
       "产品设计",
+      "Axure",
       "数据分析"
     ],
-    "description": "优点生活电子商务有限公司诚聘产品经理。工作地点：北京。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Axure、产品设计、数据分析；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-07-09",
+    "description": "康泰健康信息有限公司诚聘电商产品经理。工作地点：武汉。岗位职责：参与电子商务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 产品设计、Axure、数据分析；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-04-08",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/85"
-  },
-  {
-    "title": "用户运营专员",
-    "company": "中鑫金融科技有限公司",
-    "city": "成都",
-    "industry": "电子商务",
-    "salaryMin": 7500,
-    "salaryMax": 11000,
-    "education": "硕士",
-    "experience": "1-3年",
-    "skills": [
-      "文案策划",
-      "Excel",
-      "用户运营"
-    ],
-    "description": "中鑫金融科技有限公司诚聘用户运营专员。工作地点：成都。岗位职责：参与电子商务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 文案策划、Excel、用户运营；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-07-06",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/86"
+    "sourceUrl": "https://mock.local/job/097"
   },
   {
     "title": "课程研发工程师",
-    "company": "中鑫金融科技有限公司",
-    "city": "北京",
+    "company": "翼动游戏网络有限公司",
+    "city": "杭州",
     "industry": "教育",
-    "salaryMin": 8000,
-    "salaryMax": 11500,
-    "education": "专科",
+    "salaryMin": 8500,
+    "salaryMax": 12000,
+    "education": "本科",
     "experience": "1-3年",
     "skills": [
-      "数据分析",
       "Java",
+      "数据分析",
       "Python"
     ],
-    "description": "中鑫金融科技有限公司诚聘课程研发工程师。工作地点：北京。岗位职责：参与教育方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 数据分析、Java、Python；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-06-12",
+    "description": "翼动游戏网络有限公司诚聘课程研发工程师。工作地点：杭州。岗位职责：参与教育方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Java、数据分析、Python；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
+    "publishDate": "2026-06-09",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/87"
+    "sourceUrl": "https://mock.local/job/098"
   },
   {
     "title": "游戏服务端开发",
-    "company": "天工数据科技有限公司",
-    "city": "西安",
-    "industry": "游戏",
-    "salaryMin": 13000,
-    "salaryMax": 19000,
-    "education": "硕士",
-    "experience": "经验不限",
-    "skills": [
-      "Linux",
-      "Redis",
-      "分布式"
-    ],
-    "description": "天工数据科技有限公司诚聘游戏服务端开发。工作地点：西安。岗位职责：参与游戏方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Linux、Redis、分布式；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-17",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/88"
-  },
-  {
-    "title": "医疗数据工程师（校招）",
-    "company": "启明星辰网络安全有限公司",
-    "city": "深圳",
-    "industry": "医疗健康",
-    "salaryMin": 8000,
-    "salaryMax": 12000,
-    "education": "本科",
-    "experience": "应届生",
-    "skills": [
-      "Python",
-      "SQL",
-      "数据分析"
-    ],
-    "description": "启明星辰网络安全有限公司诚聘医疗数据工程师。工作地点：深圳。岗位职责：参与医疗健康方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Python、SQL、数据分析；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-07-01",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/89"
-  },
-  {
-    "title": "Java后端开发工程师",
-    "company": "鲲鹏智算科技有限公司",
-    "city": "深圳",
-    "industry": "互联网/IT",
-    "salaryMin": 14000,
-    "salaryMax": 21000,
-    "education": "硕士",
-    "experience": "1-3年",
-    "skills": [
-      "MySQL",
-      "Java",
-      "Spring Boot",
-      "Git"
-    ],
-    "description": "鲲鹏智算科技有限公司诚聘Java后端开发工程师。工作地点：深圳。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 MySQL、Java、Spring Boot、Git；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-06-15",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/90"
-  },
-  {
-    "title": "Python后端开发工程师",
-    "company": "慧学在线教育科技有限公司",
-    "city": "西安",
-    "industry": "互联网/IT",
-    "salaryMin": 8500,
-    "salaryMax": 13000,
-    "education": "本科",
-    "experience": "1-3年",
-    "skills": [
-      "Linux",
-      "Django",
-      "Redis"
-    ],
-    "description": "慧学在线教育科技有限公司诚聘Python后端开发工程师。工作地点：西安。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Linux、Django、Redis；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-06-30",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/91"
-  },
-  {
-    "title": "前端开发工程师（校招）",
-    "company": "蓝汛网络科技有限公司",
-    "city": "杭州",
-    "industry": "互联网/IT",
-    "salaryMin": 6000,
-    "salaryMax": 9000,
-    "education": "专科",
-    "experience": "应届生",
-    "skills": [
-      "TypeScript",
-      "Vue",
-      "CSS",
-      "JavaScript",
-      "Git"
-    ],
-    "description": "蓝汛网络科技有限公司诚聘前端开发工程师。工作地点：杭州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 TypeScript、Vue、CSS、JavaScript、Git；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-07-03",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/92"
-  },
-  {
-    "title": "大数据开发工程师",
-    "company": "天工数据科技有限公司",
-    "city": "深圳",
-    "industry": "大数据",
-    "salaryMin": 11500,
-    "salaryMax": 17000,
-    "education": "专科",
-    "experience": "经验不限",
-    "skills": [
-      "Hive",
-      "Java",
-      "Spark",
-      "Kafka"
-    ],
-    "description": "天工数据科技有限公司诚聘大数据开发工程师。工作地点：深圳。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Hive、Java、Spark、Kafka；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-11",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/93"
-  },
-  {
-    "title": "数据分析师",
-    "company": "恒达信息技术股份有限公司",
-    "city": "苏州",
-    "industry": "大数据",
-    "salaryMin": 11000,
-    "salaryMax": 16000,
-    "education": "本科",
-    "experience": "3-5年",
-    "skills": [
-      "数据分析",
-      "Tableau",
-      "Python",
-      "SQL",
-      "Excel"
-    ],
-    "description": "恒达信息技术股份有限公司诚聘数据分析师。工作地点：苏州。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 数据分析、Tableau、Python、SQL、Excel；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-06-14",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/94"
-  },
-  {
-    "title": "算法工程师",
-    "company": "万联云服信息技术有限公司",
-    "city": "上海",
-    "industry": "人工智能",
-    "salaryMin": 13500,
-    "salaryMax": 19500,
-    "education": "专科",
-    "experience": "经验不限",
-    "skills": [
-      "深度学习",
-      "机器学习",
-      "Python",
-      "PyTorch"
-    ],
-    "description": "万联云服信息技术有限公司诚聘算法工程师。工作地点：上海。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 深度学习、机器学习、Python、PyTorch；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-18",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/95"
-  },
-  {
-    "title": "自然语言处理工程师（校招）",
-    "company": "恒达信息技术股份有限公司",
+    "company": "康泰健康信息有限公司",
     "city": "北京",
-    "industry": "人工智能",
-    "salaryMin": 17500,
-    "salaryMax": 26000,
+    "industry": "游戏",
+    "salaryMin": 27000,
+    "salaryMax": 40000,
     "education": "硕士",
-    "experience": "应届生",
-    "skills": [
-      "深度学习",
-      "Python",
-      "NLP",
-      "机器学习"
-    ],
-    "description": "恒达信息技术股份有限公司诚聘自然语言处理工程师。工作地点：北京。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 深度学习、Python、NLP、机器学习；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-06-27",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/96"
-  },
-  {
-    "title": "测试开发工程师",
-    "company": "蓝汛网络科技有限公司",
-    "city": "上海",
-    "industry": "互联网/IT",
-    "salaryMin": 12500,
-    "salaryMax": 18000,
-    "education": "本科",
-    "experience": "3-5年",
-    "skills": [
-      "Selenium",
-      "Python",
-      "Git",
-      "Linux"
-    ],
-    "description": "蓝汛网络科技有限公司诚聘测试开发工程师。工作地点：上海。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Selenium、Python、Git、Linux；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-06-11",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/97"
-  },
-  {
-    "title": "运维开发工程师",
-    "company": "锐思智能装备有限公司",
-    "city": "深圳",
-    "industry": "互联网/IT",
-    "salaryMin": 11500,
-    "salaryMax": 17000,
-    "education": "本科",
-    "experience": "经验不限",
-    "skills": [
-      "Linux",
-      "Python",
-      "Docker",
-      "Kubernetes"
-    ],
-    "description": "锐思智能装备有限公司诚聘运维开发工程师。工作地点：深圳。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Linux、Python、Docker、Kubernetes；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-07-04",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/98"
-  },
-  {
-    "title": "信息安全工程师（校招）",
-    "company": "博远医疗信息技术有限公司",
-    "city": "广州",
-    "industry": "互联网/IT",
-    "salaryMin": 8500,
-    "salaryMax": 12500,
-    "education": "本科",
-    "experience": "应届生",
-    "skills": [
-      "网络安全",
-      "Python",
-      "Docker",
-      "Linux"
-    ],
-    "description": "博远医疗信息技术有限公司诚聘信息安全工程师。工作地点：广州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 网络安全、Python、Docker、Linux；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-07-05",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/99"
-  },
-  {
-    "title": "嵌入式软件工程师",
-    "company": "慧学在线教育科技有限公司",
-    "city": "杭州",
-    "industry": "智能制造",
-    "salaryMin": 13500,
-    "salaryMax": 19500,
-    "education": "本科",
     "experience": "3-5年",
     "skills": [
       "Linux",
-      "单片机",
+      "分布式",
       "C++"
     ],
-    "description": "慧学在线教育科技有限公司诚聘嵌入式软件工程师。工作地点：杭州。岗位职责：参与智能制造方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Linux、单片机、C++；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-07-02",
+    "description": "康泰健康信息有限公司诚聘游戏服务端开发。工作地点：北京。岗位职责：参与游戏方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Linux、分布式、C++；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
+    "publishDate": "2026-04-28",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/100"
-  },
-  {
-    "title": "风控数据分析师",
-    "company": "天工数据科技有限公司",
-    "city": "北京",
-    "industry": "金融",
-    "salaryMin": 12000,
-    "salaryMax": 18000,
-    "education": "专科",
-    "experience": "1-3年",
-    "skills": [
-      "SQL",
-      "数据分析",
-      "Python",
-      "数理统计"
-    ],
-    "description": "天工数据科技有限公司诚聘风控数据分析师。工作地点：北京。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 SQL、数据分析、Python、数理统计；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-07-01",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/101"
-  },
-  {
-    "title": "量化研究员",
-    "company": "中鑫金融科技有限公司",
-    "city": "杭州",
-    "industry": "金融",
-    "salaryMin": 14000,
-    "salaryMax": 20500,
-    "education": "专科",
-    "experience": "经验不限",
-    "skills": [
-      "数理统计",
-      "Python",
-      "数据分析"
-    ],
-    "description": "中鑫金融科技有限公司诚聘量化研究员。工作地点：杭州。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 数理统计、Python、数据分析；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-07-05",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/102"
-  },
-  {
-    "title": "产品经理",
-    "company": "锐思智能装备有限公司",
-    "city": "北京",
-    "industry": "互联网/IT",
-    "salaryMin": 16500,
-    "salaryMax": 24500,
-    "education": "本科",
-    "experience": "3-5年",
-    "skills": [
-      "Axure",
-      "产品设计",
-      "数据分析"
-    ],
-    "description": "锐思智能装备有限公司诚聘产品经理。工作地点：北京。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Axure、产品设计、数据分析；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-06-22",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/103"
-  },
-  {
-    "title": "用户运营专员",
-    "company": "星河智能科技有限公司",
-    "city": "广州",
-    "industry": "电子商务",
-    "salaryMin": 5500,
-    "salaryMax": 8000,
-    "education": "专科",
-    "experience": "1-3年",
-    "skills": [
-      "用户运营",
-      "文案策划",
-      "Excel",
-      "数据分析"
-    ],
-    "description": "星河智能科技有限公司诚聘用户运营专员。工作地点：广州。岗位职责：参与电子商务方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 用户运营、文案策划、Excel、数据分析；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-06-29",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/104"
-  },
-  {
-    "title": "课程研发工程师",
-    "company": "锐思智能装备有限公司",
-    "city": "西安",
-    "industry": "教育",
-    "salaryMin": 12000,
-    "salaryMax": 17500,
-    "education": "硕士",
-    "experience": "3-5年",
-    "skills": [
-      "Java",
-      "Python",
-      "数据分析"
-    ],
-    "description": "锐思智能装备有限公司诚聘课程研发工程师。工作地点：西安。岗位职责：参与教育方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Java、Python、数据分析；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-06-29",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/105"
-  },
-  {
-    "title": "游戏服务端开发（校招）",
-    "company": "中鑫金融科技有限公司",
-    "city": "武汉",
-    "industry": "游戏",
-    "salaryMin": 11000,
-    "salaryMax": 16000,
-    "education": "硕士",
-    "experience": "应届生",
-    "skills": [
-      "C++",
-      "Redis",
-      "Linux"
-    ],
-    "description": "中鑫金融科技有限公司诚聘游戏服务端开发。工作地点：武汉。岗位职责：参与游戏方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 C++、Redis、Linux；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-07-03",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/106"
-  },
-  {
-    "title": "医疗数据工程师",
-    "company": "优点生活电子商务有限公司",
-    "city": "北京",
-    "industry": "医疗健康",
-    "salaryMin": 16500,
-    "salaryMax": 24500,
-    "education": "本科",
-    "experience": "3-5年",
-    "skills": [
-      "SQL",
-      "数据分析",
-      "Python"
-    ],
-    "description": "优点生活电子商务有限公司诚聘医疗数据工程师。工作地点：北京。岗位职责：参与医疗健康方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 SQL、数据分析、Python；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-07-09",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/107"
-  },
-  {
-    "title": "Java后端开发工程师",
-    "company": "星河智能科技有限公司",
-    "city": "成都",
-    "industry": "互联网/IT",
-    "salaryMin": 7000,
-    "salaryMax": 10500,
-    "education": "专科",
-    "experience": "经验不限",
-    "skills": [
-      "Java",
-      "微服务",
-      "Spring Boot",
-      "Git",
-      "Redis"
-    ],
-    "description": "星河智能科技有限公司诚聘Java后端开发工程师。工作地点：成都。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Java、微服务、Spring Boot、Git、Redis；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-07-07",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/108"
-  },
-  {
-    "title": "Python后端开发工程师",
-    "company": "蓝汛网络科技有限公司",
-    "city": "广州",
-    "industry": "互联网/IT",
-    "salaryMin": 10500,
-    "salaryMax": 15500,
-    "education": "硕士",
-    "experience": "经验不限",
-    "skills": [
-      "Python",
-      "Linux",
-      "MySQL"
-    ],
-    "description": "蓝汛网络科技有限公司诚聘Python后端开发工程师。工作地点：广州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Python、Linux、MySQL；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-19",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/109"
-  },
-  {
-    "title": "前端开发工程师",
-    "company": "万联云服信息技术有限公司",
-    "city": "杭州",
-    "industry": "互联网/IT",
-    "salaryMin": 11500,
-    "salaryMax": 17000,
-    "education": "硕士",
-    "experience": "经验不限",
-    "skills": [
-      "Vue",
-      "Git",
-      "CSS",
-      "TypeScript",
-      "JavaScript"
-    ],
-    "description": "万联云服信息技术有限公司诚聘前端开发工程师。工作地点：杭州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Vue、Git、CSS、TypeScript、JavaScript；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-07-04",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/110"
-  },
-  {
-    "title": "大数据开发工程师",
-    "company": "蓝汛网络科技有限公司",
-    "city": "武汉",
-    "industry": "大数据",
-    "salaryMin": 13000,
-    "salaryMax": 19000,
-    "education": "硕士",
-    "experience": "1-3年",
-    "skills": [
-      "Hive",
-      "Java",
-      "Kafka",
-      "Spark"
-    ],
-    "description": "蓝汛网络科技有限公司诚聘大数据开发工程师。工作地点：武汉。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Hive、Java、Kafka、Spark；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-06-23",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/111"
-  },
-  {
-    "title": "数据分析师（校招）",
-    "company": "优点生活电子商务有限公司",
-    "city": "广州",
-    "industry": "大数据",
-    "salaryMin": 5500,
-    "salaryMax": 8000,
-    "education": "专科",
-    "experience": "应届生",
-    "skills": [
-      "数据分析",
-      "Tableau",
-      "Excel",
-      "Python"
-    ],
-    "description": "优点生活电子商务有限公司诚聘数据分析师。工作地点：广州。岗位职责：参与大数据方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 数据分析、Tableau、Excel、Python；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-06-17",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/112"
-  },
-  {
-    "title": "算法工程师",
-    "company": "中鑫金融科技有限公司",
-    "city": "杭州",
-    "industry": "人工智能",
-    "salaryMin": 18500,
-    "salaryMax": 27500,
-    "education": "专科",
-    "experience": "3-5年",
-    "skills": [
-      "PyTorch",
-      "机器学习",
-      "深度学习"
-    ],
-    "description": "中鑫金融科技有限公司诚聘算法工程师。工作地点：杭州。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 PyTorch、机器学习、深度学习；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-06-13",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/113"
-  },
-  {
-    "title": "自然语言处理工程师",
-    "company": "慧学在线教育科技有限公司",
-    "city": "成都",
-    "industry": "人工智能",
-    "salaryMin": 24000,
-    "salaryMax": 35500,
-    "education": "硕士",
-    "experience": "3-5年",
-    "skills": [
-      "机器学习",
-      "Python",
-      "NLP",
-      "深度学习"
-    ],
-    "description": "慧学在线教育科技有限公司诚聘自然语言处理工程师。工作地点：成都。岗位职责：参与人工智能方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 机器学习、Python、NLP、深度学习；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-06-30",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/114"
-  },
-  {
-    "title": "测试开发工程师",
-    "company": "天工数据科技有限公司",
-    "city": "杭州",
-    "industry": "互联网/IT",
-    "salaryMin": 7500,
-    "salaryMax": 11500,
-    "education": "专科",
-    "experience": "1-3年",
-    "skills": [
-      "Python",
-      "Git",
-      "Selenium"
-    ],
-    "description": "天工数据科技有限公司诚聘测试开发工程师。工作地点：杭州。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：专科及以上学历，熟悉 Python、Git、Selenium；具备良好的编码规范与团队协作能力。要求 1-3年 相关经验。",
-    "publishDate": "2026-07-07",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/115"
-  },
-  {
-    "title": "运维开发工程师（校招）",
-    "company": "恒达信息技术股份有限公司",
-    "city": "深圳",
-    "industry": "互联网/IT",
-    "salaryMin": 9000,
-    "salaryMax": 13000,
-    "education": "本科",
-    "experience": "应届生",
-    "skills": [
-      "Python",
-      "Kubernetes",
-      "Docker"
-    ],
-    "description": "恒达信息技术股份有限公司诚聘运维开发工程师。工作地点：深圳。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Python、Kubernetes、Docker；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-07-05",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/116"
-  },
-  {
-    "title": "信息安全工程师",
-    "company": "博远医疗信息技术有限公司",
-    "city": "上海",
-    "industry": "互联网/IT",
-    "salaryMin": 20000,
-    "salaryMax": 29000,
-    "education": "本科",
-    "experience": "3-5年",
-    "skills": [
-      "网络安全",
-      "Docker",
-      "Linux",
-      "Python"
-    ],
-    "description": "博远医疗信息技术有限公司诚聘信息安全工程师。工作地点：上海。岗位职责：参与互联网/IT方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 网络安全、Docker、Linux、Python；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-06-11",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/117"
+    "sourceUrl": "https://mock.local/job/099"
   },
   {
     "title": "嵌入式软件工程师",
-    "company": "天工数据科技有限公司",
-    "city": "武汉",
+    "company": "云链电商科技有限公司",
+    "city": "北京",
     "industry": "智能制造",
-    "salaryMin": 7500,
-    "salaryMax": 11000,
-    "education": "本科",
+    "salaryMin": 11500,
+    "salaryMax": 17000,
+    "education": "硕士",
     "experience": "经验不限",
     "skills": [
       "Linux",
       "C++",
       "单片机"
     ],
-    "description": "天工数据科技有限公司诚聘嵌入式软件工程师。工作地点：武汉。岗位职责：参与智能制造方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 Linux、C++、单片机；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
-    "publishDate": "2026-06-25",
+    "description": "云链电商科技有限公司诚聘嵌入式软件工程师。工作地点：北京。岗位职责：参与智能制造方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 Linux、C++、单片机；具备良好的编码规范与团队协作能力。要求 经验不限 相关经验。",
+    "publishDate": "2026-03-26",
     "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/118"
-  },
-  {
-    "title": "风控数据分析师（校招）",
-    "company": "鲲鹏智算科技有限公司",
-    "city": "武汉",
-    "industry": "金融",
-    "salaryMin": 7000,
-    "salaryMax": 10500,
-    "education": "本科",
-    "experience": "应届生",
-    "skills": [
-      "SQL",
-      "Python",
-      "数理统计"
-    ],
-    "description": "鲲鹏智算科技有限公司诚聘风控数据分析师。工作地点：武汉。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：本科及以上学历，熟悉 SQL、Python、数理统计；具备良好的编码规范与团队协作能力。欢迎优秀应届毕业生投递。",
-    "publishDate": "2026-07-08",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/119"
-  },
-  {
-    "title": "量化研究员",
-    "company": "星河智能科技有限公司",
-    "city": "西安",
-    "industry": "金融",
-    "salaryMin": 24500,
-    "salaryMax": 36000,
-    "education": "硕士",
-    "experience": "3-5年",
-    "skills": [
-      "数理统计",
-      "数据分析",
-      "Python"
-    ],
-    "description": "星河智能科技有限公司诚聘量化研究员。工作地点：西安。岗位职责：参与金融方向核心业务系统的设计与开发，负责模块的编码、测试与线上维护。任职要求：硕士及以上学历，熟悉 数理统计、数据分析、Python；具备良好的编码规范与团队协作能力。要求 3-5年 相关经验。",
-    "publishDate": "2026-06-30",
-    "source": "MOCK",
-    "sourceUrl": "https://mock.local/job/120"
+    "sourceUrl": "https://mock.local/job/100"
   }
 ]

@@ -8,10 +8,9 @@ import com.occupation.common.result.Result;
 import com.occupation.recommend.entity.BehaviorAction;
 import com.occupation.recommend.entity.JobApplication;
 import com.occupation.recommend.service.BehaviorService;
-import com.occupation.recommend.service.HybridRecommendService;
 import com.occupation.recommend.service.JobApplicationService;
 import com.occupation.recommend.service.JobMatchService;
-import com.occupation.recommend.service.PushService;
+import com.occupation.common.service.NotificationService;
 import com.occupation.recommend.vo.MatchJobVO;
 import com.occupation.recommend.vo.MyApplicationVO;
 import lombok.RequiredArgsConstructor;
@@ -37,18 +36,18 @@ import java.util.stream.Collectors;
 @PreAuthorize("hasRole('STUDENT')")
 public class RecommendController {
 
-    private final HybridRecommendService hybridRecommendService;
     private final JobMatchService jobMatchService;
     private final JobDetailService jobDetailService;
     private final BehaviorService behaviorService;
     private final JobApplicationService applicationService;
-    private final PushService pushService;
+    private final NotificationService pushService;
 
-    /** 个性化推荐列表（混合推荐：规则打分 + 语义匹配 + 协同过滤 + 内容推荐） */
+    /** 个性化推荐列表（按匹配分降序，含匹配理由和缺失技能提示） */
     @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/recommend")
-    public Result<List<MatchJobVO>> recommend(@RequestParam(defaultValue = "20") int topN) {
-        return Result.ok(hybridRecommendService.recommend(UserContextHolder.getUserId(), topN));
+    public Result<List<MatchJobVO>> recommend(@RequestParam(defaultValue = "25") int topN) {
+        // 可投递 / 市场参考 两栏各自独立取前 topN 名，互不抢名额
+        return Result.ok(jobMatchService.matchGrouped(UserContextHolder.getUserId(), topN));
     }
 
     /** 职位详情（自动记录 VIEW 行为，用于活跃度统计与反馈闭环） */
@@ -99,6 +98,9 @@ public class RecommendController {
     @PostMapping("/job/{jobId}/apply")
     public Result<Void> apply(@PathVariable Long jobId) {
         Long userId = UserContextHolder.getUserId();
+        if (applicationService.isEmployed(userId)) {
+            throw new BizException("你已入职，无需再投递");
+        }
         JobDetailVO job = jobDetailService.getJobById(jobId);
         if (job == null) {
             throw new BizException("职位不存在或已下架");
@@ -129,6 +131,9 @@ public class RecommendController {
     @PreAuthorize("hasRole('STUDENT')")
     @PostMapping("/job/{jobId}/contact")
     public Result<Map<String, String>> contact(@PathVariable Long jobId) {
+        if (applicationService.isEmployed(UserContextHolder.getUserId())) {
+            throw new BizException("你已入职，无需再联系其他职位");
+        }
         JobDetailVO job = jobDetailService.getJobById(jobId);
         if (job == null) {
             throw new BizException("职位不存在或已下架");
@@ -163,5 +168,21 @@ public class RecommendController {
         return Result.ok(apps.stream()
                 .map(a -> MyApplicationVO.of(a, jobs.get(a.getJobId())))
                 .collect(Collectors.toList()));
+    }
+
+    /**
+     * 接收录用（OFFER → ACCEPTED）—— 学生从收到的多个 offer 里选一个正式入职。
+     * 接收后即「已就业」，不能再投递/联系，也不能再接收别的 offer。
+     */
+    @PostMapping("/applications/{id}/accept")
+    public Result<Void> acceptOffer(@PathVariable Long id) {
+        applicationService.acceptOffer(id, UserContextHolder.getUserId());
+        return Result.ok();
+    }
+
+    /** 我的就业状态：EMPLOYED=已就业 / OFFERED=收到录用待接收 / SEEKING=求职中 / IDLE=待业 */
+    @GetMapping("/employment-status")
+    public Result<String> employmentStatus() {
+        return Result.ok(applicationService.employmentStatus(UserContextHolder.getUserId()));
     }
 }

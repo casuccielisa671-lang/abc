@@ -2,13 +2,28 @@
   <el-drawer v-model="visible" :title="title" size="560px">
     <div v-loading="loading">
       <template v-if="detail">
-        <!-- 身份与联系方式 -->
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="姓名">{{ detail.realName || '—' }}</el-descriptions-item>
-          <el-descriptions-item label="学号">{{ detail.username || '—' }}</el-descriptions-item>
-          <el-descriptions-item label="手机">{{ detail.phone || '—' }}</el-descriptions-item>
-          <el-descriptions-item label="邮箱">{{ detail.email || '—' }}</el-descriptions-item>
-        </el-descriptions>
+        <!-- 身份与联系方式（含证件照，来源为学生个人画像） -->
+        <div class="id-row">
+          <div class="id-photo">
+            <img
+              v-if="detail.resume && detail.resume.avatarUrl"
+              :src="detail.resume.avatarUrl" alt="证件照" class="id-photo-img"
+            />
+            <div v-else class="id-photo-empty">无证件照</div>
+          </div>
+          <el-descriptions :column="1" border class="id-desc">
+            <el-descriptions-item label="姓名">{{ detail.realName || '—' }}</el-descriptions-item>
+            <el-descriptions-item label="学号">{{ detail.username || '—' }}</el-descriptions-item>
+            <el-descriptions-item label="手机">{{ detail.phone || '—' }}</el-descriptions-item>
+            <el-descriptions-item label="邮箱">{{ detail.email || '—' }}</el-descriptions-item>
+          </el-descriptions>
+        </div>
+
+        <!-- 已在别处入职：提示 HR 不必再录用 -->
+        <el-alert
+          v-if="detail.employedElsewhere" type="success" :closable="false" show-icon
+          class="employed-alert" title="该学生已入职他处（已接受其他企业录用），无法再录用"
+        />
 
         <!-- 投递记录：每条单独流转 —— 同一个学生可能投了你好几个职位，各自的进度不同 -->
         <h4 class="sec-title">投递了你的这些职位</h4>
@@ -28,6 +43,7 @@
               <el-button
                 text size="small" type="success"
                 :loading="acting === a.applicationId"
+                :disabled="detail.employedElsewhere"
                 @click="act(a, 'OFFER')"
               >录用</el-button>
               <el-button
@@ -37,6 +53,13 @@
               >不合适</el-button>
             </div>
             <span v-else class="terminal-hint">已是终态，不可再变更</span>
+          </div>
+          <!-- 已发出的面试安排，方便 HR 核对 -->
+          <div v-if="a.status === 'INTERVIEW' && a.interviewTime" class="iv-box">
+            <div class="iv-line"><span class="iv-k">面试时间</span>{{ formatTime(a.interviewTime) }}</div>
+            <div class="iv-line"><span class="iv-k">面试地点</span>{{ a.interviewPlace || '—' }}</div>
+            <div v-if="a.interviewContact" class="iv-line"><span class="iv-k">联系人</span>{{ a.interviewContact }}</div>
+            <div v-if="a.interviewContent" class="iv-line"><span class="iv-k">面试内容</span>{{ a.interviewContent }}</div>
           </div>
           <p v-if="a.hrNote" class="applied-note">备注：{{ a.hrNote }}</p>
         </div>
@@ -140,6 +163,39 @@
       </template>
     </div>
   </el-drawer>
+
+  <!-- 邀请面试：填写结构化面试信息，提交后按模板给学生发通知 -->
+  <el-dialog v-model="ivVisible" title="邀请面试" width="440px" append-to-body>
+    <el-form :model="ivForm" label-width="82px" label-position="right">
+      <el-form-item label="职位">
+        <span class="iv-job">{{ ivTarget?.jobTitle || '—' }}</span>
+      </el-form-item>
+      <el-form-item label="面试时间" required>
+        <el-date-picker
+          v-model="ivForm.interviewTime" type="datetime" placeholder="选择面试时间"
+          format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DDTHH:mm:ss" style="width:100%"
+        />
+      </el-form-item>
+      <el-form-item label="地点/方式" required>
+        <el-input v-model="ivForm.interviewPlace" placeholder="线下地址，或线上会议链接" maxlength="300" />
+      </el-form-item>
+      <el-form-item label="联系人">
+        <el-input v-model="ivForm.interviewContact" placeholder="面试官 / 联系人（选填）" maxlength="100" />
+      </el-form-item>
+      <el-form-item label="面试内容">
+        <el-input
+          v-model="ivForm.interviewContent" type="textarea" :rows="3"
+          placeholder="面试环节、需准备的材料等（选填）" maxlength="500" show-word-limit
+        />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="ivVisible = false">取消</el-button>
+      <el-button type="primary" :loading="acting === ivTarget?.applicationId" @click="submitInterview">
+        发送面试邀请
+      </el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
@@ -165,8 +221,12 @@ const detail = ref(null)
 const loading = ref(false)
 const acting = ref(null)
 
+// 邀请面试表单
+const ivVisible = ref(false)
+const ivTarget = ref(null)
+const ivForm = ref({ interviewTime: null, interviewPlace: '', interviewContact: '', interviewContent: '' })
+
 const STATUS_LABEL = {
-  INTERVIEW: '邀请面试',
   OFFER: '录用',
   REJECTED: '标记为不合适'
 }
@@ -177,6 +237,7 @@ function statusTag(status) {
     VIEWED: 'warning',
     INTERVIEW: 'primary',
     OFFER: 'success',
+    ACCEPTED: 'success',
     REJECTED: 'danger'
   }[status] || 'info'
 }
@@ -184,16 +245,27 @@ function statusTag(status) {
 /**
  * 变更一条投递的状态。
  *
+ * 邀请面试要填时间/地点等，走单独的表单弹窗（submitInterview）。
  * OFFER / REJECTED 是终态，学生立刻能看到且不可撤销，所以先让 HR 确认一次。
  * 备注是可选的，留空就不覆盖已有备注（后端只在传了非 null 时才写）。
  */
 async function act(application, status) {
+  if (status === 'INTERVIEW') {
+    ivTarget.value = application
+    ivForm.value = {
+      interviewTime: application.interviewTime || null,
+      interviewPlace: application.interviewPlace || '',
+      interviewContact: application.interviewContact || '',
+      interviewContent: application.interviewContent || ''
+    }
+    ivVisible.value = true
+    return
+  }
+
   let hrNote
   try {
     const { value } = await ElMessageBox.prompt(
-      status === 'REJECTED' || status === 'OFFER'
-        ? `确定要「${STATUS_LABEL[status]}」吗？此操作不可撤销，学生会看到这个结果。`
-        : `确定要「${STATUS_LABEL[status]}」吗？`,
+      `确定要「${STATUS_LABEL[status]}」吗？此操作不可撤销，学生会看到这个结果。`,
       application.jobTitle || '处理投递',
       {
         confirmButtonText: '确定',
@@ -210,12 +282,38 @@ async function act(application, status) {
 
   acting.value = application.applicationId
   try {
-    await changeApplicationStatus(application.applicationId, status, hrNote)
+    await changeApplicationStatus(application.applicationId, { status, hrNote })
     ElMessage.success('已更新')
     await load(props.userId)
     emit('changed')
   } catch {
     /* 拦截器已提示（越权 403 / 非法流转都会给出原因） */
+  } finally {
+    acting.value = null
+  }
+}
+
+/** 提交面试邀请：前端先挡一次必填，后端还会再校验 */
+async function submitInterview() {
+  const f = ivForm.value
+  if (!f.interviewTime) { ElMessage.warning('请选择面试时间'); return }
+  if (!f.interviewPlace?.trim()) { ElMessage.warning('请填写面试地点或线上会议方式'); return }
+
+  acting.value = ivTarget.value.applicationId
+  try {
+    await changeApplicationStatus(ivTarget.value.applicationId, {
+      status: 'INTERVIEW',
+      interviewTime: f.interviewTime,
+      interviewPlace: f.interviewPlace.trim(),
+      interviewContact: f.interviewContact?.trim() || null,
+      interviewContent: f.interviewContent?.trim() || null
+    })
+    ElMessage.success('面试邀请已发送')
+    ivVisible.value = false
+    await load(props.userId)
+    emit('changed')
+  } catch {
+    /* 拦截器已提示 */
   } finally {
     acting.value = null
   }
@@ -254,6 +352,7 @@ watch(
 
 <style scoped>
 .sec-title { font-size: 14px; font-weight: 600; color: var(--app-ink); margin: 22px 0 10px; }
+.employed-alert { margin: 14px 0 4px; }
 
 .applied {
   padding: 10px 12px; border-radius: 8px; box-shadow: var(--app-hairline); margin-bottom: 8px;
@@ -268,6 +367,13 @@ watch(
   margin: 8px 0 0; font-size: 12px; color: var(--app-ink-3);
   padding-top: 8px; border-top: 1px solid var(--app-stone);
 }
+.iv-box {
+  margin-top: 8px; padding: 8px 10px; border-radius: 8px;
+  background: var(--app-surface-2, rgba(37,99,235,.06));
+}
+.iv-line { font-size: 12px; color: var(--app-ink-2); line-height: 1.7; }
+.iv-k { display: inline-block; width: 60px; color: var(--app-ink-3); }
+.iv-job { font-size: 13px; font-weight: 600; color: var(--app-ink); }
 
 .stat-grid.compact { margin-top: 16px; grid-template-columns: repeat(3, 1fr); }
 .chip-row { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -282,4 +388,17 @@ watch(
 .rs-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
 .rs-role, .rs-gpa { font-size: 12px; color: var(--app-ink-3); }
 .rs-text { font-size: 13px; line-height: 1.75; color: var(--app-ink-2); margin: 6px 0 0; white-space: pre-line; }
+
+.id-row { display: flex; gap: 14px; align-items: stretch; }
+.id-photo { flex: none; }
+.id-photo-img {
+  width: 96px; height: 128px; object-fit: cover; border-radius: 8px;
+  border: 1px solid var(--color-border, var(--app-hairline));
+}
+.id-photo-empty {
+  width: 96px; height: 128px; display: flex; align-items: center; justify-content: center;
+  border-radius: 8px; border: 1px dashed var(--color-border, #ddd);
+  color: var(--color-text-tertiary, var(--app-ink-3)); font-size: 12px;
+}
+.id-desc { flex: 1; min-width: 0; }
 </style>

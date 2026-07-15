@@ -44,6 +44,25 @@
             <el-tag :type="statusTag(row.status)" size="small">{{ statusLabel(row.status) }}</el-tag>
           </template>
         </el-table-column>
+        <el-table-column label="可见状态" width="140">
+          <template #default="{ row }">
+            <template v-if="row.status === 'SUCCESS'">
+              <!-- 市场报告：全体可见 / 仅自己可见 -->
+              <template v-if="row.category === 'MARKET'">
+                <el-tag v-if="row.visibility === 'SELF'" size="small" type="info" effect="plain">仅自己可见</el-tag>
+                <el-tag v-else size="small" type="success" effect="plain">全体可见</el-tag>
+              </template>
+              <!-- 就业报告：按下发人数 -->
+              <template v-else>
+                <el-tag v-if="row.deliveredCount > 0" size="small" type="warning" effect="plain">
+                  已发布 · {{ row.deliveredCount }}人
+                </el-tag>
+                <el-tag v-else size="small" type="info" effect="plain">仅自己可见</el-tag>
+              </template>
+            </template>
+            <span v-else>—</span>
+          </template>
+        </el-table-column>
         <el-table-column label="生成时间" width="150">
           <template #default="{ row }">{{ formatTime(row.createTime) }}</template>
         </el-table-column>
@@ -56,10 +75,8 @@
         <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
             <el-button v-if="row.status === 'SUCCESS'" text type="primary" size="small" @click="handleDownload(row)">下载</el-button>
-            <el-button v-if="row.status === 'SUCCESS' && row.category === 'EMPLOYMENT'"
-                       text type="success" size="small" @click="openDeliver(row)">发送</el-button>
-            <el-tag v-else-if="row.status === 'SUCCESS' && row.category === 'MARKET'"
-                    size="small" type="info" effect="plain" class="broadcast-tag">全体可见</el-tag>
+            <el-button v-if="row.status === 'SUCCESS'"
+                       text type="success" size="small" @click="openDeliver(row)">设置可见</el-button>
             <el-button text type="danger" size="small" @click="handleDelete(row.id)">删除</el-button>
           </template>
         </el-table-column>
@@ -117,15 +134,34 @@
         <el-button type="primary" :loading="generating" @click="handleGenerate">生成</el-button>
       </template>
     </el-dialog>
-    <el-dialog v-model="deliverVisible" title="发送报告给学生" width="480px">
+
+    <!-- 设置就业报告的可见范围（可重复设置，以最后一次为准） -->
+    <el-dialog v-model="deliverVisible" title="设置报告可见范围" width="480px">
       <p class="deliver-name">《{{ deliverRow?.name }}》</p>
+      <p class="cur-status">
+        当前状态：
+        <template v-if="deliverIsMarket">
+          <el-tag v-if="deliverRow?.visibility === 'SELF'" size="small" type="info" effect="plain">仅自己可见</el-tag>
+          <el-tag v-else size="small" type="success" effect="plain">全体可见</el-tag>
+        </template>
+        <template v-else>
+          <el-tag v-if="deliverRow && deliverRow.deliveredCount > 0" size="small" type="warning" effect="plain">
+            已发布 · {{ deliverRow.deliveredCount }}人可见
+          </el-tag>
+          <el-tag v-else size="small" type="info" effect="plain">仅自己可见</el-tag>
+        </template>
+      </p>
       <el-form label-width="90px">
-        <el-form-item label="发送范围">
+        <el-form-item label="可见范围">
           <el-select v-model="deliverForm.targetType" style="width:100%" @change="deliverForm.targetValue = null">
-            <el-option label="全体学生" value="ALL" />
-            <el-option label="按专业" value="MAJOR" />
-            <el-option label="按入学年级" value="GRADE" />
-            <el-option label="按班级" value="CLASS" />
+            <el-option label="仅自己可见（对学生隐藏）" value="SELF" />
+            <el-option v-if="deliverIsMarket" label="全体可见" value="ALL" />
+            <template v-else>
+              <el-option label="全体学生" value="ALL" />
+              <el-option label="按专业" value="MAJOR" />
+              <el-option label="按入学年级" value="GRADE" />
+              <el-option label="按班级" value="CLASS" />
+            </template>
           </el-select>
         </el-form-item>
         <el-form-item label="专业" v-if="deliverForm.targetType === 'MAJOR'">
@@ -144,17 +180,26 @@
           </el-select>
         </el-form-item>
       </el-form>
-      <p class="hint">学生将在「我的报告 → 收到的报告」中看到并可下载；已发过的学生不会重复接收。</p>
+      <p class="hint">
+        <template v-if="deliverIsMarket">
+          市场行业报告面向全体：可设为<b>全体可见</b>或<b>仅自己可见</b>（对全部学生隐藏）。
+        </template>
+        <template v-else>
+          可重复设置，<b>以最后一次为准</b>：新范围外的学生会被撤回可见，新增的学生收到通知。
+          选「仅自己可见」则对全部学生隐藏。
+        </template>
+        学生在「我的报告 → 收到的报告」中查看。
+      </p>
       <template #footer>
         <el-button @click="deliverVisible = false">取消</el-button>
-        <el-button type="primary" :loading="delivering" @click="handleDeliver">发送</el-button>
+        <el-button type="primary" :loading="delivering" @click="handleDeliver">确定</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import {
   getReportRecords, deleteReportRecord, downloadReport, generateReport,
   getClasses, getClassFilters, deliverReport
@@ -253,18 +298,23 @@ const deliverVisible = ref(false)
 const delivering = ref(false)
 const deliverRow = ref(null)
 const deliverForm = reactive({ targetType: 'ALL', targetValue: null })
+const deliverIsMarket = computed(() => deliverRow.value?.category === 'MARKET')
 
 async function openDeliver(row) {
   deliverRow.value = row
-  deliverForm.targetType = 'ALL'
+  // 市场报告默认回显当前可见性；就业报告默认全体
+  deliverForm.targetType = row.category === 'MARKET'
+    ? (row.visibility === 'SELF' ? 'SELF' : 'ALL')
+    : 'ALL'
   deliverForm.targetValue = null
-  await loadScopeOptions()
+  await loadScopeOptions()   // 就业报告的范围候选（市场报告用不到，加载也无妨）
   deliverVisible.value = true
 }
 
 async function handleDeliver() {
-  if (deliverForm.targetType !== 'ALL' && !deliverForm.targetValue) {
-    ElMessage.warning('请选择发送范围的具体值')
+  // MAJOR/GRADE/CLASS 需要具体值；ALL / SELF 不需要
+  if (['MAJOR', 'GRADE', 'CLASS'].includes(deliverForm.targetType) && !deliverForm.targetValue) {
+    ElMessage.warning('请选择范围的具体值')
     return
   }
   delivering.value = true
@@ -273,8 +323,15 @@ async function handleDeliver() {
       targetType: deliverForm.targetType,
       targetValue: deliverForm.targetValue
     })
-    ElMessage.success(n > 0 ? `已发送给 ${n} 名学生` : '该范围内的学生此前均已收到')
+    ElMessage.success(
+      deliverForm.targetType === 'SELF'
+        ? '已设为仅自己可见，报告已对学生隐藏'
+        : deliverIsMarket.value
+          ? '已设为全体可见，所有学生可见'
+          : `已发布，当前 ${n} 名学生可见`
+    )
     deliverVisible.value = false
+    loadRecords()   // 刷新列表里的可见状态
   } catch { /* 拦截器已提示 */ } finally {
     delivering.value = false
   }
@@ -293,6 +350,6 @@ onMounted(loadRecords)
 .basis { margin-bottom: 14px; }
 .basis-body p { margin: 4px 0; line-height: 1.7; font-size: 12.5px; }
 .basis-body code { background: var(--color-fill-light, rgba(0,0,0,.05)); padding: 0 4px; border-radius: 3px; }
-.deliver-name { font-weight: 600; margin-bottom: 12px; }
-.broadcast-tag { margin: 0 6px; }
+.deliver-name { font-weight: 600; margin-bottom: 6px; }
+.cur-status { font-size: 12.5px; color: var(--color-text-secondary); margin-bottom: 14px; }
 </style>

@@ -27,9 +27,9 @@
         <div class="mini-sub">学生站内投递</div>
       </div>
       <div class="tile kpi">
-        <div class="eyebrow">累计浏览</div>
-        <div class="big">{{ ov.totalViews }}</div>
-        <div class="mini-sub">职位浏览次数</div>
+        <div class="eyebrow">已就业</div>
+        <div class="big">{{ ov.employedCount }}<small> / {{ ov.totalStudents }}</small></div>
+        <div class="mini-sub">就业率 {{ employmentRate }}%</div>
       </div>
 
       <!-- 技能缺口 Top -->
@@ -65,6 +65,8 @@
         </div>
       </div>
 
+      <div class="tile t-msg"><MessageTile /></div>
+
       <NewsTile class="t-news" />
     </section>
   </div>
@@ -77,17 +79,19 @@ import { useUserStore } from '@/store/user'
 import { getTeacherOverview, getTeacherSuggestions } from '@/api/student'
 import MapHeroTile from '@/components/home/MapHeroTile.vue'
 import NewsTile from '@/components/home/NewsTile.vue'
+import MessageTile from '@/components/home/MessageTile.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
 function go(p) { router.push(p) }
 
-const ov = ref({ totalStudents: 0, withProfile: 0, totalViews: 0, totalApplies: 0 })
+const ov = ref({ totalStudents: 0, withProfile: 0, totalViews: 0, totalApplies: 0, employedCount: 0 })
 const gaps = ref([])
 const gapLoading = ref(false)
 
 const displayName = computed(() => userStore.realName || userStore.username || '老师')
 const profileRate = computed(() => ov.value.totalStudents ? Math.round(ov.value.withProfile / ov.value.totalStudents * 100) : 0)
+const employmentRate = computed(() => ov.value.totalStudents ? Math.round(ov.value.employedCount / ov.value.totalStudents * 100) : 0)
 const gapsTop = computed(() => gaps.value.slice(0, 4))
 
 function exportData() {
@@ -122,6 +126,7 @@ onMounted(() => {
 .t-map { grid-column: span 2; grid-row: span 2; }
 .t-gap { grid-column: span 2; grid-row: span 2; }
 .t-quick { grid-column: span 2; grid-row: span 2; }
+.t-msg { grid-column: span 4; grid-row: span 2; }
 .t-news { grid-column: span 4; grid-row: span 2; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 14px; padding: 16px; box-shadow: var(--shadow-sm); }
 
 .kpi .big { font-size: 30px; font-weight: 750; letter-spacing: -.5px; margin-top: auto; }

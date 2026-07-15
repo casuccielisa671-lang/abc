@@ -1,13 +1,13 @@
 <template>
   <div class="dashboard">
-    <div class="page-head with-actions">
+    <div class="page-head with-actions" v-if="!embedded">
       <div>
         <h2 class="page-title">数据看板</h2>
-        <p class="page-sub">数据每日凌晨 2:00 自动更新；采集新数据后可手动刷新面板</p>
+        <p class="page-sub">数据每日凌晨 2:00 自动更新</p>
       </div>
       <div class="page-actions">
         <el-button type="primary" :loading="rebuilding" @click="handleRebuild">
-          清洗并刷新面板
+          手动重算分析数据
         </el-button>
       </div>
     </div>
@@ -64,11 +64,14 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
-import { getDashboard, runAnalysisPipeline } from '@/api/admin'
+import { getDashboard, rebuildAnalysis } from '@/api/admin'
 import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
 import { useAppStore } from '@/store/app'
 import { chartThemeName, primarySeriesColor, moneySeriesColor } from '@/styles/chartTheme'
+
+// embedded=true 时隐藏自身标题+重算按钮，供「数据分析」中心以标签页嵌入（重算由中心统一触发）
+defineProps({ embedded: { type: Boolean, default: false } })
 
 const appStore = useAppStore()
 const loading = ref(false)
@@ -227,8 +230,8 @@ async function loadDashboard() {
 async function handleRebuild() {
   rebuilding.value = true
   try {
-    const result = await runAnalysisPipeline()
-    ElMessage.success(`刷新完成：清洗 ${result.cleaned || 0} 条，更新 ${result.analyzed || 0} 条分析结果`)
+    const count = await rebuildAnalysis()
+    ElMessage.success(`重算完成，共更新 ${count} 条分析结果`)
     await loadDashboard()
   } catch {
     // 拦截器已提示
@@ -253,6 +256,9 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize)
   disposeCharts()
 })
+
+// 供「数据分析」中心在点「重算」后刷新本标签
+defineExpose({ reload: loadDashboard })
 </script>
 
 <style scoped>

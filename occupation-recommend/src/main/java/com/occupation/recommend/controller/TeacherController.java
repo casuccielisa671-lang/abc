@@ -19,6 +19,7 @@ import com.occupation.recommend.entity.BehaviorAction;
 import com.occupation.recommend.entity.StudentBehavior;
 import com.occupation.recommend.entity.SysStudentProfile;
 import com.occupation.recommend.service.BehaviorService;
+import com.occupation.recommend.service.JobApplicationService;
 import com.occupation.recommend.service.StudentProfileService;
 import com.occupation.recommend.service.TeachingAiService;
 import com.occupation.recommend.service.TeachingSuggestionService;
@@ -76,6 +77,7 @@ public class TeacherController {
 
     private final StudentProfileService profileService;
     private final BehaviorService behaviorService;
+    private final JobApplicationService applicationService;
     private final TeachingSuggestionService suggestionService;
     private final TeachingAiService teachingAiService;
     private final UserService userService;
@@ -116,6 +118,9 @@ public class TeacherController {
         vo.setTotalViews(counts.getOrDefault(BehaviorAction.VIEW, 0L));
         vo.setTotalApplies(counts.getOrDefault(BehaviorAction.APPLY, 0L));
         vo.setTotalContacts(counts.getOrDefault(BehaviorAction.CONTACT, 0L));
+        vo.setEmployedCount(visible == null
+                ? applicationService.countEmployedInTenant()
+                : applicationService.employedUserIds(visible).size());
         return Result.ok(vo);
     }
 
@@ -329,6 +334,7 @@ public class TeacherController {
                 .map(SysStudentProfile::getUserId).collect(Collectors.toList());
         Map<Long, SysUser> users = userService.mapByIds(userIds);
         Map<Long, Map<String, Long>> behaviors = behaviorService.countByActionGroupedByUser(userIds);
+        Map<Long, String> empStatus = applicationService.employmentStatusByUsers(userIds);
         // 批量取回班级信息
         Set<Long> classIds = users.values().stream()
                 .map(SysUser::getClassId).filter(Objects::nonNull).collect(Collectors.toSet());
@@ -340,6 +346,7 @@ public class TeacherController {
                     u == null ? null : u.getUsername(),
                     u == null ? null : u.getRealName(),
                     behaviors.getOrDefault(p.getUserId(), Collections.emptyMap()));
+            vo.setEmploymentStatus(empStatus.get(p.getUserId()));
             if (u != null && u.getClassId() != null) {
                 vo.setClassId(u.getClassId());
                 SysClass c = classes.get(u.getClassId());

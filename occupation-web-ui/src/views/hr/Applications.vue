@@ -167,6 +167,7 @@ const STATUSES = [
   { key: 'VIEWED', label: '已查看' },
   { key: 'INTERVIEW', label: '邀请面试' },
   { key: 'OFFER', label: '已录用' },
+  { key: 'ACCEPTED', label: '已入职' },
   { key: 'REJECTED', label: '不合适' }
 ]
 
@@ -197,6 +198,7 @@ function statusTag(status) {
     VIEWED: 'warning',
     INTERVIEW: 'primary',
     OFFER: 'success',
+    ACCEPTED: 'success',
     REJECTED: 'danger'
   }[status] || 'info'
 }

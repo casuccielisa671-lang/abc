@@ -19,8 +19,10 @@ public enum ApplicationStatus {
     VIEWED("已查看"),
     /** 进入面试流程 */
     INTERVIEW("邀请面试"),
-    /** 终态：录用 */
+    /** HR 终态：已发出录用（学生可「接收」它，转为 ACCEPTED） */
     OFFER("已录用"),
+    /** 终态：学生已接收该录用 = 正式入职（学生动作，HR 无法设置） */
+    ACCEPTED("已入职"),
     /** 终态：不合适 */
     REJECTED("不合适");
 
@@ -35,7 +37,7 @@ public enum ApplicationStatus {
     }
 
     public boolean isTerminal() {
-        return this == OFFER || this == REJECTED;
+        return this == OFFER || this == ACCEPTED || this == REJECTED;
     }
 
     public static boolean isValid(String name) {

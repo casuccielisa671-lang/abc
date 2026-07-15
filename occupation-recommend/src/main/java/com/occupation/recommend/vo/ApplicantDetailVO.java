@@ -46,6 +46,9 @@ public class ApplicantDetailVO implements Serializable {
     private long favoriteCount;
     private long applyCount;
 
+    /** 该学生是否已在别处入职（有 ACCEPTED 投递）；true 时 HR 端提示「已入职他处」、无法再录用 */
+    private boolean employedElsewhere;
+
     /** 该学生投递到「本 HR 职位」的记录 */
     private List<AppliedJob> appliedJobs;
 
@@ -69,5 +72,11 @@ public class ApplicantDetailVO implements Serializable {
         private boolean terminal;
         /** HR 备注，仅 HR 可见 */
         private String hrNote;
+
+        /** 面试信息（status=INTERVIEW 时非空），HR 端回显已发出的安排 */
+        private LocalDateTime interviewTime;
+        private String interviewPlace;
+        private String interviewContact;
+        private String interviewContent;
     }
 }

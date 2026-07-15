@@ -1,10 +1,11 @@
 <template>
   <div class="user-manage">
     <div class="page-head with-actions">
-      <div>
+      <div v-if="!embedded">
         <h2 class="page-title">用户管理</h2>
         <p class="page-sub">管理本校账号、角色与启用状态。账号统一由管理员创建或批量导入，不开放注册。</p>
       </div>
+      <p v-else class="page-sub embed-hint">管理本校账号、角色与启用状态。账号统一由管理员创建或批量导入，不开放注册。</p>
       <div class="page-actions">
         <el-button @click="importVisible = true">批量导入</el-button>
         <el-button type="primary" @click="openDialog()">新增用户</el-button>
@@ -170,6 +171,9 @@ import { toList, toTotal } from '@/utils/list'
 import { formatTime } from '@/utils/format'
 import { saveBlob } from '@/utils/download'
 import { ElMessage, ElMessageBox } from 'element-plus'
+
+// embedded=true 时隐藏自身大标题（保留操作按钮），供「组织管理」中心以标签页嵌入
+defineProps({ embedded: { type: Boolean, default: false } })
 
 const users = ref([])
 const loading = ref(false)

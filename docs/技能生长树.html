@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>个人技能生长树</title>
+  <style>
+    :root{--bg1:#0a0e27;--bg2:#141e30;--panel:rgba(255,255,255,.1);--line:rgba(255,255,255,.16);--text:#eef4ff;--muted:#9eb0d4}
+    *{box-sizing:border-box} html,body{margin:0;height:100%;overflow:hidden;font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:radial-gradient(circle at top,#1a2844 0,var(--bg2) 35%,var(--bg1) 100%);color:var(--text)}
+    body::before{content:"";position:fixed;inset:0;background:
+      radial-gradient(circle at 20% 18%,rgba(255,255,255,.08),transparent 18%),
+      radial-gradient(circle at 80% 12%,rgba(90,150,255,.12),transparent 16%),
+      radial-gradient(circle at 50% 0,rgba(255,255,255,.04),transparent 30%);
+      pointer-events:none}
+    #app{position:relative;width:100%;height:100%}
+    canvas{position:absolute;inset:0;width:100%;height:100%}
+    .hud,.panel{position:absolute;left:50%;transform:translateX(-50%);backdrop-filter:blur(18px);background:var(--panel);border:1px solid var(--line);box-shadow:0 20px 60px rgba(0,0,0,.32)}
+    .hud{top:22px;min-width:320px;padding:16px 22px;border-radius:22px;text-align:center}
+    .hud h1{margin:0;font-size:28px;letter-spacing:2px}
+    .hud p{margin:8px 0 0;color:var(--muted);font-size:14px}
+    .count{display:inline-block;margin-top:10px;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.08);font-weight:700}
+    .panel{bottom:24px;width:min(900px,calc(100% - 28px));padding:16px;border-radius:24px}
+    .grid{display:grid;grid-template-columns:1.6fr 1fr auto auto;gap:12px;align-items:center}
+    .field,.button{height:48px;border-radius:16px;border:1px solid rgba(255,255,255,.18);font-size:15px}
+    .field{padding:0 14px;background:rgba(12,18,35,.48);color:var(--text);outline:none}
+    .field::placeholder{color:#b8c7e7}
+    .field:focus{border-color:rgba(255,255,255,.42);box-shadow:0 0 0 4px rgba(130,170,255,.12)}
+    .button{padding:0 18px;background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.08));color:var(--text);font-weight:700;cursor:pointer}
+    .button:hover{transform:translateY(-1px)}
+    .button.alt{background:rgba(255,255,255,.06)}
+    .legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    .pill{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;background:rgba(255,255,255,.06);font-size:12px;color:#dbe5ff}
+    .dot{width:10px;height:10px;border-radius:50%}
+    @media (max-width:760px){
+      .hud{top:12px;width:calc(100% - 24px);padding:14px 16px}
+      .hud h1{font-size:22px}
+      .panel{bottom:12px;padding:14px}
+      .grid{grid-template-columns:1fr 1fr;gap:10px}
+      .button{width:100%}
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <canvas id="scene"></canvas>
+    <div class="hud">
+      <h1>个人技能生长树</h1>
+      <p>每掌握一项新能力，树就向更高处长出一根新的枝丫</p>
+      <div class="count" id="count">已掌握 0 项技能</div>
+    </div>
+    <div class="panel">
+      <div class="grid">
+        <input id="skillInput" class="field" maxlength="24" placeholder="输入技能名称，例如 Spring Cloud" />
+        <select id="categorySelect" class="field">
+          <option value="lang">编程语言</option>
+          <option value="framework">框架</option>
+          <option value="db">数据库</option>
+          <option value="devops">运维工具</option>
+          <option value="soft">软技能</option>
+        </select>
+        <button id="addBtn" class="button">添加技能</button>
+        <button id="resetBtn" class="button alt">重置</button>
+      </div>
+      <div class="legend" id="legend"></div>
+    </div>
+  </div>
+  <script>
+    const canvas = document.getElementById('scene');
+    const ctx = canvas.getContext('2d');
+    const countEl = document.getElementById('count');
+    const skillInput = document.getElementById('skillInput');
+    const categorySelect = document.getElementById('categorySelect');
+    const categoryColors = {
+      lang:{main:'#ff6b6b',leaf:'#ff8787',glow:'#ff444466',name:'编程语言'},
+      framework:{main:'#ffd93d',leaf:'#ffe066',glow:'#ffc80044',name:'框架'},
+      db:{main:'#6bcb77',leaf:'#8fd99a',glow:'#44bb5544',name:'数据库'},
+      devops:{main:'#4d96ff',leaf:'#74b9ff',glow:'#3388ff44',name:'运维工具'},
+      soft:{main:'#c084fc',leaf:'#d4a8ff',glow:'#9944ff44',name:'软技能'}
+    };
+    const maxSkills = 15, branches = [], particles = [], ambient = [];
+    let w=0,h=0,dpr=1,last=0,sway=0,demoTimer=0,demoIndex=0;
+    const demoSkills = [
+      {name:'Java',category:'lang'},
+      {name:'Python',category:'lang'},
+      {name:'MySQL',category:'db'},
+      {name:'Spring Boot',category:'framework'},
+      {name:'Git',category:'devops'}
+    ];
+    function makeLegend(){
+      document.getElementById('legend').innerHTML = Object.entries(categoryColors).map(([k,v]) =>
+        `<div class="pill"><span class="dot" style="background:${v.main};box-shadow:0 0 10px ${v.glow}"></span>${v.name}</div>`).join('');
+    }
+    function resize(){
+      dpr = Math.max(1, Math.min(2, devicePixelRatio || 1));
+      w = canvas.width = innerWidth * dpr;
+      h = canvas.height = innerHeight * dpr;
+      canvas.style.width = innerWidth + 'px';
+      canvas.style.height = innerHeight + 'px';
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.scale(dpr,dpr);
+      seedAmbient();
+      branches.forEach((b,i)=>Object.assign(b, createBranchGeometry(b.skill, i, true), {progress:1,labelAlpha:1,grown:true}));
+    }
+    function seedAmbient(){
+      ambient.length = 0;
+      const count = Math.max(40, Math.floor(innerWidth / 24));
+      for(let i=0;i<count;i++) ambient.push({
+        x:Math.random()*innerWidth,y:Math.random()*innerHeight*.72,r:Math.random()*2.4+.6,
+        a:Math.random()*.6+.18,vx:(Math.random()-.5)*.08,vy:-(Math.random()*.08+.02),phase:Math.random()*6.28
+      });
+    }
+    function trunkBase(){ return {x:innerWidth*.5,y:innerHeight*.84}; }
+    function createBranchGeometry(skill,index,skipSpawn){
+      const base = trunkBase(), side = index % 2 === 0 ? -1 : 1;
+      const layer = Math.floor(index / 2);
+      const startY = base.y - innerHeight * (0.12 + Math.min(.46, layer * .065 + Math.random() * .03));
+      const startX = base.x + side * (12 + layer * 8);
+      const length = Math.min(innerWidth*.28, 140 + index*10 + Math.random()*40);
+      const rise = 48 + layer * 16 + Math.random() * 28;
+      const bend = side * (length * (.54 + Math.random()*.18));
+      const endX = startX + bend, endY = startY - rise;
+      const controlX = startX + bend * (.44 + Math.random()*.18);
+      const controlY = startY - rise * (.24 + Math.random()*.24) - 12;
+      const width = Math.max(3.2, 9 - index * .35);
+      const twigs = Array.from({length:1 + (index % 3 ? 1 : 0)}, (_,n)=>{
+        const t = .45 + n * .2 + Math.random() * .1;
+        const p = pointOnCurve({startX,startY,controlX,controlY,endX,endY}, t);
+        const twigSide = side * (n % 2 ? -1 : 1);
+        return {
+          start:p, cx:p.x + twigSide * (24 + Math.random()*16), cy:p.y - (18 + Math.random()*16),
+          end:{x:p.x + twigSide * (42 + Math.random()*26), y:p.y - (26 + Math.random()*26)},
+          width:Math.max(1.2, width * .28)
+        };
+      });
+      if(!skipSpawn) burst(startX, startY, '#c08b5c55', 8, 1.2);
+      return {startX,startY,controlX,controlY,endX,endY,width,side,twigs};
+    }
+    function pointOnCurve(b,t){
+      const u = 1 - t;
+      return {
+        x:u*u*b.startX + 2*u*t*b.controlX + t*t*b.endX,
+        y:u*u*b.startY + 2*u*t*b.controlY + t*t*b.endY
+      };
+    }
+    function addSkill(name, category, silent){
+      const text = (name || '').trim();
+      if(!text || branches.length >= maxSkills || branches.some(b=>b.skill.name.toLowerCase() === text.toLowerCase())) return false;
+      const branch = {
+        skill:{name:text, category}, ...createBranchGeometry({name:text, category}, branches.length),
+        progress:0, labelAlpha:0, grown:false
+      };
+      branches.push(branch);
+      if(!silent){ skillInput.value = ''; updateCount(); }
+      return true;
+    }
+    function resetTree(){
+      branches.length = 0; particles.length = 0; demoTimer = 0; demoIndex = 0;
+      updateCount();
+    }
+    function updateCount(){ countEl.textContent = `已掌握 ${branches.length} 项技能`; }
+    function burst(x,y,color,count,scale){
+      for(let i=0;i<count;i++) particles.push({
+        x,y,vx:(Math.random()-.5)*2.6*scale,vy:(Math.random()-.9)*2.4*scale,
+        life:0,max:36+Math.random()*20,size:1+Math.random()*2.8*scale,color,trail:Math.random()>.55
+      });
+    }
+    function shower(branch){
+      const c = categoryColors[branch.skill.category];
+      burst(branch.endX, branch.endY, c.main, 22, 1.5);
+      branch.twigs.forEach(t=>burst(t.end.x, t.end.y, c.leaf, 10, .8));
+    }
+    function drawBackground(){
+      const g = ctx.createLinearGradient(0,0,0,innerHeight);
+      g.addColorStop(0,'rgba(10,14,39,.06)'); g.addColorStop(.7,'rgba(6,12,20,.1)');
+      ctx.fillStyle = g; ctx.fillRect(0,0,innerWidth,innerHeight);
+      for(let i=0;i<ambient.length;i++){
+        const p = ambient[i];
+        p.x = (p.x + p.vx + innerWidth) % innerWidth;
+        p.y += p.vy; if(p.y < -10){ p.y = innerHeight * (.26 + Math.random()*.5); p.x = Math.random()*innerWidth; }
+        const alpha = p.a + Math.sin((performance.now()/900) + p.phase) * .12;
+        ctx.fillStyle = `rgba(182,214,255,${Math.max(.04, alpha)})`;
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.28); ctx.fill();
+      }
+    }
+    function drawGround(base){
+      const gy = base.y + 28;
+      const ground = ctx.createLinearGradient(0,gy-40,0,innerHeight);
+      ground.addColorStop(0,'rgba(28,54,38,.22)');
+      ground.addColorStop(1,'rgba(8,16,12,.72)');
+      ctx.fillStyle = ground;
+      ctx.beginPath();
+      ctx.moveTo(0,innerHeight);
+      ctx.lineTo(0,gy);
+      for(let x=0;x<=innerWidth;x+=28){
+        ctx.quadraticCurveTo(x+14, gy - (x%56?8:16), x+28, gy + (x%84?4:10));
+      }
+      ctx.lineTo(innerWidth,innerHeight); ctx.closePath(); ctx.fill();
+      for(let i=0;i<120;i++){
+        const x = (i*37)%innerWidth, len = 8 + (i%5)*4;
+        ctx.strokeStyle = `rgba(${100+i%40},${150+i%30},${90+i%20},.28)`;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x,gy+8); ctx.lineTo(x+((i%3)-1)*3,gy-len); ctx.stroke();
+      }
+    }
+    function drawTrunk(base){
+      ctx.save();
+      ctx.translate(base.x, base.y);
+      ctx.rotate(Math.sin(sway)*.014);
+      const trunkW = Math.max(56, innerWidth*.05), trunkH = innerHeight*.46;
+      const bark = ctx.createLinearGradient(-trunkW,0,trunkW,0);
+      bark.addColorStop(0,'#2b1c14'); bark.addColorStop(.45,'#6b4c3b'); bark.addColorStop(.72,'#8b6914'); bark.addColorStop(1,'#3d2b1f');
+      ctx.strokeStyle = bark; ctx.lineWidth = trunkW; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(-6,-trunkH*.45, 10,-trunkH); ctx.stroke();
+      for(let i=0;i<15;i++){
+        ctx.strokeStyle = `rgba(50,28,14,${.12 + i*.012})`;
+        ctx.lineWidth = 2;
+        const x = -trunkW*.34 + i*(trunkW*.68/14);
+        ctx.beginPath(); ctx.moveTo(x,-10); ctx.quadraticCurveTo(x-6,-trunkH*.3,x+3,-trunkH*.95); ctx.stroke();
+      }
+      [-1,1].forEach(side=>{
+        ctx.strokeStyle = '#4a3326'; ctx.lineWidth = 11;
+        ctx.beginPath(); ctx.moveTo(side*10,0);
+        ctx.quadraticCurveTo(side*50,26,side*92,42);
+        ctx.quadraticCurveTo(side*132,54,side*168,72);
+        ctx.stroke();
+        ctx.lineWidth = 6;
+        ctx.beginPath(); ctx.moveTo(side*44,28);
+        ctx.quadraticCurveTo(side*76,44,side*108,80); ctx.stroke();
+      });
+      ctx.restore();
+    }
+    function drawBranch(branch){
+      const c = categoryColors[branch.skill.category];
+      const p = Math.min(1, branch.progress);
+      const current = pointOnCurve(branch, p);
+      ctx.save();
+      ctx.translate(trunkBase().x, trunkBase().y);
+      ctx.rotate(Math.sin(sway)*.014);
+      ctx.translate(-trunkBase().x, -trunkBase().y);
+      ctx.shadowColor = 'rgba(0,0,0,.2)'; ctx.shadowBlur = 8;
+      ctx.strokeStyle = '#6b4c3b'; ctx.lineWidth = branch.width; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(branch.startX, branch.startY);
+      ctx.quadraticCurveTo(branch.controlX, branch.controlY, current.x, current.y); ctx.stroke();
+      if(p > .58){
+        branch.twigs.forEach((t,i)=>{
+          const local = Math.min(1, (p - (.58 + i*.08)) / .32);
+          if(local <= 0) return;
+          const end = {
+            x:t.start.x + (t.end.x - t.start.x) * local,
+            y:t.start.y + (t.end.y - t.start.y) * local
+          };
+          ctx.strokeStyle = '#7b5842'; ctx.lineWidth = t.width;
+          ctx.beginPath(); ctx.moveTo(t.start.x,t.start.y);
+          ctx.quadraticCurveTo(t.cx,t.cy,end.x,end.y); ctx.stroke();
+        });
+      }
+      ctx.shadowColor = c.main; ctx.shadowBlur = 18;
+      ctx.fillStyle = c.main; ctx.beginPath(); ctx.arc(current.x,current.y,2.2 + p*1.8,0,6.28); ctx.fill();
+      if(p < 1 && Math.random() < .9) burst(current.x,current.y,c.main,1,.45);
+      if(branch.grown){
+        ctx.shadowColor = c.glow; ctx.shadowBlur = 24;
+        ctx.fillStyle = c.leaf; ctx.beginPath(); ctx.arc(branch.endX,branch.endY,5.4,0,6.28); ctx.fill();
+        ctx.fillStyle = `rgba(255,255,255,${branch.labelAlpha})`;
+        ctx.font = '600 16px Microsoft YaHei'; ctx.textAlign = branch.side > 0 ? 'left' : 'right'; ctx.textBaseline = 'middle';
+        ctx.shadowColor = c.main; ctx.shadowBlur = 18; ctx.fillText(branch.skill.name, branch.endX + branch.side * 16, branch.endY - 10);
+        const labelW = Math.max(44, ctx.measureText(categoryColors[branch.skill.category].name).width + 18), lx = branch.endX + branch.side * 16, ly = branch.endY + 8;
+        const rx = branch.side > 0 ? lx : lx - labelW;
+        ctx.shadowBlur = 0; ctx.fillStyle = c.glow.replace('44','88');
+        roundRect(rx, ly, labelW, 20, 10, true);
+        ctx.fillStyle = '#f5fbff'; ctx.font = '12px Microsoft YaHei'; ctx.textAlign = branch.side > 0 ? 'left' : 'right';
+        ctx.fillText(categoryColors[branch.skill.category].name, branch.side > 0 ? rx + 9 : rx + labelW - 9, ly + 10.5);
+      }
+      ctx.restore();
+    }
+    function roundRect(x,y,w,h,r,fill){
+      ctx.beginPath();
+      ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+      ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); if(fill) ctx.fill(); else ctx.stroke();
+    }
+    function updateBranches(dt){
+      branches.forEach(branch=>{
+        if(branch.progress < 1){
+          branch.progress = Math.min(1, branch.progress + dt / (900 + Math.random()*300));
+          if(branch.progress === 1){ branch.grown = true; shower(branch); updateCount(); }
+        }else if(branch.labelAlpha < 1){
+          branch.labelAlpha = Math.min(1, branch.labelAlpha + dt / 420);
+        }
+      });
+    }
+    function updateParticles(dt){
+      for(let i=particles.length-1;i>=0;i--){
+        const p = particles[i];
+        p.life += dt * .06;
+        if(p.life > p.max){ particles.splice(i,1); continue; }
+        p.x += p.vx; p.y += p.vy; p.vy += .015; p.vx *= .992;
+      }
+    }
+    function drawParticles(){
+      particles.forEach(p=>{
+        const alpha = 1 - p.life / p.max;
+        ctx.fillStyle = hexToRgba(p.color, alpha);
+        if(p.trail){ ctx.strokeStyle = hexToRgba(p.color, alpha*.45); ctx.lineWidth = p.size*.8; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x-p.vx*4,p.y-p.vy*4); ctx.stroke(); }
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.size*alpha + .35,0,6.28); ctx.fill();
+      });
+    }
+    function hexToRgba(hex, alpha){
+      if(hex.startsWith('rgba')) return hex.replace(/[\d.]+\)$/,(alpha.toFixed(3))+')');
+      const raw = hex.replace('#',''); const full = raw.length >= 6 ? raw.slice(0,6) : raw.padEnd(6,'0');
+      const n = parseInt(full,16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${alpha})`;
+    }
+    function runDemo(dt){
+      if(demoIndex >= demoSkills.length || branches.length >= demoSkills.length) return;
+      demoTimer += dt;
+      if(demoTimer > 900){
+        addSkill(demoSkills[demoIndex].name, demoSkills[demoIndex].category, true);
+        demoIndex++; demoTimer = 0;
+      }
+    }
+    function frame(ts){
+      const dt = Math.min(40, ts - (last || ts)); last = ts; sway += dt * .0012;
+      ctx.clearRect(0,0,innerWidth,innerHeight);
+      drawBackground();
+      const base = trunkBase();
+      drawGround(base); drawTrunk(base);
+      runDemo(dt); updateBranches(dt); updateParticles(dt);
+      branches.forEach(drawBranch); drawParticles();
+      requestAnimationFrame(frame);
+    }
+    function bind(){
+      document.getElementById('addBtn').addEventListener('click',()=>{
+        if(branches.length >= maxSkills) return alert('技能节点已达到上限，请先重置后再继续添加。');
+        if(!addSkill(skillInput.value, categorySelect.value)) alert('请输入不重复的技能名称。');
+      });
+      document.getElementById('resetBtn').addEventListener('click', resetTree);
+      skillInput.addEventListener('keydown',e=>{ if(e.key === 'Enter') document.getElementById('addBtn').click(); });
+      addEventListener('resize', resize);
+    }
+    makeLegend(); bind(); resize(); updateCount(); requestAnimationFrame(frame);
+  </script>
+</body>
+</html>

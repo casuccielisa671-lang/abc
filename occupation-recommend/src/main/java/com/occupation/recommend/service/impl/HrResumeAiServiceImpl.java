@@ -9,8 +9,10 @@ import com.occupation.common.ai.AiChatClient;
 import com.occupation.recommend.entity.StudentResume;
 import com.occupation.recommend.entity.SysStudentProfile;
 import com.occupation.recommend.service.HrResumeAiService;
+import com.occupation.recommend.service.JobMatchService;
 import com.occupation.recommend.service.ResumeService;
 import com.occupation.recommend.service.StudentProfileService;
+import com.occupation.recommend.vo.MatchJobVO;
 import com.occupation.recommend.vo.ResumeScreenVO;
 import com.occupation.common.utils.SkillUtils;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +21,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /**
@@ -68,10 +75,17 @@ public class HrResumeAiServiceImpl implements HrResumeAiService {
             "]",
             "按 matchScore 从高到低排序。");
 
+    /** 融合权重：最终匹配分 = 规则分 × 0.9 + AI 分 × 0.1（规则主导，AI 只做轻量微调） */
+    private static final double AI_WEIGHT = 0.10;
+    /** AI 排序最多等待秒数；超过则丢弃 AI 参考、直接用规则排序出结果 */
+    private static final long AI_RANK_TIMEOUT_SECONDS = 15;
+
     private final AiChatClient aiChatClient;
     private final ResumeService resumeService;
     private final StudentProfileService profileService;
     private final JobDetailService jobDetailService;
+    /** 只读复用推荐匹配规则（technique/行业/城市/薪资/学历 + 行为加权），不修改其打分逻辑 */
+    private final JobMatchService jobMatchService;
 
     @Override
     public ResumeScreenVO screen(Long userId, Long jobId) {
@@ -96,13 +110,29 @@ public class HrResumeAiServiceImpl implements HrResumeAiService {
         try {
             String userPrompt = buildScreenPrompt(userId, resume, profile, jobId);
             String result = aiChatClient.askJson(SCREEN_SYSTEM, userPrompt);
-            return parseScreenResult(userId, result);
+            ResumeScreenVO screenVo = parseScreenResult(userId, result);
+            // 与「智能排序」口径统一：有目标职位时，展示的匹配分同样按 90%规则 + 10%AI 融合，
+            // 避免同一候选人在「AI 分析」弹窗与「智能排序」列里出现两个不同的分数
+            if (jobId != null && screenVo.getMatchScore() != null) {
+                screenVo.setMatchScore(blend(ruleScore(userId, jobId), screenVo.getMatchScore()));
+            }
+            return screenVo;
         } catch (Exception e) {
             log.warn("AI 简历筛选失败，降级为规则分析: {}", e.getMessage());
             return buildFallbackScreen(userId, resume, profile, jobId);
         }
     }
 
+    /**
+     * 候选人智能排序 —— <b>规则分主导（90%）+ AI 微调（10%）</b>。
+     * <p>
+     * 最终分 = 规则分 × 0.9 + AI 分 × 0.1。规则分来自 {@link JobMatchService#scoreOne}
+     * （与学生端推荐同一套规则，此处只读复用、不改其打分逻辑），保证排序<b>稳定、可解释、口径一致</b>；
+     * AI 分是模型对简历的主观评估，负责在规则难分伯仲时提供项目质量/表达等维度的轻量微调。
+     * <p>
+     * AI 是<b>可选增强</b>：最多等待 {@link #AI_RANK_TIMEOUT_SECONDS} 秒，超时或失败即丢弃 AI 参考，
+     * 直接输出纯规则排序 —— 无论 AI 是否可用，都能拿到一份靠谱的排序（不再是旧的「全 50 分不排序」）。
+     */
     @Override
     public List<ResumeScreenVO> rankByMatch(Long jobId, List<Long> applicantIds) {
         if (applicantIds == null || applicantIds.isEmpty()) {
@@ -120,18 +150,50 @@ public class HrResumeAiServiceImpl implements HrResumeAiService {
             }).collect(Collectors.toList());
         }
 
-        if (!aiChatClient.isEnabled()) {
-            return fallbackRank(applicantIds, job);
+        // 1) 规则分（确定性，占 90%）——先算好，这是排序的地基
+        Map<Long, Integer> ruleScores = new HashMap<>();
+        for (Long uid : applicantIds) {
+            ruleScores.put(uid, ruleScore(uid, jobId));
         }
 
-        try {
-            String userPrompt = buildRankPrompt(job, applicantIds);
-            String result = aiChatClient.askJson(RANK_SYSTEM, userPrompt);
-            return parseRankResult(result);
-        } catch (Exception e) {
-            log.warn("AI 批量排序失败，降级为规则排序: {}", e.getMessage());
-            return fallbackRank(applicantIds, job);
+        // 2) AI 分（占 10%）——有限等待，超时/失败则丢弃，绝不阻塞出结果
+        Map<Long, ResumeScreenVO> aiByUser = Collections.emptyMap();
+        if (aiChatClient.isEnabled()) {
+            try {
+                String userPrompt = buildRankPrompt(job, applicantIds);
+                CompletableFuture<String> future =
+                        CompletableFuture.supplyAsync(() -> aiChatClient.askJson(RANK_SYSTEM, userPrompt));
+                String result = future.get(AI_RANK_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                aiByUser = parseRankResult(result).stream()
+                        .filter(v -> v.getUserId() != null && v.getMatchScore() != null)
+                        .collect(Collectors.toMap(ResumeScreenVO::getUserId, v -> v, (a, b) -> a));
+            } catch (TimeoutException te) {
+                log.warn("AI 排序超过 {}s，丢弃 AI 参考，直接输出规则排序", AI_RANK_TIMEOUT_SECONDS);
+            } catch (Exception e) {
+                log.warn("AI 排序失败，降级为规则排序: {}", e.getMessage());
+            }
         }
+
+        // 3) 融合 90% 规则 + 10% AI，按最终分降序
+        final Map<Long, ResumeScreenVO> ai = aiByUser;
+        return applicantIds.stream().map(uid -> {
+            int rule = ruleScores.getOrDefault(uid, 0);
+            ResumeScreenVO aiVo = ai.get(uid);
+            ResumeScreenVO vo = new ResumeScreenVO();
+            vo.setUserId(uid);
+            if (aiVo != null) {
+                vo.setMatchScore(blend(rule, aiVo.getMatchScore()));
+                vo.setSummary(aiVo.getSummary());
+                vo.setAiGenerated(true);
+            } else {
+                vo.setMatchScore(clamp(rule));
+                vo.setSummary("规则匹配排序");
+                vo.setAiGenerated(false);
+            }
+            return vo;
+        }).sorted(Comparator.comparingInt(
+                (ResumeScreenVO v) -> v.getMatchScore() == null ? 0 : v.getMatchScore()).reversed())
+          .collect(Collectors.toList());
     }
 
     // ================== Prompt 构造 ==================
@@ -258,18 +320,40 @@ public class HrResumeAiServiceImpl implements HrResumeAiService {
         vo.setSummary("候选人" + userId + "（规则分析，AI 启用后可获得更详细分析）");
         vo.setHighlights(highlights);
         vo.setRisks(risks);
+        // 有目标职位时，即便 AI 未启用也给出规则匹配分，展示列不至于空白
+        if (jobId != null) {
+            vo.setMatchScore(clamp(ruleScore(userId, jobId)));
+        }
         return vo;
     }
 
-    private List<ResumeScreenVO> fallbackRank(List<Long> applicantIds, JobDetailVO job) {
-        return applicantIds.stream().map(uid -> {
-            ResumeScreenVO vo = new ResumeScreenVO();
-            vo.setUserId(uid);
-            vo.setAiGenerated(false);
-            vo.setMatchScore(50);
-            vo.setSummary("规则排序（AI 启用后可获得精准排序）");
-            return vo;
-        }).collect(Collectors.toList());
+    // ================== 规则分复用与融合 ==================
+
+    /**
+     * 取候选人对目标职位的规则匹配分（0-100）。
+     * <p>只读复用 {@link JobMatchService#scoreOne}，与学生端推荐同一套规则；
+     * 候选人未完善画像等异常一律记 0 分（排在后面），不影响整体排序产出。
+     */
+    private int ruleScore(Long userId, Long jobId) {
+        try {
+            MatchJobVO mv = jobMatchService.scoreOne(userId, jobId);
+            return mv != null && mv.getScore() != null ? mv.getScore() : 0;
+        } catch (Exception e) {
+            log.debug("规则分计算失败 uid={} jobId={}: {}", userId, jobId, e.getMessage());
+            return 0;
+        }
+    }
+
+    /** 融合：规则分 × (1 - AI_WEIGHT) + AI 分 × AI_WEIGHT，裁剪回 0-100 */
+    private int blend(int ruleScore, Integer aiScore) {
+        if (aiScore == null) {
+            return clamp(ruleScore);
+        }
+        return clamp((int) Math.round(ruleScore * (1 - AI_WEIGHT) + aiScore * AI_WEIGHT));
+    }
+
+    private int clamp(int score) {
+        return Math.max(0, Math.min(100, score));
     }
 
     // ================== 解析 ==================

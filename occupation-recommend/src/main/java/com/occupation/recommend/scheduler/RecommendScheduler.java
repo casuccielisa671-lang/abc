@@ -5,7 +5,7 @@ import com.occupation.common.entity.SysTenant;
 import com.occupation.common.mapper.SysTenantMapper;
 import com.occupation.recommend.entity.SysStudentProfile;
 import com.occupation.recommend.service.JobMatchService;
-import com.occupation.recommend.service.PushService;
+import com.occupation.common.service.NotificationService;
 import com.occupation.recommend.service.StudentProfileService;
 import com.occupation.recommend.vo.MatchJobVO;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class RecommendScheduler {
     private final SysTenantMapper sysTenantMapper;
     private final StudentProfileService profileService;
     private final JobMatchService jobMatchService;
-    private final PushService pushService;
+    private final NotificationService pushService;
 
     @Scheduled(cron = "0 0 8 * * ?")
     public void dailyRecommendPush() {

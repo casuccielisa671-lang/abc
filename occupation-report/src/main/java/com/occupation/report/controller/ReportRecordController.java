@@ -18,6 +18,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -50,6 +51,18 @@ public class ReportRecordController {
         List<ReportRecordVO> list = page.getRecords().stream()
                 .map(ReportRecordVO::of)
                 .collect(Collectors.toList());
+
+        // 就业报告补上「当前可见人数」，前端据此展示可见状态（已发布N人 / 仅自己可见）
+        List<Long> empIds = list.stream()
+                .filter(v -> "EMPLOYMENT".equals(v.getCategory()))
+                .map(ReportRecordVO::getId)
+                .collect(Collectors.toList());
+        Map<Long, Long> counts = deliveryService.deliveredCountByReports(empIds);
+        list.forEach(v -> {
+            if ("EMPLOYMENT".equals(v.getCategory())) {
+                v.setDeliveredCount(counts.getOrDefault(v.getId(), 0L));
+            }
+        });
         return Result.ok(PageResult.of(page.getTotal(), page.getCurrent(), page.getSize(), list));
     }
 

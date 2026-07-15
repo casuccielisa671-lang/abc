@@ -41,6 +41,7 @@
       </div>
 
       <div class="header-right">
+        <NotificationBell />
         <button class="theme-toggle-btn" @click="handleThemeToggle" :title="appStore.dark ? '切换到日光模式' : '切换到夜光模式'">
           <svg v-if="!appStore.dark" class="theme-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
@@ -67,9 +68,10 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { useAppStore } from '@/store/app'
+import NotificationBell from '@/components/NotificationBell.vue'
 import {
   DataAnalysis, Setting, Document, User, House,
-  Reading, Star, TrendCharts, Management,
+  Reading, TrendCharts, Management,
   Tickets, ChatDotRound, Promotion, Notebook
 } from '@element-plus/icons-vue'
 
@@ -106,13 +108,10 @@ const roleLabel = computed(() => {
 const flatMenuItems = computed(() => {
   const menus = {
     ADMIN: [
-      { index: '/admin', title: '首页', icon: House },
-      { index: '/admin/dashboard', title: '数据看板', icon: DataAnalysis },
-      { index: '/admin/employment', title: '就业分析', icon: TrendCharts },
+      { index: '/admin/dashboard', title: '数据分析', icon: DataAnalysis },
       { index: '/admin/crawler', title: '采集管理', icon: Setting },
       { index: '/admin/report-list', title: '报告中心', icon: Document },
-      { index: '/admin/user', title: '用户管理', icon: User },
-      { index: '/admin/class', title: '班级管理', icon: Reading },
+      { index: '/admin/user', title: '组织管理', icon: User },
       { index: '/admin/news-manage', title: '资讯管理', icon: Notebook },
       {
         index: '/admin/tools',
@@ -126,11 +125,8 @@ const flatMenuItems = computed(() => {
     ],
     STUDENT: [
       { index: '/student', title: '首页', icon: House },
-      { index: '/student/jobs', title: '职位推荐', icon: Promotion },
-      { index: '/student/profile', title: '个人画像', icon: User },
-      { index: '/student/resume', title: '我的简历', icon: Tickets },
-      { index: '/student/applications', title: '我的投递', icon: Promotion },
-      { index: '/student/favorites', title: '我的收藏', icon: Star },
+      { index: '/student/jobs', title: '职位信息', icon: Promotion },
+      { index: '/student/profile', title: '我的资料', icon: User },
       { index: '/student/reports', title: '我的报告', icon: Document },
       { index: '/student/advisor', title: '职业顾问', icon: ChatDotRound },
       { index: '/student/news', title: '资讯', icon: Notebook },
@@ -183,8 +179,26 @@ const flatMenuItems = computed(() => {
   return menus[userStore.role] || []
 })
 
-/** 路由高亮：精确匹配优先，其次最长前缀（如职位详情归到职位推荐） */
+/** 路由高亮：精确匹配优先，其次最长前缀（如职位详情归到职位信息） */
 const activeIndex = computed(() => {
+  // 「我的投递/我的收藏/职位详情」都并入「职位信息」中心，统一高亮该菜单
+  if (route.path === '/student/applications'
+      || route.path === '/student/favorites'
+      || route.path.startsWith('/student/job/')) {
+    return '/student/jobs'
+  }
+  // 「我的简历」并入「我的资料」中心（菜单项为 /student/profile）
+  if (route.path === '/student/resume') {
+    return '/student/profile'
+  }
+  // 「就业分析」并入「数据分析」中心（菜单项为 /admin/dashboard）
+  if (route.path === '/admin/employment') {
+    return '/admin/dashboard'
+  }
+  // 「班级管理」并入「组织管理」中心（菜单项为 /admin/user）
+  if (route.path === '/admin/class') {
+    return '/admin/user'
+  }
   const leafItems = flatMenuItems.value.flatMap(item =>
     item.children ? [item, ...item.children] : [item]
   )
@@ -266,22 +280,13 @@ html:not(.dark) .brand-name {
   min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
-  /* 隐藏滚动条但保留滚动能力 */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  /* 菜单精简后一般不溢出：不显示滚动条（原来那条 4px「下栏」已移除），
+     但保留横向滚动能力作窄屏兜底，避免菜单被截断 */
+  scrollbar-width: none;
 }
 
 .top-menu-wrap::-webkit-scrollbar {
-  height: 4px;
-}
-
-.top-menu-wrap::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 2px;
-}
-
-.top-menu-wrap::-webkit-scrollbar-track {
-  background: transparent;
+  display: none;
 }
 
 .top-menu {

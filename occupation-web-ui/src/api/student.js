@@ -17,6 +17,11 @@ export function getProfileStats() {
   return request.get('/student/profile/stats')
 }
 
+// 删除证件照（后端清空画像 avatar_url 并删除磁盘文件）
+export function deleteAvatar() {
+  return request.delete('/student/profile/avatar')
+}
+
 // ========== 简历 ==========
 /** 未填写时后端返回 { exists: false, educations: [], ... }，不会是 null */
 export function getResume() {
@@ -111,6 +116,16 @@ export function applyJob(jobId) {
 /** 我的投递 + HR 处理进度。不含 HR 的内部备注 */
 export function getMyApplications() {
   return request.get('/student/applications')
+}
+
+/** 接收某条 OFFER 录用（OFFER→ACCEPTED）。接收后即已就业，不能再投递/联系 */
+export function acceptOffer(applicationId) {
+  return request.post(`/student/applications/${applicationId}/accept`)
+}
+
+/** 我的就业状态：EMPLOYED / OFFERED / SEEKING / IDLE */
+export function getEmploymentStatus() {
+  return request.get('/student/employment-status')
 }
 
 /**
@@ -233,9 +248,11 @@ export function getHrApplicant(userId) {
 /**
  * 变更投递状态。status 只能是 VIEWED / INTERVIEW / OFFER / REJECTED。
  * 后端会校验归属（只能改自己职位上的投递）与流转合法性（终态不可回退）。
+ * data = { status, hrNote?, interviewTime?, interviewPlace?, interviewContact?, interviewContent? }。
+ * status=INTERVIEW 时后端要求 interviewTime 与 interviewPlace 非空，并按模板给学生发面试通知。
  */
-export function changeApplicationStatus(applicationId, status, hrNote) {
-  return request.put(`/hr/applications/${applicationId}/status`, { status, hrNote })
+export function changeApplicationStatus(applicationId, data) {
+  return request.put(`/hr/applications/${applicationId}/status`, data)
 }
 
 export function createHrJob(data) {

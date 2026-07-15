@@ -46,6 +46,9 @@ public class StudentVO implements Serializable {
     private long favoriteCount;
     private long applyCount;
 
+    /** 就业状态：EMPLOYED=已就业 / OFFERED=收到录用待接收 / SEEKING=求职中 / IDLE=待业 */
+    private String employmentStatus;
+
     public static StudentVO of(SysStudentProfile p, String username, String realName,
                                Map<String, Long> behaviorCounts) {
         StudentVO vo = new StudentVO();

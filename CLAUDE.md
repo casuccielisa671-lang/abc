@@ -22,33 +22,41 @@
 docker-compose up -d                      # mysql/redis/zookeeper/kafka/nginx
 mvn install -DskipTests                   # ⚠️ 改过非 web 模块后必须先装，见下
 mvn spring-boot:run -pl occupation-web    # 后端 8080
-cd occupation-web-ui && npm run dev       # 前端 
+cd occupation-web-ui && npm run dev       # 前端 5173
 ```
 
 - **`spring-boot:run -pl occupation-web` 不会重新编译其它模块**：它从本地 `.m2` 取 `occupation-auth` 等依赖的旧 jar。改了 auth/analysis/recommend/report/api/common 里的代码却不先 `mvn install`，跑的还是旧代码 —— 表现为「明明改了却没生效」。只改 occupation-web 或前端时可跳过。
   **这个坑真实咬过人**：曾有人报「学生画像改了学历、教师端不跟着变」「报告下载下来打不开」，两个功能分别在 `occupation-recommend` 和 `occupation-report`（都是非 web 模块），先 `mvn install` 再启动后两者都复现不出来。省事的写法：`mvn install -DskipTests && mvn spring-boot:run -pl occupation-web`。
   另注意 `mvn clean compile` **治不了这个病** —— 它只编到各模块的 `target/classes`，不往 `~/.m2` 装 jar
-- **后端跑着的时候，内置定时任务会持续改库**（`app.scheduler.enabled: true`）：`AnalysisScheduler` 会把 `raw_job_data` 里待清洗的数据洗进 `job_detail`，所以 `job_detail` 的行数会从种子的 96 慢慢往上涨。这是设计如此，不是 bug，但排查数据问题时别把它当成异常
+- **后端跑着的时候，内置定时任务会持续改库**（`app.scheduler.enabled: true`）：`AnalysisScheduler` 会把 `raw_job_data` 里待清洗（`status=RAW`）的数据洗进 `job_detail`，所以 `job_detail` 会从种子的 **90 涨到 93**（种子有 3 条 RAW 待清洗样例 + 2 条脏数据，清洗后 3 条合法的进库、2 条脏的丢弃），之后无更多 RAW 便稳定。这是设计如此，不是 bug；点采集任务(mock-jobs.json)还会再加 100 条自主联系职位
 - 登录账号（租户 `测试学院`，密码均 `admin123`）：`admin`（管理员）、`student`（学生）、`teacher`（教师）、`hr`（HR）——init.sql 预置
-- init.sql 含全量测试数据（由 `scripts/gen-seed-data.js` 确定性生成）：**114 个职位**（90 采集 + 24 站内）、13 份学生画像（租户1 占 12、租户2 占 1）、12 份简历、**391 条行为**（VIEW 212 / APPLY 73 / FAVORITE 63 / CONTACT 32 / IGNORE 11）、**73 条投递**（五种状态铺开）、分析结果已预算好，**开箱即可看到看板/推荐/投递漏斗/供需错配**
-- **种子账号的边界用例**（写统计逻辑时留意）：`student12` 有账号、无画像、无简历，却投递了一个站内职位 —— 一次覆盖三个空态（学生端「请先完善画像」+ HR 端「未完善画像 / 未填写简历」）；`student98` 状态禁用（`status=0`，**仍计入** `countByRole`）；`student99` 逻辑删除（`deleted=1`，**不计入**）。所以**管理员**看到的教师端「学生总数 14 / 已填画像 12」是对的，别当成 bug。另有 `student01`~`student11`、`teacher01/02`、`hr01`~`hr05`；第二租户 `示范大学`（admin/student/teacher）测多租户隔离；`停用学院` 测租户禁用。
+- init.sql 含全量测试数据（由 `scripts/gen-seed-data.js` 确定性生成）：**90 个职位（2026-07-14 起全部 HR_PUBLISH 可投递，开箱无采集职位，见下方"数据模型"）**、13 份学生画像（租户1 占 12、租户2 占 1）、12 份简历、**329 条行为**（VIEW 182 / APPLY 63 / FAVORITE 63 / IGNORE 21；**无 CONTACT**——开箱没有可自主联系的采集职位）、**63 条投递**（五种状态铺开）、分析结果已预算好，**开箱即可看到看板/推荐/投递漏斗/供需错配**（唯「自主求职流向」图开箱空，需点采集+学生自主联系才有数据）
+- **⚠️ 数据模型（2026-07-14 大改）：开箱职位全部可投递，采集数据运行时才有**。init.sql 只预置 90 条可投递(HR_PUBLISH)职位（12 家公司/8 行业/10 城市），看板/推荐/就业分析开箱即基于这 90 条。**「自主联系(采集)」数据不再进种子**，改为点采集任务→读 `mock/mock-jobs.json`（100 条，`mock.local`）→走 Kafka+清洗进库（`publisher_id` 恒 NULL）。采完平台数据即"更新"，看板随之纳入。连带：CONTACT 行为/自主求职流向图开箱为空，是有意为之
+- **🚧 进行中（2026-07-14，未 down -v 应用 + 统一测试待做）**：`gen-seed-data.js`（→init.sql，90 可投递/12 HR/12 公司/无 CONTACT/63 投递）与 `gen-mock-jobs.js`（→mock-jobs.json，100 条自主联系/11 行业/全 10 城/18 独立公司）**已重新生成，并在临时库 `occupation_verify` 验证通过**（规模、每 HR≥5 投递、APPLY 全落可投递、分析维度非空），但**尚未 `down -v` 应用到真库**。**下次继续三步**：① `docker-compose down -v && up -d`（应用新种子，会清空当前库）；② `mvn install -DskipTests`（同时让前面改的 **AI 顾问 `CareerAdvisorServiceImpl`**——注入就业状态+实际岗位、简历意向不喂 AI——生效）；③ 起后端+前端**统一测试**：开箱 90 可投递/看板有料/12 HR(`hr`,`hr01`~`hr11`)各看到自己的职位与投递/学生「市场参考」栏空 → **点采集(mock)** 后 100 条自主联系入库、看板市场数据更新、CONTACT/自主求职流向出现 → AI 顾问就业状态与简历同步。**下方「验证状态（2026-07-10）」那节仍是旧种子的记录，测完后刷新。**
+- **种子账号的边界用例**（写统计逻辑时留意）：`student12` 有账号、无画像、无简历，却投递了一个站内职位 —— 一次覆盖三个空态（学生端「请先完善画像」+ HR 端「未完善画像 / 未填写简历」）；`student98` 状态禁用（`status=0`，**仍计入** `countByRole`）；`student99` 逻辑删除（`deleted=1`，**不计入**）。所以**管理员**看到的教师端「学生总数 14 / 已填画像 12」是对的，别当成 bug。另有 `student01`~`student11`、`teacher01/02`、`hr01`~`hr11`（共 12 个 HR）；第二租户 `示范大学`（admin/student/teacher）测多租户隔离；`停用学院` 测租户禁用。
   **注意（2026-07-12 后）**：教师端数字随登录教师的可见范围变化——`teacher01`（班主任软工班）看到 3 人 / 2 有画像、`teacher02`（专业老师计科）2/2、`teacher`（届老师 2022 级）10/9；只有 ADMIN 看整租户 14/12。见下方「教师可见范围」章节
-- **HR 职位归属**：24 个 `HR_PUBLISH` 职位平均分给 6 个 HR（`hr`/`hr01`~`hr05`，各 4 个），分属 3 家公司。六个账号登录后「职位管理」看到的列表各不相同 —— 这是验证「只看我发布的」是否生效的最快方式。每个 HR 都收到 10~13 条投递，且五种处理状态都有样本，HR 端与「就业分析」的漏斗开箱就有形状
+- **HR 职位归属**：90 个 `HR_PUBLISH` 职位分摊给 12 个 HR（`hr`/`hr01`~`hr11`，每人 7~8 个），**一司一 HR、共 12 家公司**（覆盖 8 大行业，`gen-seed-data.js` 的 `HR_COMPANIES` 里 `[公司名, 主行业, HR的userId]`）。各账号登录后「职位管理」看到的列表各不相同 —— 验证「只看我发布的」是否生效的最快方式。每个 HR 都收到 **≥5 条投递**，五种处理状态都有样本，HR 端与「就业分析」的漏斗开箱就有形状
 - 登录页有角色选择标签，但仅作入口提示；实际进入哪个端由**账号自身的 role** 决定（选错会提示并按实际角色进入）
 - MySQL：root/root，库名 `occupation`
-- **职位数据靠「采集管理 → 选中任务 → 启动」生成**（走 Kafka 清洗链路，Kafka 没起就静默失败）；看板数据靠「手动重算分析数据」——种子数据已含两者结果，重跑只会增量/覆盖
-- **种子数据（2026-07-10 版）**：114 个职位（90 采集 + 24 站内）、6 个 HR、13 份画像、12 份简历、391 条行为（含 32 条 CONTACT）、73 条投递（五种状态铺开）。`mock-jobs.json` 有 60 条，点一次「启动」全部入库，再点因 `source_url` 去重不会增加
+- **可投递职位是 init.sql 直接预置**（90 条，开箱即有）；**采集(自主联系)职位靠「采集管理 → 选中任务 → 启动」生成**（**MOCK 现为同步入库，见下方 2026-07-14 说明**；真实爬虫如智联仍走 Kafka 异步清洗）；看板数据靠「手动重算分析数据」——种子已含分析结果，重跑只会增量/覆盖
+- **种子数据（2026-07-14 版）**：**90 个职位全部 HR_PUBLISH 可投递**、12 个 HR / 12 家公司、13 份画像、12 份简历、329 条行为（**无 CONTACT**）、63 条投递（五种状态铺开）。**开箱无采集(MOCK)职位**——自主联系数据靠点采集从 `mock-jobs.json`（100 条，`mock.local`）进库。点一次「启动」全部入库，再点因 `source_url` 去重不会增加
 - **原来那个「Mock 模拟采集」按钮已删**（2026-07-10）。它与「对一条 `source_type=MOCK` 的任务点启动」完全等价，却每点一次就用 `System.currentTimeMillis()` 当主键新插一条一次性 `crawler_task`、跑完不清理——实测点五次就留下五条垃圾任务。现在唯一入口是 `PUT /api/admin/crawler/task/{id}/start`
-- **MOCK 采集不访问外网**：`MockJobPageProcessor` 读的是 classpath 下的 `occupation-crawler/src/main/resources/mock/mock-jobs.json`（20 条），`source_url` 是 `https://mock.local/job/001` 这类不存在的地址。它不走 WebMagic 的 `Spider`，直接同步循环读文件；只有 BOSS/智联走真正的爬虫框架
-- **`mock-jobs.json` 那 20 条已全部入库**：清洗按 `source_url` 去重，再点多少次「启动」`job_detail` 都不会涨（`raw_job_data` 会涨，那是原始归档，不去重）。想采到新职位得先把这个 JSON 加厚
+- **MOCK 采集不访问外网**：`MockJobPageProcessor` 读的是 classpath 下的 `occupation-crawler/src/main/resources/mock/mock-jobs.json`（100 条），`source_url` 是 `https://mock.local/job/001` 这类不存在的地址。它不走 WebMagic 的 `Spider`，直接同步循环读文件；只有智联走真正的爬虫框架
+- **MOCK 采集改为同步清洗入库（2026-07-14，绕开 Kafka）**：原 MOCK 把数据投 Kafka，由 `JobDataCleanListener` 异步清洗进 `job_detail`。该异步链路在部分环境不消费（`raw_job_data` 堆积 `status=RAW`、`job_detail` 始终为 0），表现为「采集成功但学生端长时间看不到市场参考」。现 `CrawlerServiceImpl` 的 MOCK 分支改为 `MockJobPageProcessor.collectAll()` + 逐条 `DataCleanService.cleanAndSave` **同步入库**（crawler 显式依赖 analysis）：采集调用返回时职位已在 `job_detail`，刷新即见、零延迟。去重仍按 `source_url`。**真实爬虫（智联）不变，仍走 Kafka 异步。** 所以「Kafka 没起 MOCK 就静默失败」的旧说法对 MOCK 已不成立
+- **MOCK 采集加了进度弹窗 + 返回真实条数（2026-07-14）**：MOCK 同步瞬时完成，点「启动」几乎无反馈。现 `CrawlerTask.vue` 对 `sourceType==='MOCK'` 弹进度弹窗（进度条 ~1.2s 最小展示，结束显示「本次采集 N 条职位」），真实爬虫（异步、点完还在后台跑）不走此流程、保持原「任务已启动」。连带把 start 接口 `PUT /task/{id}/start` 的返回从任务 id（`Result<Long>`）改成**本次采集条数**（`Result<Integer>`，取 `startCrawl` 的 `CrawlerLog.recordCount`）供前端展示。注意「N 条」是**采集读取条数**（MOCK 恒 100），不是净新增——重复启动因 `source_url` 去重实际入库 0，文案用「采集」不用「新增」
+- **`mock-jobs.json`（100 条）开箱不在库**（2026-07-14 起）：种子里没有采集职位，点一次「启动」这 100 条才进 `job_detail`（自主联系）。之后再点因 `source_url` 去重不会重复入库（`raw_job_data` 会涨，那是原始归档，不去重）。由 `scripts/gen-mock-jobs.js` 确定性生成（100 条，18 家独立市场公司、11 行业含平台没有的医疗/新能源/企业服务、全 10 城）；想改数量/多样性改这个脚本重跑
+- **职位完全重复项已消除（2026-07-14）**：init.sql 曾有 7 组、mock-jobs.json 曾有 2 组「标题+公司+城市」三者全同的重复职位（生成器随机撞车/条目重复所致）。已**直接改 init.sql 与 mock-jobs.json**（把重复的那一份改成不同公司，保留行 id 与全部投递/行为引用、统计与分析数据不变）去重。**注意：两个生成器 `gen-seed-data.js`/`gen-mock-jobs.js` 尚未加去重逻辑**，若重新生成会再次产生重复——本分支 init.sql 已与生成器脱钩（crawler_task 也不同步），**不建议再跑生成器重新生成**，日常 `down -v` 直接读 init.sql 已是干净的
 - 爬虫默认 MOCK 数据源；`BossJobPageProcessor` / `ZhaopinJobPageProcessor` 是真实爬虫实现但默认不启用（站点改版即失效 + 服务条款风险，勿依赖）
 
 ## 数据库协作流程（以 init.sql 为唯一事实来源）
 
 - 脚本位置：`occupation-common/src/main/resources/sql/init.sql`（DROP+CREATE 19 张表 + 种子数据，可重复执行）
-- **资讯表 `news`（2026-07-12 新增，首页资讯板块）**：`type` = DATA_CAST（数据播报，点击去图表 `link_target`）/ ARTICLE（精选文章，有 `content`）/ EXTERNAL（外部资讯，跳 `source_url`）；`category` = 技术方向（backend/frontend/…，null=通用）；封面用 `cover_style` 色块占位。后端在 **occupation-recommend**（`News`/`NewsService`/`NewsController`，`GET /api/news`、`/api/news/latest`、`/api/news/{id}`，任意登录角色可读）。增量脚本 `upgrade-2026-07-12-news.sql`。种子 8 条（5 播报 + 2 文章 + 1 外部占位）。**RSS 默认源为开源中国，管理端支持资讯 CRUD 与数据播报自动生成。**
-- **首页改造已完成（2026-07-13，各角色 Bento 工作台）**：各角色首页从"整屏大地图落地页"改为**角色工作台**。学生 `views/student/StudentDashboard.vue`、教师 `views/teacher/TeacherDashboard.vue`、HR `views/hr/HrDashboard.vue`（Bento 网格：欢迎条 + 地图 hero + 角色 KPI + 主内容 + 资讯格子），**管理员** `/admin` 首页直接指现成的 `views/admin/Dashboard.vue`（方案A，不套 Bento）。共享组件 `components/home/`：`MapHeroTile.vue`（地图 hero 静态预览，**点击跳独立地图页 `/{role}/map`**）、`NewsTile.vue`（资讯格子）、`NewsDetailDialog.vue`。共享页 `views/common/`：`NewsPage.vue`（资讯全览，四端 `/{role}/news`）、`MapExplore.vue`（3D 地图页，四端 `/{role}/map`）。**旧 `views/Home/`（HomeIndex/JobNews/jobNewsData）已整目录删除。** 注意 `views/student/StudentHome.vue` 是**职位推荐列表**（路由 `/student/jobs`），命名易误解，别和首页 `StudentDashboard.vue` 搞混
-- **3D 地图已换 echarts-gl（2026-07-13，弃用自研 three.js）**：`MapExplore.vue` 用 **echarts-gl `geo3D` + `bar3D`/`scatter3D`**（柱状/光点两模式），装了 `echarts-gl`，中国底图从 Aliyun DataV geojson 外链注册。**图层**：`岗位数`/`平均薪资`（市场，全角色）+ `学生意向`/`投递去向`（学生侧，仅教师/ADMIN，按可见范围过滤）。后端接口：`GET /api/map/cityDistribution`（analysis，全量城市岗位数+平均薪资+坐标）、`GET /api/teacher/map/intent-cities`、`/application-cities`（recommend `TeacherMapService`，按 `TeacherScopeService` 范围过滤）；城市坐标走 `common/CityGeoUtil`。**旧 `components/visualization/China3DMap.vue` + `lib/chinaMap3d/` 已无引用（孤儿），待清理。** 地图默认展示全量分布、自动旋转、hover tooltip、visualMap 图例、城市排行侧栏。**echarts-gl 3D 视觉（柱高/配色/光照）待浏览器微调。**
+- **资讯表 `news`（2026-07-12 新增，首页资讯板块）**：`type` = DATA_CAST（数据播报，点击去图表 `link_target`）/ ARTICLE（精选文章，有 `content`）/ EXTERNAL（外部资讯，跳 `source_url`）；`category` = 技术方向（backend/frontend/…，null=通用）；封面用 `cover_style` 色块占位。后端在 **occupation-recommend**（`News`/`NewsService`/`NewsController`，`GET /api/news`、`/api/news/latest`、`/api/news/{id}`，任意登录角色可读）。增量脚本 `upgrade-2026-07-12-news.sql`。**种子 208 条（2026-07-14 融合 main 的资讯数据）**：原 8 条（5 播报 + 2 文章 + 1 外部占位，id 1~8，无封面图）+ main 扩充的 200 条（id 9~208，5 分类×3 类型，**每条带 `cover_image` 封面图**，源自 `upgrade-2026-07-13-news-bulk.sql`，已折进 init.sql 的 news 段）。**封面图是 `picsum.photos` 外链，需联网才显示，离线回落到 `cover_style` 色块**。**RSS 拉取(Google News)与管理端资讯 CRUD、数据播报自动生成 = 待做**
+- **首页改造已完成（2026-07-13，各角色 Bento 工作台）**：各角色首页从"整屏大地图落地页"改为**角色工作台**。学生 `views/student/StudentDashboard.vue`、教师 `views/teacher/TeacherDashboard.vue`、HR `views/hr/HrDashboard.vue`（Bento 网格：欢迎条 + 地图 hero + 角色 KPI + 主内容 + 资讯格子），**管理员**不单独做工作台（管理员是运维用户、不需要吸睛引导页）：`/admin` **重定向到 `/admin/dashboard`**（2026-07-14 改，原来 `path:''` 和 `dashboard` 两个路由都指 `Dashboard.vue`，菜单里「首页」「数据看板」两项指向同一页、像没做完；现只保留一个数据分析入口，`AdminHome` 路由已删；该入口 2026-07-14 又与「就业分析」合并为「数据分析」标签中心，见下方「标签中心导航整合」）。共享组件 `components/home/`：`MapHeroTile.vue`（地图 hero 静态预览，**点击跳独立地图页 `/{role}/map`**）、`NewsTile.vue`（资讯格子）、`NewsDetailDialog.vue`。共享页 `views/common/`：`NewsPage.vue`（资讯全览，四端 `/{role}/news`）、`MapExplore.vue`（3D 地图页，四端 `/{role}/map`）。**旧 `views/Home/`（HomeIndex/JobNews/jobNewsData）已整目录删除。** 注意 `views/student/StudentHome.vue`（路由 `/student/jobs`，命名易误解，别和首页 `StudentDashboard.vue` 搞混）**2026-07-14 起是「职位信息」四标签中心**——见下方「学生职位信息中心」章节
+- **3D 地图（2026-07-15 改回自研 three.js 卫星热力图 + 融合 echarts 版的图层）**：`MapExplore.vue` 现用**队友的自研 `China3DMap.vue`**（`lib/chinaMap3d/` three.js，卫星影像 + 热力图层，展示效果更好），**保留了原 echarts 版的 4 图层与城市排行侧栏**——切图层只改喂给 `China3DMap` 的 `heatPoints`（格式 `{cityName,longitude,latitude,gatherValue}`，`heatmapLayer` 内部按各图层 max 自适应归一化），**去掉了「柱状/光点」两模式**（热力图取代）。**图层不变**：`岗位数`/`平均薪资`（市场，全角色）+ `学生意向`/`投递去向`（仅教师/ADMIN，按可见范围过滤）；后端接口与坐标源都没变（`GET /api/map/cityDistribution`、`/api/teacher/map/intent-cities`、`/application-cities`；`common/CityGeoUtil`）。**贴图资源在 `public/mapAssets/`**（china_satellite/height/border.png，约 40MB，已入库）；卫星走高德实时瓦片（vite `/amap-tile` 代理）、失败回落本地静态图；底图 geojson 仍是 Aliyun DataV 外链。**性能**：像素比封顶 1.5、关阴影、dispose 时 `forceContextLoss` 防反复开图黑屏、首页 `MapHeroTile` 是静态卡不渲染 3D、全图页懒加载（three.js 单独 chunk）——这些是队友原有优化，未改。
+- **✅ 白屏已修复（2026-07-15，取 main 已跑通的地图代码）。** 之前的白屏根因**不是** three.js 代码没跑通，而是**本分支的整套地图库停在了 main 修复之前的旧版**——当初合并 AI 功能时**显式排除了 map**，导致 `lib/chinaMap3d`/`China3DMap.vue`/`MapExplore.vue` 都比 main 旧。**此前那条「China3DMap 在 main 里是孤儿、0 差异、从没跑通」的记录是错的**：main 的 `MapExplore.vue` 一直正常引用 China3DMap，main 的地图是能跑的（git log「地图部分修正、增加动态背景」）。真实差异：main 有 `lib/chinaMap3d/ambientFx.js`（+295 行动态背景，本分支**根本没有**）、`heatmapLayer.js` 大改（171 行）、`chinaMap3d.js`/`terrainMesh.js` 修复、`China3DMap.vue` 热力点竞态修复、`MapExplore.vue` 加了**防御性过滤 `.filter(坐标有效 && val>0)`**（旧版把空坐标/0 值点也塞给热力图，疑似白屏元凶）。**修法**：`git checkout origin/main --` 取整套地图代码（`China3DMap.vue` + `lib/chinaMap3d/` 全量含新增 ambientFx.js + `MapExplore.vue`），三件套现与 main **完全一致**。依赖 `keli-heatmap.js`（^2.0.18）本分支早已在 package.json + node_modules，`public/mapAssets/`（40MB）两边一致，故**无需 npm 装包、无需动资源**。`npm run build` 通过。**⚠️ 仍需浏览器实测确认白屏消除**（未真机点验）。
+- **`echarts-gl` 依赖已删（2026-07-15）**：改用 main 的 three.js 地图后 `echarts-gl` 全仓 0 引用，从 `package.json` 删除并 `npm install` 同步 `package-lock.json`。**`echarts`（非 gl）保留**——4 处图表页仍在用；`d3-geo` 保留（`geoProjection.js` 地图投影用）。
+- **孤儿清理（2026-07-15）**：删了 `components/WaterRippleCanvas.vue`（合并带进来、全仓 0 引用的装饰组件）。地图修复后再次全量扫描：**无孤儿 .vue 组件、无孤儿 lib/js**；`China3DMap`/`lib/chinaMap3d`（含 ambientFx.js）被 `MapExplore` 引用、勿删。`npm build` 通过。
 - **学院内组织结构（2026-07-12 新增）**：`sys_class`（班级：专业-入学年级-班级）、`sys_user.class_id`（学生班级归属，仅学生非空）、`teacher_scope`（教师可见范围：CLASS=班主任 / MAJOR=专业老师 / GRADE=届老师，一教师可多行）。种子：11 个班级 + 4 条教师范围，演示三种可见范围（班主任软工班 3 人 / 专业老师计科 2 人 / 届老师 2022 级 10 人——**均为当前租户内计数**，跨租户裸 SQL 会多算租户2的 2022 班而得 11，别被误导）。增量升级脚本 `upgrade-2026-07-12-class-org.sql`。**注意班级归属放 `sys_user` 不放选填的画像；MAJOR/GRADE 范围经 class 解析，`sys_class.major` 为组织权威专业，与 `sys_student_profile.major`（喂推荐）分工**
 - MySQL 容器**首次启动（数据卷为空）时自动执行**它
 - **不想 `down -v` 丢数据时**，用同目录的增量脚本给现有库补表：
@@ -56,7 +64,7 @@ cd occupation-web-ui && npm run dev       # 前端
   docker exec -i occupation-mysql mysql -uroot -proot occupation < occupation-common/src/main/resources/sql/upgrade-2026-07-10-student-resume.sql
   ```
   它是 `CREATE TABLE IF NOT EXISTS` + `INSERT IGNORE`，可重复执行、不 DROP、不覆盖已有行。内容由脚本从 init.sql 抽取，两处同源不会漂移。
-  **`sql/` 下现有三份增量脚本**（`upgrade-2026-07-10-student-resume`、`upgrade-2026-07-10-job-application`、`upgrade-2026-07-12-class-org`）：不 `down -v` 的库要**按日期顺序都跑一遍**才与 init.sql 对齐；每份都幂等，重复跑无副作用
+  **`sql/` 下有一批 `upgrade-YYYY-MM-DD-*.sql` 增量脚本**（student-resume、job-application、class-org、news、report-category、report-delivery、report-simplify、report-user、**notify**、**report-visibility** …）：不 `down -v` 的库要**按文件名日期顺序把它们都跑一遍**才与 init.sql 对齐；每份都幂等（`CREATE TABLE IF NOT EXISTS` / `INSERT IGNORE` / information_schema 守卫的 `ALTER`），重复跑无副作用
 
 **日常同步（最常用，就两步）：**
 ```bash
@@ -173,6 +181,19 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 - 未填写时 `GET /api/student/resume` 返回 `{exists:false, educations:[], …}` 空壳而不是 `null`，前端不必判空
 - 种子里 12 份简历，覆盖租户1全部有画像的学生。「未填写简历」的空态由 `student12`（userId 16）覆盖 —— 他没画像、没简历，却投了一个站内职位
 
+### 证件照 / 头像（avatar，2026-07-14 完善）
+
+证件照存 `sys_student_profile.avatar_url`，**个人画像是唯一上传入口**；简历、HR 投递人详情只**读取展示**、来源同一份（学生只在画像里传/改）。文件存磁盘 `data/avatars/年月/随机UUID.ext`（不进 DB、不进 jar，已 gitignore）。
+
+- **单一数据源自动打通**：`ResumeVO` 加了 `avatarUrl`，`ResumeServiceImpl.getByUserId` 从画像取 avatar 填入 → 简历页、HR `applicantDetail`（`vo.setResume(resumeService.getByUserId(applicantId))`）、AI（不读 avatar）**一处改全通**。前端：`Resume.vue` 只读展示 + 提示「在个人画像中修改」；`ApplicantDrawer.vue`（HR 投递人详情）顶部身份区显示证件照；`StudentDashboard.vue` 画像完整度把证件照计入（6→7 字段）。
+- **首页画像完善度按满否变色（2026-07-15）**：`StudentDashboard.vue` 欢迎条的完善度环——**未满 100 红(`--color-danger`)、满 100 绿(`--color-success`)**,中间百分比数字同步;按钮满 100 显绿色「已完善」、未满显红色「去完善」(都仍可点进画像)。因完整度含证件照共 7 项,**七项全填齐(含传证件照)才 100% 绿**。
+- **三个真踩过的坑（都已修）**：
+  1. **静态图被鉴权拦住**：`<img src="/api/avatars/…">` 加载**不带 JWT**，而该路径要鉴权 → 401 显示不出来。已把 `/api/avatars/**` 加进**两处白名单**（`SecurityConfig.permitAll` + `JwtAuthenticationFilter.WHITE_LIST`，见「无鉴权接口要两处放行」）。文件名随机 UUID 不可枚举，公开可读安全。
+  2. **上传直接 500**：`MultipartFile.transferTo(相对路径 File)` 对相对路径按 **servlet 临时目录**解析，与前面 `Files.createDirectories` 建的目录对不上 → `FileNotFound`。改用 `Files.copy(file.getInputStream(), targetPath)`（与 createDirectories 同一套路径解析）。
+  3. **删除清不掉 DB**：`updateById` 默认 `FieldStrategy` **跳过 null 字段**，所以「把 avatar_url 设 null 再 save」清不掉列。新增 `StudentProfileService.clearAvatar` 用 `LambdaUpdateWrapper.set(avatarUrl, null)` **显式置空**。
+- **不堆积**：每次上传新 UUID 文件；**上传新头像时删掉被替换的旧文件**（每人最多 1 张）；新增 `DELETE /api/student/profile/avatar`（删磁盘文件 + `clearAvatar` 清 DB），`Profile.vue` 的「删除」改调它（原来只清前端字段、文件与 DB 都不动）。
+- **启动对账清理孤儿文件（2026-07-15）**：`docker-compose down -v` 只清数据库、**不动磁盘 `data/avatars/`**——重置后 `avatar_url` 归零但旧 png 还在磁盘、成永久孤儿越堆越多（上传时删旧的逻辑管不到，因为重置后 profile 没 avatar_url）。新增 `AvatarStartupCleaner`（recommend/config，`@EventListener(ApplicationReadyEvent)`）：启动时扫 `data/avatars/`，删掉**数据库里没有任何画像引用**的文件，使磁盘与库对齐。跨租户取引用走 `SysStudentProfileMapper.selectAllAvatarUrls()`（**方法级** `@InterceptorIgnore(tenantLine="true")`，启动时无租户上下文，普通查询会被过滤成 0 行）。只删无引用文件、被引用的保留（验证过：被引用 1 张保留、3 个孤儿删除）。
+
 ### HR 可见性边界（改动了原来的「全脱敏」设计）
 
 | 页面 | 能看到什么 | 为什么 |
@@ -197,7 +218,10 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 - 推荐列表**不批量调大模型**：20 条逐条调既慢又贵。列表只给规则分，点开某条才调 `/api/student/advisor/explain/{jobId}`
 
 **怎么让 AI 效果变好（这是 prompt 工程，不是训练，也不需要联网）**：
-1. **真正起作用的是往 prompt 里塞真实上下文**。`CareerAdvisorServiceImpl.buildContext()` 注入了这名学生的画像、简历摘要，以及本平台真实的技能热度/城市/行业岗位数。去掉这段，模型只会输出「建议多学习多实践」这种正确的废话
+1. **真正起作用的是往 prompt 里塞真实上下文**。`CareerAdvisorServiceImpl.buildContext()` 注入了这名学生的画像、简历摘要、**当前就业状态**，以及本平台真实的技能热度/城市/行业岗位数。去掉这段，模型只会输出「建议多学习多实践」这种正确的废话
+   - **就业状态段是 2026-07-14 补的**（`appendEmployment`，调 `JobApplicationService.employmentStatus(userId)`，取不到静默降级）。之前顾问上下文**只有画像+简历+市场**、不含就业状态，已就业学生问「我该继续投吗」会被当求职者答（学生就业状态是第四轮才加的功能，加时漏改了顾问这个出口——顾问是全平台唯一没接就业状态的地方）。同轮把角色设定里写死的「即将求职的在校大学生」改成「本校学生」，并加一条准则「学历字段只表示学历层次、不代表在读/毕业，不要臆断」——否则模型会把角色措辞「在校」当成学生档案事实，脑补出「本科在读」
+   - **只给「已入职」状态还不够，得带实际岗位详情**（同日第二次修）：光注入 `EMPLOYED` 三个字，模型被问到实际工作仍会退回去抓简历里的求职意向来联想、答非所问。现在 `appendEmployment` 顺着 `ACCEPTED` 投递 → `jobId` → `JobDetailService.listByIds` 把**真实入职岗位**（职位/公司/城市/薪资，`jobBrief()` 拼串）写进上下文，并指示「围绕实际岗位谈、别把求职意向当现职」；`OFFERED` 时列出**是哪些岗位给的 offer**（可能多个）帮学生比较。批量查避免 N+1。**前提**：数据源是平台内「投递→HR 发 offer→学生点接收录用」这条链产生的 `ACCEPTED` 记录；学生若在真实世界入职但没在平台走这条链，系统无从得知、AI 也没料——这不是 AI 的问题
+   - **画像 vs 简历的数据权威性划分**（同日第三次修，用户选定）：画像（`sys_student_profile`）与简历（`student_resume`）都有「求职方向」类字段且会打架——简历的 `jobIntention`（求职意向）vs 画像的 `expectedCity`/`expectedIndustry`（意向城市/行业）。**决策：求职方向一律以画像为唯一权威**，`buildContext` 里画像那行标注「求职意向（以画像为准）」，**简历的 `jobIntention` 刻意不喂给 AI**（去冲突）。简历改为只喂**不冲突的自我陈述**供 AI 联想补充：`selfIntro` + 教育/实习/项目经历（走 `resumeService.getByUserId` 拿 `ResumeVO` 的结构化列表，`appendResumeExperience`/`eduBrief`/`internBrief`/`projBrief` 拼成人话，描述截断防撑爆）+ 获奖证书。**顾问上下文四块最终形态**：①学生档案(画像：专业/学历/技能/**意向城市行业(权威)**/期望薪资) ②简历补充(自我评价/教育/实习/项目/获奖，**不含求职意向**) ③就业状态(投递派生+岗位详情) ④市场数据(技能/行业/城市/学历分布)。分工口径：方向性数据(去哪/做什么/会什么/要多少钱)全以画像为准，简历只提供经历细节素材
 2. **角色设定与数据分离**：约束放 `system`，数据放 `user`。模型更不容易跑题
 3. **禁止编造**要写进 system（「数据里没有的信息，直言不知道」「不许编造原文没有的数字」），否则模型会替学生瞎编项目成果
 4. **要结构化就用 JSON 模式**，别让模型输出 Markdown 再正则去抠
@@ -208,10 +232,13 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 
 ### 职位分两类，这是理解整个系统的关键
 
-| | 站内职位（24 个） | 采集职位（90 个） |
+**（2026-07-14 起：站内 90 个开箱预置；采集职位开箱为 0，点采集从 mock-jobs.json 入库）**
+
+| | 站内职位（可投递） | 采集职位（自主联系） |
 |---|---|---|
 | `source` | `HR_PUBLISH` | `MOCK` / `ZHAOPIN` |
 | `publisher_id` | 指向某个 HR | **NULL** |
+| 种子里 | **90 个（开箱预置）** | **0 个（点采集才有，源自 mock-jobs.json）** |
 | 学生能做什么 | **投递简历**（HR 端能看到、能处理） | **自主联系**（跳出平台，只记录意向） |
 | 用途 | 真实招聘关系 | 市场标尺：看板、技能热度、教师端诊断、推荐候选池、AI 顾问引用的数字 |
 
@@ -230,7 +257,7 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 
 **行为与归属的硬约束**（生成器里有自检，违反直接抛异常）：`APPLY` 只能落站内职位，`CONTACT` 只能落采集职位。服务端两处守卫互为镜像。
 
-**状态流转**：只能向前推进或直接 `REJECTED`，终态（`OFFER`/`REJECTED`）不可再改。HR 打开投递人详情会自动把 `SUBMITTED` 推进到 `VIEWED`。学生看得到状态，**看不到 `hrNote`**。
+**状态流转**：HR 侧只能向前推进或直接 `REJECTED`，`OFFER`/`REJECTED` 对 HR 不可再改。HR 打开投递人详情会自动把 `SUBMITTED` 推进到 `VIEWED`。学生看得到状态，**看不到 `hrNote`**。（**2026-07-13 第四轮起**：`OFFER` 之后还有学生动作 `OFFER→ACCEPTED`（接收录用），见「学生就业状态 + 接收录用」章节。）
 
 ### 就业分析：复用 analysis_result，用 SPI 解循环依赖
 
@@ -253,11 +280,32 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 - `crawler_task.url_pattern` 对 ZHAOPIN 存的是**参数串**而非 URL：`kw=Java&jl=653&maxPages=2`（`jl` 是智联城市编码，653=杭州）
 - robots 校验不通过时**不抛异常**，而是把日志标成 FAILED 后返回。`startCrawl` 带 `@Transactional(rollbackFor = Exception.class)`，抛 `BizException`（RuntimeException）会把刚写的 FAILED 日志一起回滚
 
-### 学生首页分两栏
+### 学生「职位信息」中心（可投递 / 市场参考两栏）
 
-「可投递岗位」和「市场参考」两栏。**没有改推荐打分**——只是展示层按 `applicable` 分组。改打分的话，匹配分的语义就变了，教师端和 AI 顾问引用的数字也跟着变。
+**推荐打分本身没改**（技能/城市/薪资/学历规则分 + 行为加权，语义不变，教师端和 AI 顾问引用的数字不受影响）。变的是「取哪些、怎么展示」：
 
-`CONTACT` 行为的推荐权重是 +2（与 `APPLY` 同级），已联系过的职位不再出现在推荐里。**现有数据里一条 `CONTACT` 都没有，所以加它对既有推荐结果零影响**——改造前后 20 条推荐的职位 ID 与分数完全一致，有脚本验过。
+- **两栏各自独立取前 25（2026-07-14，后端 `matchGrouped`）**：原来是单一混合榜单 `match(userId, topN)` 取 Top N，前端再按 `applicable` 拆两栏——采集来的「市场参考」职位数量多、匹配分高，会把「可投递」挤出榜单；且意向城市被 mock 填满超 20 条后算法停止「放开城市」，连外地可投递也被挡在候选池外，表现为「加了市场参考后可投递骤减」。现 `JobMatchServiceImpl.matchGrouped(userId, perCategory)`：**用全量候选池打分（城市仅作打分项、不硬过滤），按可投递/市场参考分两组各取前 25，互不抢名额**。`RecommendController` 的 `GET /api/student/recommend` 改用它（默认 25）。**`match()` 保持不变**（混合榜单，供 `RecommendScheduler` 推送 top5）。
+- **前端「职位信息」标签中心（2026-07-14 起，初 4 标签；2026-07-15 加「目标岗位」共 5 个）**：`views/student/StudentHome.vue`（路由 `/student/jobs`）从「职位推荐列表」改造成标签中心——标题「职位信息」旁一排标签 `可投递岗位 / 市场参考 / 我的投递 / 我的收藏 / 目标岗位`（目标岗位见下条），一次只显示一块，不用长滚即到市场参考。**顶部菜单「职位推荐」改名「职位信息」，删掉「我的投递」「我的收藏」两项（菜单 10→8 项）**。我的投递/我的收藏复用 `Applications.vue`/`Favorites.vue`（加 `embedded` 属性隐藏其自带大标题）。**路由协调**：`/student/applications`、`/student/favorites` 路由保留、都指向 `StudentHome.vue`，组件按路径自动选中对应标签（`/student/jobs?tab=market` = 市场参考）——Dashboard KPI 卡片、消息通知等老跳转照常生效；`MainLayout` 高亮把投递/收藏/职位详情统一归到「职位信息」。
+- **职位信息中心加搜索框（2026-07-15，前端即时过滤）**：中心顶部右侧一个搜索框,输入**即时过滤当前标签**的列表(匹配 职位名/公司/城市)。可投递/市场参考过滤已加载的推荐 top-25;我的投递/我的收藏把关键词作 `filter` 属性传给 embedded 的 `Applications`/`Favorites` 内部过滤(表格/卡片过滤,统计卡/面试卡/就业横幅仍基于全量)。**零后端**;局限:可投递/市场参考只在 top-25 里搜,不是全职位库搜索(那是另一个独立功能)。
+- **职位信息加「目标岗位」标签 + 首页能力画像卡呼应（2026-07-15）**：职位信息中心新增**第 5 标签「目标岗位」**（路由 `/student/jobs?tab=target`）——**从「我的收藏」里选**一个岗位点「设为目标」(不是搜全职位库；目标一定是你收藏过的)。当前目标显示**技能覆盖率**(满绿未满红) + 已掌握(绿 chip)/待补强(红 chip) + 查看详情/清除。收藏列表**复用顶部那个共享搜索框**(`query`+`jobMatch`)过滤,**不单独放搜索框**(否则一页两个搜索框)。**不预设**(原来首页是自动取 `recommend[0]` 最高匹配,现改掉):未选时显示"还没选目标岗位",新用户即为空。**首页 `StudentDashboard` 的「能力画像」卡改读同一份目标岗位**(存 `store/targetJob.js`,**localStorage 按账号(username)隔离**、存整条含 skills 的职位对象),所以首页卡是这个标签的**缩影**,两处呼应;首页未选显示"未选择目标岗位·点这里去选一个"、点击跳该标签。技能对比抽到 `utils/skillGap.js`(岗位技能 vs 画像技能,**前端算,零后端、不动推荐算法**)。**局限**:localStorage 按账号存,刷新/重开浏览器还在,但**跨设备不同步**(要跨设备需后端加 `target_job_id` 字段)。
+
+`CONTACT` 行为的推荐权重是 +2（与 `APPLY` 同级），已联系过的职位不再出现在推荐里。
+
+### 标签中心导航整合（2026-07-14，四处，同一套模式）
+
+为精简顶部横向菜单，把「同一类的多个平级页面」收进**标签中心**：标题旁一排分段标签切换，一次只显示一块。**共同套路**：被收纳的原页面加 `embedded` 属性隐藏自带大标题；原路由全部保留、都指向中心组件，中心按 `route.path`（必要时加 `?tab=`）自动选中标签，**老跳转/深链一律照常生效**；`MainLayout` 的 `activeIndex` 把并入的子路径高亮到中心的菜单项。
+
+| 中心（新组件） | 标签 | 合并的原页面 | 路由 | 菜单 |
+|---|---|---|---|---|
+| 学生「职位信息」`StudentHome.vue` | 可投递/市场参考/我的投递/我的收藏 | Applications/Favorites | `/student/jobs`(`?tab=market`)、`/student/applications`、`/student/favorites` | 「职位推荐」→「职位信息」，删投递/收藏 |
+| 学生「我的资料」`MyData.vue` | 个人画像/我的简历 | Profile/Resume | `/student/profile`、`/student/resume` | 「个人画像」「我的简历」→「我的资料」 |
+| 管理员「数据分析」`Analysis.vue` | 市场看板/就业分析 | Dashboard/Employment | `/admin/dashboard`、`/admin/employment` | 「数据看板」「就业分析」→「数据分析」 |
+| 管理员「组织管理」`OrgManage.vue` | 用户/班级/教师范围 | UserManage/ClassManage | `/admin/user`、`/admin/class`(`?tab=scopes`) | 「用户管理」「班级管理」→「组织管理」 |
+
+- **结果**：学生菜单 10→6 项（首页/职位信息/我的资料/我的报告/职业顾问/资讯 + 工具箱），管理员 8→6 项（数据分析/采集管理/报告中心/组织管理/资讯管理/工具箱）。
+- **两处技术细节**：①`Analysis.vue` 的两个子标签用 **`v-if` 只挂载当前标签**（图表在可见容器里初始化，规避 ECharts 在 `display:none` 里算出 0 宽度而错位/空白）；其余中心用 `v-show` 常驻挂载（保留表单编辑/列表分页等状态）。②`Analysis.vue` 顶部**共用一个「重算分析数据」按钮**（两看板数据同源 `analysis_result`），子组件 `defineExpose({ reload })` 供中心重算后刷新当前标签。③`OrgManage.vue` 把 `ClassManage` 原本的内部两标签（班级/教师范围）**拉平**成顶层标签：给 `ClassManage` 传 `section` 属性驱动显示、CSS 隐藏其内部 `.el-tabs__header`。
+- **`报告中心`（`ReportList.vue`）刻意不并入「数据分析」**：它是"生成/下载/发送报告文档"的动作型工作台，不是"看分析数据的第三个视图"，并入会破坏内聚、伤可发现性。
+- **顶部菜单溢出滚动条（`.top-menu-wrap` 那条 4px「下栏」）已移除**：菜单精简后一般不溢出，改为不显示滚动条（`scrollbar-width:none`）；但**保留 `overflow-x:auto` 作窄屏兜底**，避免窄窗口菜单被截断。
 
 ## 上一轮新增/改动的接口
 
@@ -310,11 +358,80 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 - **报告分发：管理员发送 → 学生接收（2026-07-13，已验证）**：新增 **`report_delivery` 表**（init.sql 升到 **19 张表**；增量脚本 `upgrade-2026-07-13-report-delivery.sql`，已灌真库）。产品决策（用户选定）：**①按范围批量发送（ALL/MAJOR/GRADE/CLASS）；②市场报告发布即全体可见（广播、不落 delivery），就业报告按范围定向发送（每接收学生落一行，`uk_report_user` 防重）。** 后端（report 模块）：`ReportDeliveryService`（`deliver` 经 auth 的 `ClassService` 解析范围→userId；`receivedFor` 广播市场+定向下发内存合并分页；`canStudentAccess`；`markRead`）；`ClassService` 加 `allStudentIds()`。接口：`POST /api/report/{id}/deliver`、`GET /api/report/{id}/delivery-count`（ADMIN，**下发市场报告会被拒**）；`GET /api/student/received-reports`、`POST /api/student/received-reports/{id}/read`（STUDENT）。**`loadReportFile` 归属校验扩展**：租户级报告 **STUDENT 仅能下广播市场 或 已下发给自己的就业报告（否则 403）**，ADMIN/TEACHER/HR 不受限。前端：admin `ReportList.vue` 加两类报告生成依据说明 + 就业报告「发送」范围弹窗；student `Reports.vue` 拆两 Tab（我的 AI 报告 / 收到的报告，未读角标）。验证：市场下发被拒；就业发软工班=3 人；student01(软工)收到广播市场+定向就业并下 200 合法 PDF、student02(数据科学)只收市场、下就业**403**、下广播市场 200；mark-read 翻转成功。
 - **下载健壮性（`utils/download.js` 的 `saveBlob`）**：后端下载失败返回的是 JSON 错误体（HTTP 200 + `application/json`），但 `responseType:'blob'` 会把它也变成 Blob。`saveBlob` **必须先检查 `blob.type` 含 `application/json`**——是则读文本、`ElMessage.error(message)` 并抛错，**不能当文件存盘**（否则用户打开「PDF」看到的是 `{"code":500,...}`，约 67B）。已修。
 
+## 站内通知 + 报告可见性（2026-07-13 第三轮，已验证）
+
+### 站内通知统一出口下沉到 common
+
+- **全平台唯一站内信服务是 `occupation-common` 的 `NotificationService`**（原 recommend 的 `PushService`/`PushRecord`/`PushRecordMapper` 已移到 common 并改名；recommend 只保留 `PushController`）。任何模块发站内信都注入它，**别再各写一份**。common 是所有模块的地基，放这里零循环依赖。
+- **`push_record` 加了 `ref_type` / `ref_id`**（`APPLICATION`=投递、`REPORT`=报告、null=纯通知），前端据此决定点击跳哪。`type` 扩到 `RECOMMEND/SYSTEM/INTERVIEW/OFFER/REJECT/REPORT`。
+- 接口 `/api/push`：`list`（**pageNum/pageSize**）、`unread/count`、`{id}/read`、`read-all`。任意登录角色可用，多租户自动隔离（`push_record` 带 `tenant_id`，租户插件自动填/隔离）。
+
+### HR 投递状态变更 → 面试/结果通知（含结构化面试模板）
+
+- HR 改投递状态时**按模板给学生发站内信**：`INTERVIEW`（面试邀请）/ `OFFER`（录用）/ `REJECT`（婉拒）三态才发；`VIEWED` 是打开详情时自动流转，不打扰。
+- **`job_application` 加 4 列** `interview_time / interview_place / interview_contact / interview_content`。`ApplicationStatusDTO` 加了这些面试字段，`JobApplicationService.changeStatus` 签名从收 `(status,hrNote)` 改成**收整个 DTO**。`INTERVIEW` 时 service 强制校验时间+地点非空。
+- 学生看得到通知内容与面试卡，**看不到 `hrNote`**（内部备注）。HR 端 `ApplicantDetailVO.AppliedJob` 与学生端 `MyApplicationVO` 都补了面试字段——注意 `appliedJobs` 用的是 `AppliedJob` 内部类**不是** `ApplicationVO`，两处都要设。学生端 `views/student/Applications.vue` 把 INTERVIEW 投递渲染成置顶「面试通知卡」。
+
+### 报告下发 → 通知；前端消息中心
+
+- `ReportDeliveryServiceImpl.deliver` 给每个**新增**接收学生发一条 `REPORT` 通知（ref=REPORT）。report 模块复用 common 的 `NotificationService`。
+- **前端消息中心**（走科技蓝 `--color-*` 令牌）：导航栏 `components/NotificationBell.vue`（铃铛 + 未读红点，60s 轮询）、首页格子 `components/home/MessageTile.vue`（四端 Bento 都加了 `.t-msg` 满宽）、消息中心页 `views/common/MessagePage.vue`（路由 `/{role}/messages` 四端复用）。`store/message.js`（未读数共享，标已读后 `decrement/reset`）、`api/push.js`、`utils/message.js`（消息类型元数据 + 跳转规则）。
+- **消息跳转修复（2026-07-15）**：原 `messageTarget` 只对带 `refType` 的消息(APPLICATION/REPORT)给跳转目标,而种子消息全是 **RECOMMEND(职位推荐)+SYSTEM(无 refType)→ 点了都不跳**。改为"**先看 refType,没有再按 type 跳**":职位推荐 RECOMMEND → 职位信息(`/student/jobs`)、APPLICATION 按角色跳(学生我的投递/HR收到投递)、REPORT→我的报告、SYSTEM 等纯通知不跳;新增 `messageActionLabel` 统一"查看…"提示(消息中心/铃铛/首页格子共用)。**铃铛弹层**另修:`el-popover` 点内部消息不会自动关,跳转发生了但弹层浮在新页上盖住像"没反应"——加 `v-model:visible`,点消息/查看全部后关弹层。
+
+### 报告发布改「覆盖」语义 + 可见性（用户选定）
+
+- **发布可重复、以最后一次为准**：`deliver` 每次以本次范围为准 —— 新范围外的学生撤销可见、新增的学生下发并通知、仍在范围内的保留已读不重复通知（不再是旧的「多次发送累加」）。
+- **⚠️ 真踩过的坑**：`report_delivery extends BaseEntity` → **逻辑删除**（`@TableLogic`），而表有**物理唯一键 `uk_report_user`**。用 MP 的 `deliveryMapper.delete()`（逻辑删）撤销后再重发，残留的 `deleted=1` 行会撞唯一键 → **Duplicate entry 500**。解法：新增 `ReportDeliveryMapper.hardDeleteByReport`（原生 `@Delete` 物理删），覆盖前**物理清空**再重建。
+- **报告可见性**：`report_record` 加 `visibility` 列（`PUBLIC`=全体可见 / `SELF`=仅自己可见；增量脚本 `upgrade-2026-07-13-report-visibility.sql`，默认 PUBLIC 不改现有行为）。
+  - **市场报告**二态：`deliver` 只收 `ALL`（→PUBLIC，广播）/ `SELF`（→SELF，从广播摘掉），其余类型拒绝。`receivedFor` 广播查询加 `.ne(visibility,'SELF')`，`canStudentAccess` 市场分支查 visibility。
+  - **就业报告**可见性看 delivery 行：>0=已发布 N 人，0=仅自己可见（`visibility` 列对就业报告不用，恒 PUBLIC）。
+  - `ReportRecordVO` 加 `deliveredCount`（就业，批量查避免 N+1）+ `visibility`（市场）。前端每份 SUCCESS 报告都有「设置可见」按钮，列表加「可见状态」列，弹窗选项按大类切换。
+
+### 增量脚本 / 验证
+
+- 新增 `upgrade-2026-07-13-notify.sql`（push_record 加 ref 列 + job_application 加面试列）、`upgrade-2026-07-13-report-visibility.sql`（report_record 加 visibility）。**MySQL 8 不支持 `ALTER ... ADD COLUMN IF NOT EXISTS`**（那是 MariaDB），脚本用 `information_schema` 守卫的存储过程做幂等。
+- 验证：`mvn test`（25 单测）+ `npm run build` 通过；真实 HTTP 逐步核对——HR 邀请面试→学生收信+面试卡+状态变、标记已读、报告覆盖发布（ALL→CLASS→SELF→ALL 物理行精确、不再 Duplicate 500）、市场报告设仅自己可见→学生失访→恢复全体可见。测试产生的数据已清理。
+
+## 学生就业状态 + 接收录用（2026-07-13 第四轮，已验证）
+
+引入了一个**学生整体就业状态**，并把「录用」做成需要学生二次确认的两步流程。核心产品决策（用户选定）：**HR 可给同一学生发多个 OFFER，学生自己选一个「接收录用」，接收后才算「已就业」**。
+
+### 投递状态机加了一个终态 `ACCEPTED`（已入职）
+
+- `ApplicationStatus` 新增 `ACCEPTED("已入职")`，**由学生**把自己的某条 `OFFER` 接收而来，**HR 的 `changeStatus` 无法产生它**（HR 的 `ApplicationStatusDTO` `@Pattern` 只放行 VIEWED/INTERVIEW/OFFER/REJECTED）。`ACCEPTED` 是终态（`isTerminal` 含它）。
+- **只是 `job_application.status` 的新枚举值，无 schema 变更**（VARCHAR 列，无约束），存量数据不受影响。init.sql 里只更新了 status 列的注释。
+- 学生动作走**独立接口** `POST /api/student/applications/{id}/accept`（`acceptOffer`）：校验该投递属本人、状态为 OFFER、且本人**尚未接收过别的 offer**（一人只能入职一处）。接收后给发 offer 的 HR 发一条「学生已接受录用」站内信。
+
+### 就业状态是**派生的**（不新增列，单一事实来源＝投递记录）
+
+- 派生口径（`JobApplicationServiceImpl.deriveStatus`）：有 `ACCEPTED` → **EMPLOYED（已就业）**；否则有 `OFFER` → **OFFERED（收到录用待接收）**；否则有投递 → **SEEKING（求职中）**；否则 → **IDLE（待业）**。
+- 服务方法：`isEmployed(userId)`（守卫用）、`employmentStatus(userId)`（单个）、`employmentStatusByUsers(ids)`（教师列表批量，一次查回避免 N+1）、`employedUserIds(ids)` / `countEmployedInTenant()`（就业率计数）。
+- 接口 `GET /api/student/employment-status` 返回 `EMPLOYED/OFFERED/SEEKING/IDLE`。
+
+### 三处行为守卫（都在服务端强制，前端只是禁用按钮做提示）
+
+1. **已就业 → 不能投递**：`RecommendController.apply()` 先 `isEmployed` 拦「你已入职，无需再投递」。
+2. **已就业 → 不能自主联系**：`contact()` 同样拦（用户选定「也禁止」）。
+3. **不能录用已就业的学生**：`changeStatus` 里 `to==OFFER && isEmployed(该生)` → 拦「该学生已入职他处，无法录用」。发 offer 前（学生没接收前）**任何 HR 都能发**，多 offer 并存。
+   - 接收一个 offer 后，其他 offer **不自动改动**（避免学生看到误导性的「不合适」），只是学生已就业、别的 HR 发不了、其他在途投递 HR 端会标注。
+
+### 各端统一展示（口径走前端 `utils/employment.js`）
+
+- **学生**：`StudentDashboard` 欢迎条就业徽章；`Applications.vue` 顶部横幅（已入职 XX / 收到 N 个录用去接收）+ OFFER 行「接收录用」按钮 + `ACCEPTED` 状态；`JobDetail`/`StudentHome` 的投递/联系按钮在已就业时禁用（`store/employment.js` 缓存状态，投递/接收后 `refresh()`）。
+- **教师**：`Students.vue` 加「就业状态」列（`StudentVO.employmentStatus`）；`TeacherDashboard` KPI 换成「已就业 / 就业率」（`TeacherOverviewVO.employedCount`，ADMIN 走 `countEmployedInTenant`、教师走 `employedUserIds(visible).size()`）。
+- **HR**：`ApplicantDrawer` 顶部「已入职他处」提示 + 录用按钮禁用（`ApplicantDetailVO.employedElsewhere`）。
+- **AI 顾问**（2026-07-14 补）：`CareerAdvisorServiceImpl.buildContext()` 注入就业状态，已就业不再被当求职者答。见上方「怎么让 AI 效果变好」第 1 条。
+- 新增前端：`utils/employment.js`（label/tag/isEmployed）、`store/employment.js`；`api/student.js` 加 `acceptOffer`/`getEmploymentStatus`。
+
+### 验证
+
+- `mvn test`（25 单测）+ `npm run build` 通过。真实 HTTP 全链路：hr、hr02 分别给 student01 发 OFFER（多 offer 并存）→ 状态 OFFERED → 学生接收一个 → EMPLOYED → 再投递/自主联系均被拦 → hr03 再录用被拦「已入职他处」→ 管理员概览 `employedCount=1/14`。测试数据已还原、通知已清理。
+
 ## 后端要点
 
 - **技能字段解析统一走 `SkillUtils`**（common/utils）：库里标准格式是 JSON 数组 `["Java","MySQL"]`，但存在逗号/顿号分隔的旧数据。前端对应 `utils/skills.js`
 - **技能词库提取**（`SkillDictionary`，analysis 模块）：从职位标题+描述中补全技能标签。ASCII 技能用 lookaround 手写词边界，否则 `Django` 会命中 `Go`、`JavaScript` 会命中 `Java`（`\b` 处理不了 `C++`/`C#` 结尾的符号）。中文技能直接子串匹配。有 9 个单测守着，**改词库前先跑 `SkillDictionaryTest`**
-- **推荐打分 = 基础规则 0~100 + 行为加权 ±10**：技能 40 / 城市 25 / 薪资 20 / 学历 15，再按历史 APPLY(+2) / FAVORITE(+1) / IGNORE(-2) 反推技能偏好加减分；已投递、已忽略的职位不再出现在推荐里。最终分裁剪回 0~100
+- **推荐打分 = 基础规则 0~100 + 行为加权 ±10**：技能 35 / 行业 20 / 城市 20 / 薪资 15 / 学历 10（**2026-07-14 加入意向行业**：原来画像的意向行业收集了却没参与打分，现按行业一致 +20 并把其余权重从 40/25/20/15 调成 35/20/20/15/10，总分仍 100），再按历史 APPLY(+2) / FAVORITE(+1) / IGNORE(-2) 反推技能偏好加减分；已投递、已忽略的职位不再出现在推荐里。最终分裁剪回 0~100。**学生首页取数走 `matchGrouped`（可投递/市场参考各取前 25、全量池），`match()`（混合 Top N）仅供推送——详见「学生职位信息中心」章节**
 - **教学建议是真算的**：`TeachingSuggestionServiceImpl` 对比 `analysis_result`(dimension=skill) 的市场热度与学生画像的掌握率，输出「市场热但掌握率 <30%」的技能，每条附岗位数与掌握人数作证据。`marketDemand` 是**相对热度**（该技能岗位数 ÷ 最热技能岗位数），所以排第一的恒为 100
 - **批量查询避免 N+1**：`BehaviorService.countByActionGroupedByUser` / `UserService.mapByIds` / `JobDetailService.listByIds` 都是一次取回。加新的「列表 + 关联信息」接口时沿用这个模式
 - **限流是 Redis ZSET 滑动窗口 + Lua**（`RateLimitInterceptor`）：剔除→计数→写入必须原子完成，否则并发下超发。固定窗口计数在窗口边界会瞬间放过 2 倍流量
@@ -355,6 +472,57 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 - 早前已验证：租户下拉 / 五个角色登录 / 教师看板统计 / 技能缺口诊断非随机 / HR「只看我发布的」(2/1/3) / Excel 导出 / PDF 内嵌中文字体 / Word 结构化表格 / 开放 API BCrypt 校验
 - **报告下载已重新验证无误**：用真实数据库拉取，PDF/Word 下载字节与磁盘文件 sha256 完全一致；PDF 为 3 页、内嵌 SimSun 子集、51 个文字块。此前「下载打不开」的报告应为旧 jar 所致（见启动流程那节）
 - **未做**：浏览器里的人工点验（深色模式配色、图表重绘、简历表单与顾问对话的交互手感）；XXL-Job 分布式调度未跑通
+
+## ✅ 已合并 main 的 AI 功能到 v1-backup（2026-07-15 实施完成，前后端编译通过，**未 commit 待用户测**）
+
+**四轮总览（当前状态速查）：**
+| 轮次 | 做了什么 | 关键文件 |
+|---|---|---|
+| 第一轮 | 合并 6 个 AI 功能主体（②语义匹配跳过、④教学AI首轮误判、JD换AI版） | 见下方「6 个功能落地」 |
+| 第二轮 | 提示词深度升级（教师教学建议 / 学生求职报告 / 职业顾问） | `TeachingAiServiceImpl`/`StudentAiReportServiceImpl`/`CareerAdvisorServiceImpl` |
+| 第三轮 | 全量 AI 审计补漏（市场摘要）+ 删规则版 JD 孤儿 | `AiSummaryServiceImpl` + `HrTool*` 清理 |
+| 第四轮 | HR「智能排序」改 90%规则+10%AI 混合打分 | `HrResumeAiServiceImpl` |
+
+**全程硬约束（已守住）：`JobMatchServiceImpl`/`JobMatchService` 四轮累计 0 改动**（第四轮只 `scoreOne` 只读复用）；未带入 main 推荐算法（`CollaborativeFilter*/ContentBased*/HybridRecommend*`）；每轮 `mvn install -DskipTests` 全绿；**均未 commit、未做真实 AI 点验**（需配 `application-local.yml` 密钥 + `enabled:true` + 重启后端）。
+
+---
+
+把 `功能合并指导.md` 列的 AI 功能从 `origin/main` 合进本分支，**不影响本分支功能主体**。**硬约束（用户强调，已守住）：绝不改本分支的匹配分数计算规则**（`JobMatchServiceImpl` / `JobMatchService` **0 改动**），也**未带入 main 的推荐算法**（`CollaborativeFilter*/ContentBased*/HybridRecommend*`）。
+
+**6 个功能的实际落地（盘点本分支已有内容后）：**
+1. **AI 系统提示词** — 随各实现类的 `static final` 常量自动带入，无独立文件
+2. **语义匹配 SemanticMatch** — **用户拍板跳过**。它在 main 里**唯一用途**是被 `JobMatchServiceImpl` 调用给匹配分数加 `semanticBonus`（最多 +15），正好撞硬约束；且无独立页面入口。**未搬入** `SemanticMatch*` 任何文件
+3. **简历 AI 多轮润色** — 合并：`ResumeAiService.polishChat` + `ResumePolishChatDTO` + `/api/student/resume/ai-polish-chat`；诊断增强（`ResumeReviewVO` 加 `marketCompetitiveness`、`Suggestion.priority/expectedEffect`）；前端 `Resume.vue` 加润色聊天弹窗
+4. **教学建议 AI** — 见下方「第二轮」。（首轮误判：只 diff 了 `TeachingAiService` **接口**为空就以为无需合并，其实提示词在 **`TeachingAiServiceImpl`** 里，main 强很多）
+5. **HR 简历 AI 筛选/排序 + JD AI** — 合并：`HrResumeAiService`/`HrJdAiService`(+impl)、`ResumeScreenVO`/`JdOptimizeVO`(本分支已有同名同结构)、`HrController` 加 `/api/hr/ai/jd/**` 与 `/api/hr/ai/resume/**` 端点；前端 `hr/Applications.vue` 加「AI 分析/智能排序」。**JD 助手 `components/hr/JdOptimizeAssistant.vue` 用户拍板从本地规则版换成 main 的 AI 版**（props 一致、`JobManage.vue` 无需改），连带删掉孤儿 `utils/jdOptimizer.js`
+6. **HR 面试题生成** — 合并：`HrInterviewAiService`(+impl)、`InterviewQuestionVO`、`HrController` 加 `/api/hr/ai/interview/questions`；新页 `views/hr/tools/InterviewQuestions.vue` + 路由 `/hr/tools/interview-questions` + 菜单项
+
+**合并手法（关键：main 在多处共享文件上落后于本分支，不能整覆盖）：**
+- **纯新增/纯追加文件直接取**：`git checkout origin/main -- <path>`（3 对 HR AI service+impl、`ResumeScreenVO`/`InterviewQuestionVO`/`ResumePolishChatDTO`、以及 `ResumeAiService(Impl)`/`ResumeReviewVO`/`StudentResumeController`——经确认 `diff v1-backup origin/main` 纯追加、无本分支内容丢失、`InterviewQuestions.vue`、AI 版 `JdOptimizeAssistant.vue`）
+- **外科式只加片段、绝不整覆盖**（main 缺本分支的就业状态/面试字段/头像）：`HrController.java`（+3 service 字段 +6 端点，保留 `changeStatus(id,uid,dto)`/`employedElsewhere`/interview 字段）、`api/student.js`（只加 AI 函数，保留 `deleteAvatar`/`acceptOffer`/`getEmploymentStatus`/带 DTO 的 `changeApplicationStatus`）、`Resume.vue`（保留 `embedded`/证件照）、`MainLayout.vue`（只加 1 个菜单项）、`router/index.js`（只加 1 条路由）
+- **`hr/Applications.vue` 是特例**：main 是本分支的超集，仅差 `ACCEPTED` 两行 → checkout main 版后补回 `ACCEPTED`（STATUSES + statusTag）
+- **前置依赖已就位**：`app.ai` 配置在 `application.yml`、`AiChatClient`/`AiMessage` 本分支都有（main 仅多一个用不到的 `chat(msgs,temp,maxTokens)` 重载，4 个新 impl 均不用）
+- **`ApplicantDrawer.vue` 未改**：AI 筛选实际落在 `Applications.vue`，抽屉无 AI 逻辑
+- **验证**：`mvn install -DskipTests` 通过、`npm run build` 通过；`JobMatchServiceImpl/Service` 0 改动、无 `Semantic/Collaborative/ContentBased/HybridRecommend` 文件混入
+- **未做**：真实 AI 端到端点验（需配 `occupation-web/src/main/resources/application-local.yml` 密钥 + `enabled:true`，`mvn install -DskipTests && mvn spring-boot:run -pl occupation-web` + 起前端，逐一点验简历多轮润色 / HR「AI 分析·智能排序」/ HR 工具箱「AI 面试问题」/ 发布职位 JD AI 优化；AI 关时均降级为规则文案）
+
+**第二轮：AI 提示词深度升级（2026-07-15，用户反馈「教师/学生分析太肤浅」后补合并，编译通过、未 commit）**——首轮遗漏：提示词常量都在 **Impl** 里，首轮只 diff 了接口。三处「取 main 更优实现」，**均不碰匹配分数/推荐算法/其他功能**：
+- **教师教学建议 AI**（`TeachingAiServiceImpl`，取 main）：旧版 350 字单段 → **1000-1500 字 + 五大板块**（整体诊断/技能缺口/课程调整/校企合作/预期效果），注入课程改革建议，用 `chat(...,0.5,4000)`。依赖 `TeachingSuggestionVO.courseSuggestions`/`SkillGap.suggestion`（本分支已有）。
+- **学生求职分析报告**（`StudentAiReportServiceImpl`，取 main）：旧版 4 段纯文本 → **六大板块**（个人画像/市场定位/技能竞争力/薪资合理性/3条求职路线/90天行动计划），2000-3000 字 Markdown，`chat(...,0.5,6000)`，上下文加 Top3 匹配+市场技能+行业薪资。**连带引入 `report/export/MarkdownRenderer.java`（Markdown→PDF，flexmark）+ 根 pom 加 `flexmark.version=0.64.8` 版本管理 + report pom 加 `flexmark-all` 依赖**（首轮曾把 MarkdownRenderer 列进排除、现按需引入）。
+- **学生职业顾问对话**（`CareerAdvisorServiceImpl`，外科式只改 `ADVISOR_ROLE` 常量）：**保留本分支更丰富的 buildContext**（就业状态+实际岗位+简历经历，比 main 强，不回退），**只借 main 的输出指令**——300 字→**500 字 + 「先结论→分点→下一步」结构 + 「我该学什么」给学习路径**。准则 1-5（含就业状态权威那条）原样保留。
+- **前置**：`AiChatClient` 取 main 版（**纯追加** `chat(msgs,temp,maxTokens)` 3 参重载，旧调用传 null 行为不变，全局 `max-tokens=1200`）。教师 4000 / 学生报告 6000 靠此重载放开；顾问 500 字走全局 1200 够用。
+- **验证**：`mvn install -DskipTests` 全绿、`MarkdownRenderer.class` 生成、`JobMatch` 仍 0 改动。同样**未做真实 AI 点验**（教师端教学建议 AI 解读 / 学生「我的报告」求职分析 / 学生职业顾问对话）。
+
+**第三轮：全量 AI 审计补漏 + 孤儿清理（2026-07-15，用户要求「查其他 AI 有没有同样情况」，编译通过、未 commit）**——把 8 个用 `AiChatClient` 的实现类逐一 diff（**diff Impl 不是接口**），结论：6 个已取 main 一致、`CareerAdvisor.EXPLAIN_SYSTEM` 两分支相同，**唯一漏网 = `AiSummaryServiceImpl`（市场报告智能摘要）**：
+- **`AiSummaryServiceImpl`（取 main）**：300 字单段 → **600-800 字 + 四大板块**（整体趋势/行业城市热点/技能需求变化/对师生建议），上下文加薪资分布+月度趋势（近6期）。依赖 `DashboardVO.TrendItem`（period/jobCount/avgSalary，本分支已有）。影响面仅市场报告摘要（`ReportGeneratorServiceImpl` 调用）。
+- **孤儿清理（用户拍板删）**：JD 助手换 AI 版后，本分支**规则版 JD 后端已无人调用**（前端/测试 0 引用）→ 删 `HrToolController` 的 `/optimize-jd` 端点、`HrToolService.optimizeJd` 接口方法、`HrToolServiceImpl` 的 `optimizeJd`+7 个 JD 私有辅助（scoreDimension/score*×5/generateSuggestions）、`dto/JdOptimizeRequest.java` 整文件。**保留** `JdOptimizeVO`（AI 版 `HrJdAiService.analyze` 在用）、`compareTalents`/`benchmarkSalary`/`calcTalentScore`（人才对比/薪资竞争力工具，不受影响）。连同第一轮删的前端 `utils/jdOptimizer.js`，规则版 JD 前后端已彻底清干净。
+- **验证**：`mvn install -DskipTests` 全绿、`JdOptimizeRequest` 全仓 0 引用、`JobMatch` 仍 0 改动。
+
+**第四轮：HR「智能排序」改混合打分（2026-07-15，用户主动要求，编译通过、未 commit）**——原 `HrResumeAiServiceImpl.rankByMatch` 是 **100% 大模型主观打分**（不可复现、每次点可能跳；AI 挂了降级成「全 50 分不排序」）。改为**规则主导 + AI 微调**（用户拍板 90/10、15s 超时）：
+- **最终分 = 规则分 × 0.9 + AI 分 × 0.1**（常量 `AI_WEIGHT=0.10`）。规则分来自 **`JobMatchService.scoreOne(userId, jobId)`**——「对单个职位打分，与 match 同一套规则」，**只读复用、不改 `JobMatchServiceImpl` 打分逻辑**（硬约束仍守住），顺带让 HR 排序分与学生端推荐匹配分**口径一致**。
+- **AI 是可选增强**：`CompletableFuture.supplyAsync(askJson).get(15s)`，超时（`TimeoutException`）或失败即丢弃 AI、直接输出**纯规则排序**——无论 AI 是否可用都有靠谱排序（替代旧的「全 50」）。注意超时后台线程仍会把那次 HTTP 跑完（走 ForkJoinPool.commonPool，低并发可接受）。
+- **`screen()`（单个「AI 分析」弹窗）同步融合**：有 jobId 时展示分也按 90/10 融合，避免同一候选人在弹窗与排序列显示两个不同分；AI 关时降级也补规则分。删了旧 `fallbackRank`（全 50，已被规则排序取代）。新增私有 `ruleScore`/`blend`/`clamp`，注入 `JobMatchService`（无循环依赖）。
+- **权重/超时是常量**，想调改 `AI_WEIGHT`（如 0.20）与 `AI_RANK_TIMEOUT_SECONDS` 即可。**只动 `HrResumeAiServiceImpl`**，前端/接口/契约不变。`mvn install` 全绿、`JobMatch` 仍 0 改动。
 
 ## 下次接手前必读的三条
 

@@ -1,6 +1,6 @@
 <template>
-  <div class="class-manage">
-    <div class="page-head">
+  <div class="class-manage" :class="{ embedded }">
+    <div class="page-head" v-if="!embedded">
       <h2 class="page-title">班级管理</h2>
       <p class="page-sub">维护学院内「专业-入学年级-班级」结构，并配置教师的可见范围（班主任 / 专业老师 / 届老师）</p>
     </div>
@@ -150,7 +150,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getClasses, saveClass, deleteClass, assignStudentsToClass, getClassFilters,
@@ -158,7 +158,15 @@ import {
 } from '@/api/admin'
 import { toList } from '@/utils/list'
 
+// embedded=true 时隐藏页头与内部标签栏；section 由「组织管理」中心控制显示「班级」还是「教师范围」
+const props = defineProps({
+  embedded: { type: Boolean, default: false },
+  section: { type: String, default: '' }   // 'classes' | 'scopes'
+})
+
 const tab = ref('classes')
+// 中心切「班级/教师范围」标签时，同步内部 tab（embedded 下内部标签栏已隐藏，仅由此驱动）
+watch(() => props.section, v => { if (v) tab.value = v }, { immediate: true })
 
 // ---------- 班级 ----------
 const classes = ref([])
@@ -298,4 +306,6 @@ onMounted(async () => {
 <style scoped>
 .bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
 .hint { color: var(--color-text-tertiary); font-size: 13px; }
+/* 嵌入「组织管理」中心时，隐藏内部 el-tabs 的标签栏（改由中心的顶层标签驱动） */
+.class-manage.embedded :deep(.el-tabs__header) { display: none; }
 </style>

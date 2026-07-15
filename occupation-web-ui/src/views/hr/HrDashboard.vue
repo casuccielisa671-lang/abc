@@ -58,6 +58,8 @@
         </div>
       </div>
 
+      <div class="tile t-msg"><MessageTile /></div>
+
       <NewsTile class="t-news" />
     </section>
   </div>
@@ -71,6 +73,7 @@ import { getHrJobs, getHrApplications } from '@/api/student'
 import { toList, toTotal } from '@/utils/list'
 import MapHeroTile from '@/components/home/MapHeroTile.vue'
 import NewsTile from '@/components/home/NewsTile.vue'
+import MessageTile from '@/components/home/MessageTile.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -121,6 +124,7 @@ onMounted(() => {
 .t-map { grid-column: span 2; grid-row: span 2; }
 .t-funnel { grid-column: span 2; grid-row: span 2; }
 .t-quick { grid-column: span 2; grid-row: span 2; }
+.t-msg { grid-column: span 4; grid-row: span 2; }
 .t-news { grid-column: span 4; grid-row: span 2; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 14px; padding: 16px; box-shadow: var(--shadow-sm); }
 
 .kpi .big { font-size: 30px; font-weight: 750; letter-spacing: -.5px; margin-top: auto; }

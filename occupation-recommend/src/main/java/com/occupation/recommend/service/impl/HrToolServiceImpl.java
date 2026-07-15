@@ -9,7 +9,6 @@ import com.occupation.common.utils.SkillUtils;
 import com.occupation.recommend.entity.SysStudentProfile;
 import com.occupation.recommend.service.HrToolService;
 import com.occupation.recommend.service.StudentProfileService;
-import com.occupation.recommend.vo.JdOptimizeVO;
 import com.occupation.recommend.vo.SalaryBenchmarkVO;
 import com.occupation.recommend.vo.TalentCompareVO;
 import lombok.RequiredArgsConstructor;
@@ -32,35 +31,6 @@ public class HrToolServiceImpl implements HrToolService {
     private final JobDetailMapper jobDetailMapper;
     private final UserService userService;
     private final StudentProfileService profileService;
-
-    @Override
-    public JdOptimizeVO optimizeJd(String jdText) {
-        if (jdText == null || jdText.trim().isEmpty()) {
-            throw new IllegalArgumentException("请输入职位描述内容");
-        }
-
-        String text = jdText.trim();
-        JdOptimizeVO vo = new JdOptimizeVO();
-
-        // 各维度评分
-        List<JdOptimizeVO.Dimension> dimensions = new ArrayList<>();
-        dimensions.add(scoreDimension("吸引力", scoreAttractiveness(text)));
-        dimensions.add(scoreDimension("完整性", scoreCompleteness(text)));
-        dimensions.add(scoreDimension("关键词覆盖", scoreKeywordCoverage(text)));
-        dimensions.add(scoreDimension("结构清晰度", scoreStructure(text)));
-        dimensions.add(scoreDimension("薪资竞争力", scoreSalaryCompetitiveness(text)));
-        vo.setDimensions(dimensions);
-
-        // 综合评分 = 各维度平均
-        int total = dimensions.stream().mapToInt(JdOptimizeVO.Dimension::getScore).sum();
-        vo.setScore(total / dimensions.size());
-
-        // 生成优化建议
-        List<String> suggestions = generateSuggestions(text, dimensions);
-        vo.setSuggestions(suggestions);
-
-        return vo;
-    }
 
     @Override
     public TalentCompareVO compareTalents(List<Long> userIds) {
@@ -212,118 +182,6 @@ public class HrToolServiceImpl implements HrToolService {
         vo.setCityData(cityData);
 
         return vo;
-    }
-
-    // ==================== JD 分析辅助方法 ====================
-
-    private JdOptimizeVO.Dimension scoreDimension(String name, int score) {
-        JdOptimizeVO.Dimension d = new JdOptimizeVO.Dimension();
-        d.setName(name);
-        d.setScore(score);
-        return d;
-    }
-
-    private int scoreAttractiveness(String text) {
-        int score = 50;
-        if (text.contains("福利") || text.contains("假期") || text.contains("补贴")) score += 10;
-        if (text.contains("团建") || text.contains("氛围") || text.contains("文化")) score += 10;
-        if (text.contains("发展") || text.contains("晋升") || text.contains("成长")) score += 10;
-        if (text.contains("期权") || text.contains("股权") || text.contains("年终")) score += 10;
-        if (text.contains("培训") || text.contains("学习") || text.contains("导师")) score += 10;
-        return Math.min(100, score);
-    }
-
-    private int scoreCompleteness(String text) {
-        int score = 50;
-        if (text.contains("职责") || text.contains("负责") || text.contains("工作内容")) score += 10;
-        if (text.contains("要求") || text.contains("任职") || text.contains("条件")) score += 10;
-        if (text.contains("学历") || text.contains("本科") || text.contains("硕士")) score += 10;
-        if (text.contains("经验") || text.contains("年限") || text.matches(".*\\d+年.*")) score += 10;
-        if (text.contains("薪资") || text.contains("薪酬") || text.matches(".*\\d+[kK].*")) score += 10;
-        return Math.min(100, score);
-    }
-
-    private int scoreKeywordCoverage(String text) {
-        String lower = text.toLowerCase();
-        int score = 50;
-        // 从数据库中取热门技能关键词进行匹配
-        List<JobDetail> allJobs = jobDetailMapper.selectList(null);
-        Set<String> hotSkills = allJobs.stream()
-                .flatMap(j -> SkillUtils.parse(j.getSkills()).stream())
-                .filter(s -> s.length() >= 2)
-                .collect(Collectors.groupingBy(s -> s, Collectors.counting()))
-                .entrySet().stream()
-                .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
-                .limit(15)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toSet());
-
-        long matched = hotSkills.stream().filter(s -> lower.contains(s.toLowerCase())).count();
-        if (matched >= 10) score += 50;
-        else if (matched >= 5) score += 30;
-        else if (matched >= 2) score += 10;
-        return Math.min(100, score);
-    }
-
-    private int scoreStructure(String text) {
-        int score = 50;
-        if (text.contains("【") || text.contains("】") || text.contains("##") || text.contains("1.")) score += 15;
-        if (text.split("\\n").length >= 8) score += 15;
-        if (text.length() >= 300) score += 10;
-        if (text.contains("加分项") || text.contains("优先") || text.contains("熟悉")) score += 10;
-        return Math.min(100, score);
-    }
-
-    private int scoreSalaryCompetitiveness(String text) {
-        int score = 50;
-        if (text.matches(".*\\d+[kK]-\\d+[kK].*") || text.matches(".*\\d+[kK].*")) score += 20;
-        // 从市场数据判断薪资是否处于合理区间
-        List<JobDetail> allJobs = jobDetailMapper.selectList(null);
-        double avgMarket = allJobs.stream()
-                .mapToInt(j -> (j.getSalaryMin() != null && j.getSalaryMax() != null)
-                        ? (j.getSalaryMin() + j.getSalaryMax()) / 2 : 0)
-                .filter(s -> s > 0).average().orElse(0);
-        // 尝试从文本提取薪资
-        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+)[kK]").matcher(text);
-        if (m.find()) {
-            int salary = Integer.parseInt(m.group(1)) * 1000;
-            if (salary >= avgMarket * 0.9) score += 20;
-            else if (salary >= avgMarket * 0.6) score += 10;
-        }
-        return Math.min(100, score);
-    }
-
-    private List<String> generateSuggestions(String text, List<JdOptimizeVO.Dimension> dims) {
-        List<String> suggestions = new ArrayList<>();
-        for (JdOptimizeVO.Dimension d : dims) {
-            if (d.getScore() < 60) {
-                switch (d.getName()) {
-                    case "吸引力":
-                        suggestions.add("开头增加公司亮点和团队文化描述，提升职位吸引力");
-                        break;
-                    case "完整性":
-                        suggestions.add("补充具体的技术栈要求（如 Spring Boot、Vue 等），避免模糊表述");
-                        break;
-                    case "关键词覆盖":
-                        suggestions.add("增加更多行业标准技能关键词，提高职位搜索匹配度");
-                        break;
-                    case "结构清晰度":
-                        suggestions.add("将\"任职要求\"和\"加分项\"分开列出，结构更清晰");
-                        break;
-                    case "薪资竞争力":
-                        suggestions.add("明确薪资范围，当前 JD 未提及薪资信息或薪资低于市场水平");
-                        break;
-                }
-            }
-        }
-        if (suggestions.isEmpty()) {
-            suggestions.add("JD 质量较高，建议定期回顾并根据市场变化微调");
-        }
-        suggestions.add("增加职业发展路径说明，让候选人看到成长空间");
-        if (text.length() < 200) {
-            suggestions.add("JD 内容偏短，建议补充岗位职责和团队情况描述");
-        }
-        return suggestions;
     }
 
     // ==================== 人才评分辅助方法 ====================

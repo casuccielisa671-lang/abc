@@ -29,6 +29,16 @@ public class ReportRecordVO implements Serializable {
     private String errorMsg;
     private LocalDateTime createTime;
 
+    /** 可见性：PUBLIC=全体可见 / SELF=仅自己可见。市场报告用它展示可见状态；就业报告看 deliveredCount */
+    private String visibility;
+
+    /**
+     * 已下发的学生人数（仅 EMPLOYMENT 报告有意义）。
+     * >0 表示当前对这些学生可见；0 表示仅自己可见（未发布或已撤回）。
+     * MARKET 报告为广播，此字段为 null，前端按「全体可见」展示。
+     */
+    private Long deliveredCount;
+
     public static ReportRecordVO of(ReportRecord r) {
         ReportRecordVO vo = new ReportRecordVO();
         vo.id = r.getId();
@@ -38,6 +48,7 @@ public class ReportRecordVO implements Serializable {
         vo.status = r.getStatus();
         vo.errorMsg = r.getErrorMsg();
         vo.createTime = r.getCreateTime();
+        vo.visibility = r.getVisibility();
         return vo;
     }
 }
