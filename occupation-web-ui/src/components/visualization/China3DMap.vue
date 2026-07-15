@@ -72,6 +72,10 @@ let mapInstance = null
 
 let mapReady = false
 
+/** 地图尚未 ready 时到达的热力点，ready 后补同步 */
+
+let pendingHeatPoints = null
+
 
 
 function normalizePoints(list) {
@@ -92,6 +96,40 @@ function normalizePoints(list) {
 
 
 
+function applyHeatPoints(points) {
+
+  if (!mapInstance || !mapReady) {
+
+    pendingHeatPoints = points
+
+    return
+
+  }
+
+  mapInstance.updateHeatPoints(normalizePoints(points))
+
+  pendingHeatPoints = null
+
+}
+
+
+
+/** 地图就绪后：补上加载期间丢掉的更新，并再同步一次当前 props */
+
+function syncHeatAfterReady() {
+
+  const latest = pendingHeatPoints != null ? pendingHeatPoints : props.heatPoints
+
+  pendingHeatPoints = null
+
+  if (!mapInstance || !mapReady) return
+
+  mapInstance.updateHeatPoints(normalizePoints(latest || []))
+
+}
+
+
+
 async function bootMap(initialPoints) {
 
   if (!containerRef.value) return
@@ -105,6 +143,8 @@ async function bootMap(initialPoints) {
   textureHint.value = ''
 
   satelliteBadge.value = ''
+
+  mapReady = false
 
   try {
 
@@ -140,25 +180,21 @@ async function bootMap(initialPoints) {
 
     }
 
+    // 解决竞态：接口可能在贴图加载期间已返回热力数据
+
+    syncHeatAfterReady()
+
   } catch (e) {
 
     error.value = e?.message || '地图加载失败'
+
+    mapReady = false
 
   } finally {
 
     mapLoading.value = false
 
   }
-
-}
-
-
-
-function applyHeatPoints(points) {
-
-  if (!mapInstance || !mapReady) return
-
-  mapInstance.updateHeatPoints(normalizePoints(points))
 
 }
 
@@ -187,6 +223,8 @@ onUnmounted(() => {
   mapInstance = null
 
   mapReady = false
+
+  pendingHeatPoints = null
 
 })
 

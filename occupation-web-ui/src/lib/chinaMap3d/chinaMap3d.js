@@ -16,6 +16,7 @@ import { createHeatmapMesh } from './heatmapLayer.js'
 import { buildProvinceLabels, buildCityHeatLabels } from './mapLabels.js'
 import { attachRegionHover } from './mapInteraction.js'
 import { fitCameraToMap, refitCameraOnResize } from './cameraFit.js'
+import { createAmbientFx } from './ambientFx.js'
 
 /** 初始相机边距（越小地图越大） */
 const MAP_CAMERA_PADDING = 1.38 / 1.65
@@ -65,6 +66,7 @@ export async function mountChinaMap3d(container, options = {}) {
   const height = container.clientHeight || 420
 
   const scene = new Scene()
+  // 原 China3DMap 淡黄油画布
   scene.background = new Color('#fff5e8')
 
   const camera = new PerspectiveCamera(50, width / height, 0.1, 5000)
@@ -110,6 +112,7 @@ export async function mountChinaMap3d(container, options = {}) {
   if (heatPoints.length > 0) {
     heatLayer = createHeatmapMesh(projection, heatPoints, {
       depth,
+      bbox,
       maskTexture: textures.borderTex || null
     })
     terrainGroup.add(heatLayer.group)
@@ -117,13 +120,21 @@ export async function mountChinaMap3d(container, options = {}) {
 
   scene.add(terrainGroup)
 
+  const ambient = createAmbientFx(bbox)
+  ambient.attach(scene)
+
   fitCameraToMap(camera, controls, terrainGroup, { padding: MAP_CAMERA_PADDING })
 
   const hoverCtrl = attachRegionHover(renderer, camera, terrainGroup.regionGroups || [])
 
   let frameId = null
+  let lastTs = performance.now()
   const renderLoop = () => {
     frameId = requestAnimationFrame(renderLoop)
+    const now = performance.now()
+    const dt = Math.min(0.05, (now - lastTs) / 1000)
+    lastTs = now
+    ambient.tick(dt)
     hoverCtrl.tick()
     controls.update()
     renderer.render(scene, camera)
@@ -156,13 +167,22 @@ export async function mountChinaMap3d(container, options = {}) {
     usingFallbackTextures: textures.fallback,
     satelliteSource: textures.satelliteSource || '',
     updateHeatPoints(points) {
-      if (!points?.length) return
-      refreshCityLabels(points)
+      const list = points || []
+      refreshCityLabels(list)
+      if (!list.length) {
+        if (heatLayer) {
+          heatLayer.dispose()
+          terrainGroup.remove(heatLayer.group)
+          heatLayer = null
+        }
+        return
+      }
       if (heatLayer) {
-        heatLayer.update(points)
+        heatLayer.update(list)
       } else {
-        heatLayer = createHeatmapMesh(projection, points, {
+        heatLayer = createHeatmapMesh(projection, list, {
           depth,
+          bbox,
           maskTexture: textures.borderTex || null
         })
         terrainGroup.add(heatLayer.group)
@@ -175,6 +195,7 @@ export async function mountChinaMap3d(container, options = {}) {
       container.removeEventListener('wheel', blockScroll)
       renderer.domElement.removeEventListener('webglcontextlost', onContextLost)
       hoverCtrl.dispose()
+      ambient.dispose()
       controls.dispose()
       heatLayer?.dispose()
       scene.traverse((obj) => {
