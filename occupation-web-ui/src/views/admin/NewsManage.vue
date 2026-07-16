@@ -216,10 +216,6 @@ onMounted(load)
 </script>
 
 <style scoped>
-.news-manage { max-width: 1100px; }
-.page-head { margin-bottom: 16px; }
-.page-title { font-size: 22px; font-weight: 700; margin: 0 0 4px; }
-.page-sub { color: var(--color-text-tertiary); font-size: 13.5px; margin: 0; }
 .bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
 .filters { display: flex; gap: 10px; }
 .actions { display: flex; gap: 8px; flex-wrap: wrap; }
