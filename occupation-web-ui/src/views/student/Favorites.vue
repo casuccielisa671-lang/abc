@@ -11,9 +11,10 @@
         :description="list.length ? '没有匹配的收藏' : '暂无收藏，去「可投递岗位」或「市场参考」看看吧'"
       />
 
-      <div class="job-grid">
-        <div v-for="job in shownList" :key="job.id" class="job-card"
+      <div class="job-grid favorite-grid">
+        <div v-for="job in shownList" :key="job.id" class="job-card favorite-card"
           @click="$router.push(`/student/job/${job.id}`)">
+          <div class="favorite-label">已收藏</div>
           <div class="job-head">
             <div>
               <h3 class="job-title">{{ job.title }}</h3>
@@ -21,14 +22,14 @@
             </div>
             <div class="job-salary">{{ salaryRange(job.salaryMin, job.salaryMax) }}</div>
           </div>
-          <div class="job-chips">
+          <div class="job-chips favorite-chips">
             <span class="chip">{{ job.city }}</span>
             <span class="chip">{{ job.education || '学历不限' }}</span>
             <span v-if="job.industry" class="chip">{{ job.industry }}</span>
           </div>
-          <div class="job-foot">
+          <div class="job-foot favorite-foot">
             <span class="date">{{ job.publishDate }}</span>
-            <el-button size="small" type="danger" text @click.stop="handleUnfavorite(job.id)">
+            <el-button class="unfavorite-btn" size="small" type="danger" text @click.stop="handleUnfavorite(job.id)">
               取消收藏
             </el-button>
           </div>
@@ -81,3 +82,5 @@ async function handleUnfavorite(id) {
 
 onMounted(() => loadFavorites())
 </script>
+
+<style src="./Favorites.css"></style>

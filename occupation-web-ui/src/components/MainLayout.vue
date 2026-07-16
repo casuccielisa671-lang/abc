@@ -1,5 +1,7 @@
 <template>
   <el-container class="main-layout">
+    <AppPageBackground />
+
     <el-header class="main-header" height="56px">
       <div class="brand" @click="$router.push(homePath)">
         <span class="brand-mark">职</span>
@@ -68,6 +70,7 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { useAppStore } from '@/store/app'
+import AppPageBackground from '@/components/common/AppPageBackground.vue'
 import NotificationBell from '@/components/NotificationBell.vue'
 import {
   DataAnalysis, Setting, Document, User, House,
@@ -213,7 +216,9 @@ const activeIndex = computed(() => {
 
 <style scoped>
 .main-layout {
+  position: relative;
   height: 100vh;
+  overflow: hidden;
   /* 日光模式：科技蓝渐变背景（专业数据平台风格） */
   background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 50%, #F0F4FF 100%);
 }
@@ -224,6 +229,8 @@ html.dark .main-layout {
 }
 
 .main-header {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -353,6 +360,8 @@ html:not(.dark) .user-name {
 }
 
 .main-content {
+  position: relative;
+  z-index: 1;
   padding: 32px;
   background: transparent;
   overflow-y: auto;

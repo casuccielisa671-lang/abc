@@ -3,6 +3,7 @@
     <!-- 标题 + 双标签切换栏 -->
     <div class="hub-head">
       <h2 class="page-title">我的资料</h2>
+      <span class="hub-badge">能力档案</span>
       <div class="seg" role="tablist">
         <button
           v-for="t in TABS" :key="t.key" type="button" role="tab"
@@ -50,42 +51,4 @@ function switchTab(key) {
 // 两个表单都用 v-show 常驻挂载：切换标签不重新加载、保留未保存的编辑
 </script>
 
-<style scoped>
-.hub-head {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
-}
-.hub-head .page-title { margin: 0; }
-
-.seg {
-  display: inline-flex;
-  gap: 4px;
-  padding: 4px;
-  background: var(--color-fill-light, var(--color-surface));
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-}
-.seg-btn {
-  padding: 6px 14px;
-  border: none;
-  background: transparent;
-  color: var(--color-text-secondary);
-  font-size: 13.5px;
-  font-weight: 500;
-  border-radius: 9px;
-  cursor: pointer;
-  transition: background .15s, color .15s;
-  white-space: nowrap;
-}
-.seg-btn:hover { color: var(--color-text-primary); }
-.seg-btn.active { background: var(--color-primary); color: #fff; font-weight: 600; }
-
-.panel-note {
-  font-size: 12px;
-  color: var(--color-text-tertiary);
-  margin: 0 0 14px;
-}
-</style>
+<style src="./MyData.css"></style>

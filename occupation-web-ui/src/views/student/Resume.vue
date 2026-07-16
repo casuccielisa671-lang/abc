@@ -1,6 +1,7 @@
 <template>
   <div class="resume-page">
     <div class="page-head with-actions">
+      <span class="resume-badge">AI 简历工作台</span>
       <div v-if="!embedded">
         <h2 class="page-title">我的简历</h2>
         <p class="page-sub">
@@ -19,9 +20,12 @@
     </div>
 
     <div v-loading="loading" class="resume-body">
-      <!-- ============ 基本信息 ============ -->
-      <el-card>
-        <template #header>基本信息</template>
+      <el-card class="resume-card basic-card">
+        <template #header>
+          <div class="card-head">
+            <span>基本信息<em class="section-tag">基础资料</em></span>
+          </div>
+        </template>
         <el-form :model="form" label-width="96px" style="max-width:720px">
           <el-form-item label="证件照">
             <div class="resume-avatar">
@@ -58,11 +62,10 @@
         </el-form>
       </el-card>
 
-      <!-- ============ 教育经历 ============ -->
-      <el-card class="section">
+      <el-card class="resume-card section">
         <template #header>
           <div class="card-head">
-            <span>教育经历</span>
+            <span>教育经历<em class="section-tag">教育背景</em></span>
             <el-button size="small" @click="form.educations.push({})">添加</el-button>
           </div>
         </template>
@@ -87,11 +90,10 @@
         </div>
       </el-card>
 
-      <!-- ============ 项目经历 ============ -->
-      <el-card class="section">
+      <el-card class="resume-card section">
         <template #header>
           <div class="card-head">
-            <span>项目经历<span class="hint">校招最看重这一段</span></span>
+            <span>项目经历<em class="section-tag">重点经历</em><span class="hint">校招最看重这一段</span></span>
             <el-button size="small" @click="form.projects.push({ skills: [] })">添加</el-button>
           </div>
         </template>
@@ -127,11 +129,10 @@
         </div>
       </el-card>
 
-      <!-- ============ 实习经历 ============ -->
-      <el-card class="section">
+      <el-card class="resume-card section">
         <template #header>
           <div class="card-head">
-            <span>实习经历</span>
+            <span>实习经历<em class="section-tag">实践经历</em></span>
             <el-button size="small" @click="form.internships.push({})">添加</el-button>
           </div>
         </template>
@@ -166,16 +167,18 @@
         </div>
       </el-card>
 
-      <!-- ============ 获奖与证书 ============ -->
-      <el-card class="section">
-        <template #header>获奖与证书</template>
+      <el-card class="resume-card section">
+        <template #header>
+          <div class="card-head">
+            <span>获奖与证书<em class="section-tag">证书亮点</em></span>
+          </div>
+        </template>
         <SkillTags v-model="form.honors" placeholder="如 CET-6、蓝桥杯省一，回车添加" />
       </el-card>
     </div>
 
-    <!-- ============ AI 诊断结果 ============ -->
     <el-drawer v-model="reviewVisible" title="AI 简历诊断" size="480px">
-      <div v-if="review" class="review">
+      <div v-if="review" class="resume-review">
         <el-alert
           v-if="!review.aiGenerated" type="info" :closable="false" show-icon
           title="AI 未启用，以下为规则诊断"
@@ -225,7 +228,6 @@
       </template>
     </el-drawer>
 
-    <!-- ============ AI 润色聊天弹窗 ============ -->
     <el-dialog
       v-model="polishDialogVisible"
       :title="'AI 润色 — ' + polishSection"
@@ -489,99 +491,4 @@ function scrollPolishChatBottom() {
 onMounted(load)
 </script>
 
-<style scoped>
-.resume-body { display: flex; flex-direction: column; gap: 16px; }
-.card-head { display: flex; justify-content: space-between; align-items: center; }
-.hint { color: var(--app-ink-3); font-size: 12px; font-weight: 400; margin-left: 8px; }
-
-.entry {
-  padding: 14px;
-  border-radius: 10px;
-  box-shadow: var(--app-hairline);
-  margin-bottom: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.entry:last-child { margin-bottom: 0; }
-.entry-head { display: flex; justify-content: space-between; align-items: center; }
-.entry-no { font-size: 13px; font-weight: 600; color: var(--app-ink-2); }
-
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-.polish-btn { align-self: flex-start; padding-left: 0; }
-
-/* ---- 诊断抽屉 ---- */
-.score-row { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
-.score-num {
-  font-size: 40px; font-weight: 600; line-height: 1;
-  color: var(--app-score); font-variant-numeric: tabular-nums;
-}
-.score-cap { font-size: 12px; color: var(--app-ink-3); }
-.score-sum { font-size: 14px; color: var(--app-ink); margin-top: 2px; }
-.target { font-size: 13px; color: var(--app-ink-3); margin-bottom: 12px; }
-
-.rv-title { font-size: 14px; font-weight: 600; color: var(--app-ink); margin: 18px 0 8px; }
-.rv-list { margin: 0; padding-left: 18px; }
-.rv-list li { font-size: 13px; line-height: 1.9; }
-.rv-list.good li { color: var(--app-ink-2); }
-.rv-list.bad li { color: var(--app-ember); }
-
-.sugg { padding: 10px 0; border-top: 1px solid var(--app-stone); }
-.sugg:first-of-type { border-top: none; }
-.sugg-issue { font-size: 13px; color: var(--app-ink); margin: 6px 0 2px; }
-.sugg-advice { font-size: 13px; color: var(--app-ink-3); margin: 0; line-height: 1.7; }
-.chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
-
-@media (max-width: 760px) {
-  .grid-2, .grid-3 { grid-template-columns: 1fr; }
-}
-
-/* ---- 润色聊天弹窗 ---- */
-.polish-chat {
-  max-height: 420px; overflow-y: auto;
-  display: flex; flex-direction: column; gap: 12px;
-  padding-right: 4px;
-}
-.polish-chat-card {
-  border-radius: 10px; padding: 12px 14px;
-  max-width: 85%;
-}
-.polish-chat-card.original {
-  background: #f5f5f5; border: 1px solid #e0e0e0;
-  max-width: 100%; align-self: stretch;
-}
-.polish-chat-card.user {
-  background: #ecf5ff; align-self: flex-end;
-}
-.polish-chat-card.ai {
-  background: #f0f9eb; align-self: flex-start;
-}
-.polish-chat-card.typing {
-  opacity: 0.7;
-}
-.polish-chat-label {
-  font-size: 11px; font-weight: 600; color: var(--app-ink-3);
-  margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;
-}
-.polish-chat-text {
-  font-size: 14px; line-height: 1.8; color: var(--app-ink);
-  white-space: pre-wrap; word-break: break-word;
-}
-.polish-chat-footer {
-  margin-top: 16px; padding-top: 12px;
-  border-top: 1px solid var(--app-stone);
-}
-
-.resume-avatar { display: flex; align-items: center; gap: 14px; }
-.resume-avatar-img {
-  width: 84px; height: 112px; object-fit: cover; border-radius: 8px;
-  border: 1px solid var(--color-border);
-}
-.resume-avatar-empty {
-  width: 84px; height: 112px; display: flex; align-items: center; justify-content: center;
-  border-radius: 8px; border: 1px dashed var(--color-border);
-  color: var(--color-text-tertiary); font-size: 13px; background: var(--color-fill-light, transparent);
-}
-.resume-avatar-hint { font-size: 12px; color: var(--color-text-tertiary); }
-</style>
+<style src="./Resume.css"></style>

@@ -1,0 +1,186 @@
+.favorites-page {
+  position: relative;
+}
+
+.favorites-page .favorite-grid {
+  align-items: stretch;
+}
+
+.favorites-page .favorite-card {
+  position: relative;
+  min-height: 214px;
+  padding: 30px 28px 22px;
+  border: 1px solid rgba(202, 219, 249, 0.82);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 92% 12%, rgba(96, 165, 250, 0.18), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.84), rgba(246, 250, 255, 0.66)),
+    rgba(255, 255, 255, 0.72);
+  box-shadow: 0 18px 42px rgba(49, 92, 159, 0.11);
+  backdrop-filter: blur(18px);
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.favorites-page .favorite-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(126, 165, 255, 0.88);
+  box-shadow: 0 24px 52px rgba(49, 92, 159, 0.16);
+}
+
+.favorites-page .favorite-card::after {
+  content: "";
+  position: absolute;
+  right: -44px;
+  bottom: -58px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124, 95, 255, 0.12), transparent 70%);
+  pointer-events: none;
+}
+
+.favorites-page .favorite-label {
+  position: absolute;
+  top: 0;
+  left: 24px;
+  z-index: 1;
+  padding: 5px 13px;
+  border-radius: 0 0 8px 8px;
+  background: linear-gradient(135deg, #4b6df6, #7aa8ff);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 10px 20px rgba(69, 108, 243, 0.22);
+}
+
+.favorites-page .job-head,
+.favorites-page .favorite-chips,
+.favorites-page .favorite-foot {
+  position: relative;
+  z-index: 1;
+}
+
+.favorites-page .job-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.favorites-page .job-title {
+  margin: 0;
+  color: #101828;
+  font-size: 19px;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.favorites-page .job-company {
+  margin: 8px 0 0;
+  color: #61708a;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.favorites-page .job-salary {
+  flex: none;
+  color: #3fb06c;
+  font-size: 18px;
+  font-weight: 850;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.favorites-page .favorite-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 22px;
+}
+
+.favorites-page .chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 12px;
+  border: 1px solid rgba(210, 224, 248, 0.92);
+  border-radius: 999px;
+  background: rgba(240, 246, 255, 0.86);
+  color: #5a6a83;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.favorites-page .favorite-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(219, 231, 250, 0.9);
+}
+
+.favorites-page .date {
+  color: #748198;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.favorites-page .unfavorite-btn {
+  font-weight: 800;
+}
+
+html.dark .favorites-page .favorite-card {
+  border-color: rgba(139, 170, 232, 0.24);
+  background:
+    radial-gradient(circle at 92% 12%, rgba(96, 165, 250, 0.12), transparent 34%),
+    linear-gradient(145deg, rgba(30, 41, 59, 0.82), rgba(15, 23, 42, 0.68)),
+    rgba(15, 23, 42, 0.74);
+  box-shadow: 0 20px 46px rgba(2, 8, 23, 0.28);
+}
+
+html.dark .favorites-page .favorite-card:hover {
+  border-color: rgba(112, 153, 246, 0.48);
+}
+
+html.dark .favorites-page .job-title {
+  color: #f1f7ff;
+}
+
+html.dark .favorites-page .job-company,
+html.dark .favorites-page .date {
+  color: #a8b5c8;
+}
+
+html.dark .favorites-page .job-salary {
+  color: #7ed9a3;
+}
+
+html.dark .favorites-page .chip {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(30, 41, 59, 0.72);
+  color: #c5d1e2;
+}
+
+html.dark .favorites-page .favorite-foot {
+  border-top-color: rgba(148, 163, 184, 0.18);
+}
+
+@media (max-width: 700px) {
+  .favorites-page .favorite-card {
+    min-height: 0;
+    padding: 28px 20px 20px;
+  }
+
+  .favorites-page .job-head {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .favorites-page .favorite-foot {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

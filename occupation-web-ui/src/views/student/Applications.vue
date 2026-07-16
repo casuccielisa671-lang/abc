@@ -1,6 +1,7 @@
 <template>
   <div class="my-applications">
     <div class="page-head" v-if="!embedded">
+      <span class="page-badge">投递追踪</span>
       <h2 class="page-title">我的投递</h2>
       <p class="page-sub">只有企业在本平台发布的职位可以投递；采集来的职位仅供参考</p>
     </div>
@@ -17,6 +18,7 @@
     <!-- 进度概览 -->
     <div class="stat-grid" v-if="list.length">
       <div v-for="s in STATUSES" :key="s.key" class="stat-card">
+        <span class="stat-dot" :class="s.key.toLowerCase()" />
         <div class="stat-label">{{ s.label }}</div>
         <div class="stat-value">{{ counts[s.key] || 0 }}</div>
       </div>
@@ -38,8 +40,12 @@
       </div>
     </div>
 
-    <el-card :style="list.length ? 'margin-top:16px' : ''">
-      <el-table :data="shownList" v-loading="loading" stripe>
+    <el-card class="applications-panel" :style="list.length ? 'margin-top:16px' : ''">
+      <div class="panel-title">
+        <span>投递记录</span>
+        <em>{{ shownList.length }} 条</em>
+      </div>
+      <el-table class="applications-table" :data="shownList" v-loading="loading" stripe>
         <el-table-column label="职位" min-width="180">
           <template #default="{ row }">
             <span v-if="row.jobTitle">{{ row.jobTitle }}</span>
@@ -183,40 +189,4 @@ async function load() {
 onMounted(load)
 </script>
 
-<style scoped>
-.removed { color: var(--app-ink-3); font-style: italic; }
-.changed, .waiting { display: block; font-size: 11px; color: var(--app-ink-3); margin-top: 3px; }
-.muted { color: var(--color-text-tertiary); }
-.accepted-mark { color: var(--color-success); font-weight: 650; font-size: 13px; }
-
-.emp-banner {
-  margin: 14px 0 0; padding: 12px 16px; border-radius: 12px; font-size: 13.5px;
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-}
-.emp-banner .sub { font-size: 12px; color: var(--color-text-tertiary); }
-.emp-banner.employed {
-  background: var(--color-success-lighter); color: var(--color-success);
-  border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
-}
-.emp-banner.offered {
-  background: var(--color-warning-lighter); color: var(--color-warning);
-  border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
-}
-
-.iv-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin-top: 16px; }
-.iv-card {
-  border-radius: 14px; padding: 16px;
-  background: linear-gradient(120deg, color-mix(in srgb, var(--color-primary) 12%, var(--color-surface)), var(--color-surface));
-  border: 1px solid color-mix(in srgb, var(--color-primary) 32%, var(--color-border));
-}
-.iv-top { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
-.iv-badge { font-size: 11px; font-weight: 700; color: #fff; background: var(--color-primary); border-radius: 6px; padding: 2px 9px; }
-.iv-title { font-size: 14px; font-weight: 650; color: var(--color-text-primary); }
-.iv-title em { font-style: normal; font-weight: 500; color: var(--color-text-tertiary); margin-left: 4px; }
-.iv-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 16px; }
-.iv-cell { display: flex; flex-direction: column; gap: 2px; }
-.iv-cell.full { grid-column: 1 / -1; }
-.iv-cell .k { font-size: 11px; color: var(--color-text-tertiary); }
-.iv-cell .v { font-size: 13px; color: var(--color-text-secondary); line-height: 1.5; }
-.iv-cell .v.strong { font-weight: 700; color: var(--color-primary); }
-</style>
+<style src="./Applications.css"></style>

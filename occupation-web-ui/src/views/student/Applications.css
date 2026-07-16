@@ -1,0 +1,133 @@
+.my-applications { position: relative; }
+.my-applications .page-head,
+.my-applications .stat-card,
+.my-applications .emp-banner,
+.my-applications .iv-card,
+.my-applications .applications-panel {
+  border: 1px solid rgba(210, 226, 255, .82);
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(255,255,255,.88), rgba(245,250,255,.68)), rgba(255,255,255,.72);
+  box-shadow: 0 18px 45px rgba(39, 85, 150, .09);
+  backdrop-filter: blur(18px);
+}
+.my-applications .page-head {
+  position: relative; overflow: hidden; margin-bottom: 16px; padding: 20px 22px;
+}
+.my-applications .page-head::after,
+.my-applications .stat-card::after,
+.my-applications .iv-card::after {
+  content: ""; position: absolute; right: -48px; top: -62px; width: 160px; height: 160px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(96,165,250,.16), transparent 68%); pointer-events: none;
+}
+.my-applications .page-badge {
+  position: absolute; top: 14px; right: 18px; display: inline-flex; min-height: 22px; align-items: center;
+  padding: 2px 9px; border: 1px solid rgba(174,196,255,.72); border-radius: 999px;
+  background: rgba(226,234,255,.82); color: #2563eb; font-size: 11px; font-weight: 800;
+}
+.my-applications .page-title { margin: 0; color: #101a33; font-size: 26px; font-weight: 850; }
+.my-applications .page-sub { margin: 6px 0 0; color: #64748b; font-size: 13px; }
+.my-applications .removed { color: #8a97ab; font-style: italic; }
+.my-applications .changed,
+.my-applications .waiting { display: block; margin-top: 3px; color: #8a97ab; font-size: 11px; }
+.my-applications .muted { color: #94a3b8; }
+.my-applications .accepted-mark { color: #10b981; font-size: 13px; font-weight: 750; }
+
+.my-applications .emp-banner {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 14px 0 0; padding: 13px 16px;
+  font-size: 13.5px; font-weight: 700;
+}
+.my-applications .emp-banner .sub { color: #69758a; font-size: 12px; font-weight: 500; }
+.my-applications .emp-banner.employed { color: #0f9f6e; background: linear-gradient(145deg, rgba(209,250,229,.84), rgba(255,255,255,.66)); }
+.my-applications .emp-banner.offered { color: #c27a00; background: linear-gradient(145deg, rgba(254,243,199,.86), rgba(255,255,255,.66)); }
+
+.my-applications .stat-grid {
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; margin-top: 16px;
+}
+.my-applications .stat-card {
+  position: relative; min-height: 104px; overflow: hidden; padding: 18px 16px; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.my-applications .stat-card:hover,
+.my-applications .iv-card:hover,
+.my-applications .applications-panel:hover {
+  transform: translateY(-3px); border-color: rgba(96,165,250,.42); box-shadow: 0 22px 50px rgba(39,85,150,.15);
+}
+.my-applications .stat-dot {
+  display: grid; width: 34px; height: 34px; place-items: center; margin-bottom: 8px; border-radius: 50%;
+  background: linear-gradient(135deg, rgba(226,234,255,.95), rgba(207,250,254,.48)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.75);
+}
+.my-applications .stat-dot::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: #4662f2; }
+.my-applications .stat-dot.interview::before { background: #7c5cf4; }
+.my-applications .stat-dot.offer::before { background: #f59e0b; }
+.my-applications .stat-dot.accepted::before { background: #10b981; }
+.my-applications .stat-dot.rejected::before { background: #ef4444; }
+.my-applications .stat-label { color: #53637a; font-size: 12px; font-weight: 750; }
+.my-applications .stat-value { margin-top: 4px; color: #4662f2; font-size: 30px; font-weight: 850; line-height: 1; }
+
+.my-applications .iv-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin-top: 16px; }
+.my-applications .iv-card { position: relative; overflow: hidden; padding: 16px; }
+.my-applications .iv-top { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
+.my-applications .iv-badge {
+  padding: 3px 10px; border-radius: 999px; color: #fff; background: linear-gradient(135deg, #2f6cf6, #6a7cff);
+  box-shadow: 0 8px 18px rgba(47,108,246,.2); font-size: 11px; font-weight: 800;
+}
+.my-applications .iv-title { color: #101a33; font-size: 14px; font-weight: 750; }
+.my-applications .iv-title em { margin-left: 4px; color: #69758a; font-style: normal; font-weight: 500; }
+.my-applications .iv-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 16px; }
+.my-applications .iv-cell { display: flex; flex-direction: column; gap: 2px; }
+.my-applications .iv-cell.full { grid-column: 1 / -1; }
+.my-applications .iv-cell .k { color: #8a97ab; font-size: 11px; }
+.my-applications .iv-cell .v { color: #53637a; font-size: 13px; line-height: 1.5; }
+.my-applications .iv-cell .v.strong { color: #2563eb; font-weight: 800; }
+
+.my-applications .applications-panel { border-color: rgba(210,226,255,.82); overflow: hidden; }
+.my-applications .applications-panel .el-card__body { padding: 16px; }
+.my-applications .panel-title {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; color: #101a33; font-size: 15px; font-weight: 850;
+}
+.my-applications .panel-title::before {
+  content: ""; width: 4px; height: 16px; border-radius: 999px; background: linear-gradient(180deg, #2f6cf6, #8b5cf6);
+}
+.my-applications .panel-title span { margin-right: auto; }
+.my-applications .panel-title em {
+  padding: 3px 10px; border: 1px solid rgba(174,196,255,.72); border-radius: 999px; background: rgba(226,234,255,.82);
+  color: #2563eb; font-size: 11px; font-style: normal; font-weight: 800;
+}
+.my-applications .applications-table { --el-table-border-color: rgba(226,234,248,.86); --el-table-header-bg-color: rgba(240,246,255,.76); }
+.my-applications .applications-table .el-table__inner-wrapper::before { background: transparent; }
+.my-applications .applications-table th.el-table__cell { color: #53637a; font-weight: 800; }
+.my-applications .applications-table td.el-table__cell { color: #1f2b42; }
+.my-applications .salary-text { color: #19a974; font-weight: 800; }
+
+html.dark .my-applications .page-head,
+html.dark .my-applications .stat-card,
+html.dark .my-applications .emp-banner,
+html.dark .my-applications .iv-card,
+html.dark .my-applications .applications-panel {
+  border-color: rgba(139,170,232,.22);
+  background: linear-gradient(145deg, rgba(30,41,59,.78), rgba(15,23,42,.62)), rgba(15,23,42,.72);
+  box-shadow: 0 18px 42px rgba(2,8,23,.24);
+}
+html.dark .my-applications .page-title,
+html.dark .my-applications .iv-title,
+html.dark .my-applications .panel-title,
+html.dark .my-applications .applications-table td.el-table__cell { color: #f1f7ff; }
+html.dark .my-applications .page-sub,
+html.dark .my-applications .emp-banner .sub,
+html.dark .my-applications .stat-label,
+html.dark .my-applications .iv-title em,
+html.dark .my-applications .iv-cell .k,
+html.dark .my-applications .iv-cell .v,
+html.dark .my-applications .changed,
+html.dark .my-applications .waiting { color: #9aa9bd; }
+html.dark .my-applications .page-badge,
+html.dark .my-applications .panel-title em {
+  border-color: rgba(148,163,184,.22); background: rgba(30,41,59,.72); color: #c5d1e2;
+}
+html.dark .my-applications .applications-table {
+  --el-table-header-bg-color: rgba(30,41,59,.72); --el-table-tr-bg-color: transparent; --el-table-row-hover-bg-color: rgba(30,41,59,.76);
+}
+@media (max-width: 1100px) { .my-applications .stat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 700px) {
+  .my-applications .stat-grid,
+  .my-applications .iv-grid { grid-template-columns: 1fr; }
+}

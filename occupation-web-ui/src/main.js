@@ -9,6 +9,7 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import './styles/tech-colors.css'
 import './styles/theme-tech.css'
 import './styles/interactions.css'
+import './styles/app-glass.css'
 import { registerChartThemes } from './styles/chartTheme'
 
 import App from './App.vue'

@@ -1,0 +1,139 @@
+/* Translucent surfaces for authenticated role pages. */
+body.app-glass-ui {
+  --app-glass-surface: rgba(255, 255, 255, 0.68);
+  --app-glass-surface-strong: rgba(255, 255, 255, 0.78);
+  --app-glass-surface-soft: rgba(248, 250, 252, 0.52);
+  --app-glass-border: rgba(148, 163, 184, 0.34);
+  --app-glass-border-strong: rgba(96, 165, 250, 0.36);
+  --app-glass-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+}
+
+html.dark body.app-glass-ui {
+  --app-glass-surface: rgba(30, 41, 59, 0.58);
+  --app-glass-surface-strong: rgba(30, 41, 59, 0.72);
+  --app-glass-surface-soft: rgba(15, 23, 42, 0.42);
+  --app-glass-border: rgba(148, 163, 184, 0.22);
+  --app-glass-border-strong: rgba(96, 165, 250, 0.32);
+  --app-glass-shadow: 0 18px 42px rgba(0, 0, 0, 0.26);
+}
+
+body.app-glass-ui :where(
+  .el-card,
+  .job-card,
+  .tool-card,
+  .stat-card,
+  .metric-card,
+  .summary-card,
+  .overview-card,
+  .chart-card,
+  .table-card,
+  .profile-card,
+  .resume-card,
+  .application-card,
+  .favorite-card,
+  .report-card,
+  .student-card,
+  .talent-card,
+  .class-card,
+  .alert-card,
+  .panel-card,
+  .insight-card,
+  .ready-card,
+  .ops-card,
+  .tip-card,
+  .template-card,
+  .iv-card,
+  .band-card,
+  .dest-card,
+  .ov-card,
+  .decision-card,
+  .target-card,
+  .ai-card,
+  .chat-card,
+  .config-card,
+  .q-card,
+  .polish-chat-card,
+  .news-tile,
+  .message-tile,
+  .map-tile,
+  .recommend-metric,
+  .applications-panel,
+  .compare-table,
+  .tenant-table,
+  .export-form,
+  .summary-box
+) {
+  background: var(--app-glass-surface) !important;
+  border-color: var(--app-glass-border) !important;
+  box-shadow: var(--app-glass-shadow) !important;
+  backdrop-filter: blur(16px) saturate(138%);
+  -webkit-backdrop-filter: blur(16px) saturate(138%);
+}
+
+body.app-glass-ui :where(
+  .el-card,
+  .job-card,
+  .tool-card,
+  .stat-card,
+  .template-card,
+  .insight-card,
+  .iv-card,
+  .band-card,
+  .decision-card,
+  .recommend-metric,
+  .news-tile,
+  .message-tile
+):hover {
+  background: var(--app-glass-surface-strong) !important;
+  border-color: var(--app-glass-border-strong) !important;
+}
+
+body.app-glass-ui :where(.el-card__header, .el-card__body) {
+  background: transparent !important;
+}
+
+body.app-glass-ui :where(
+  .seg,
+  .ops-item,
+  .table-header,
+  .table-row:hover,
+  .basis-body code,
+  .chip,
+  .stage-track,
+  .score-bar-track,
+  .job-reason
+) {
+  background: var(--app-glass-surface-soft) !important;
+  border-color: var(--app-glass-border) !important;
+}
+
+body.app-glass-ui :where(
+  .el-table,
+  .el-table__inner-wrapper,
+  .el-table__body-wrapper,
+  .el-table tr,
+  .el-table td.el-table__cell
+) {
+  background: transparent !important;
+}
+
+body.app-glass-ui .el-table th.el-table__cell {
+  background: var(--app-glass-surface-soft) !important;
+}
+
+body.app-glass-ui .el-table__body tr:hover > td.el-table__cell,
+body.app-glass-ui .el-table__body tr.hover-row > td.el-table__cell {
+  background: rgba(219, 234, 254, 0.34) !important;
+}
+
+html.dark body.app-glass-ui .el-table__body tr:hover > td.el-table__cell,
+html.dark body.app-glass-ui .el-table__body tr.hover-row > td.el-table__cell {
+  background: rgba(96, 165, 250, 0.14) !important;
+}
+
+body.app-glass-ui :where(.el-dialog, .el-drawer, .el-popover.el-popper) {
+  background: var(--app-glass-surface-strong) !important;
+  border-color: var(--app-glass-border) !important;
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}

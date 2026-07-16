@@ -102,6 +102,13 @@ const router = createRouter({
   routes
 })
 
+router.afterEach((to) => {
+  const roleRoots = ['/admin', '/student', '/teacher', '/hr']
+  const isRolePage = roleRoots.some(root => to.path === root || to.path.startsWith(`${root}/`))
+  document.body.classList.remove('admin-ui')
+  document.body.classList.toggle('app-glass-ui', isRolePage)
+})
+
 router.beforeEach((to, _from, next) => {
   const token = localStorage.getItem('token')
 
