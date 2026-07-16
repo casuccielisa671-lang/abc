@@ -524,6 +524,37 @@ git add init.sql gen-seed-data.js && ...  # 4. 提交，队友同样 down -v
 - **`screen()`（单个「AI 分析」弹窗）同步融合**：有 jobId 时展示分也按 90/10 融合，避免同一候选人在弹窗与排序列显示两个不同分；AI 关时降级也补规则分。删了旧 `fallbackRank`（全 50，已被规则排序取代）。新增私有 `ruleScore`/`blend`/`clamp`，注入 `JobMatchService`（无循环依赖）。
 - **权重/超时是常量**，想调改 `AI_WEIGHT`（如 0.20）与 `AI_RANK_TIMEOUT_SECONDS` 即可。**只动 `HrResumeAiServiceImpl`**，前端/接口/契约不变。`mvn install` 全绿、`JobMatch` 仍 0 改动。
 
+## main 已对齐 v1-backup + 队友同步指南（2026-07-15）
+
+**`origin/main` 内容已整体替换为 `v1-backup`（v1-backup 是最终版）。** 用「ours 覆盖式合并」做的（非强推、保留双方历史）：切到 main → `merge -s ours --no-commit v1-backup` → `git rm -rq .` → `git checkout v1-backup -- .` → commit → push。因非强推，队友直接 `git pull` 即可快进,无需 reset。**代价（用户确认接受）**：main 不再含旧 main 独有的推荐算法（`CollaborativeFilter*/ContentBased*/HybridRecommend*`）、语义匹配（`SemanticMatch*`）、2 个采集器——这些 v1-backup 一直没纳入。
+
+**队友从旧 main 同步的标准流程（少一步就报错，均为真实问题）：**
+```bash
+git checkout main && git pull origin main          # 拉最新（快进，无冲突）
+docker-compose down -v && docker-compose up -d      # ⚠️ 重建库（清本地数据）——新代码要 v1-backup 的表/种子，旧库缺表缺列会 500
+mvn install -DskipTests                             # 关键：改了 recommend/report/common 非 web 模块 + report 新增 flexmark 依赖，不装就跑旧 jar
+mvn spring-boot:run -pl occupation-web              # 后端
+cd occupation-web-ui && npm install && npm run dev  # 前端（package.json 删了 echarts-gl，需 npm install 同步）
+```
+- **AI 默认关**：`application-local.yml`（DeepSeek key）是 gitignore、不在仓库，队友拉不到 → AI 功能自动降级为规则文案（不报错）；想开 AI 得自建该文件填 key。
+- 嫌 `down -v` 清数据可惜，可改跑 `sql/upgrade-*.sql` 增量脚本（幂等、不清数据），但 `down -v` 重建最省心。
+
+**⚠️ 教训：别在 Vite/前端 dev 服务还开着的时候跑 `git rm -rq .` 或整分支替换类操作。** 本次「main 对齐」在用户的 `npm run dev` 存活期间 `git rm` 了全部文件（虽随即恢复），运行中的 Vite 抓到「文件不存在」并缓存住、弹出 `Failed to resolve import ".../LoginView.vue"` 红屏覆盖层——**文件早已恢复、代码无损，纯 Vite 缓存卡死**。修法：杀掉 dev 进程 + 删 `node_modules/.vite`（和 `.vite`）缓存 + 重启 `npm run dev`（强刷浏览器 Ctrl+Shift+R 清覆盖层）。**正确姿势：做这类动工作区的 git 操作前先停 dev 服务，或在 worktree 里做。**
+
+**本地跑通验证（2026-07-15，最终版）**：`mvn install` 全绿；后端重启后 `/api/auth/tenants`(2租户)、登录 student→200 拿 token、`/api/student/recommend`→返回真实职位带匹配分、`/api/map/cityDistribution`→10 城；前端 `localhost:5173`→200（Vite 绑 IPv6，用 `127.0.0.1` 探活会假失败，用 `localhost`/`[::1]`）。地图 3D 页真机渲染未点验（three.js 白屏需浏览器眼看）。
+
+## UI 美化：快进合并 main 的 glass 风格（2026-07-16）
+
+**把 `origin/main` 的 UI 提交 `ff2adfe`「优化平台整体UI风格」快进合并进 v1-backup（零冲突）。** 这是 v1-backup↔main 的**唯一**差异（`4b5cfc5` 已把 main 对齐 v1-backup，其上只有这一个 UI 提交）。**纯前端视觉美化，未碰任何业务逻辑/页面结构/菜单/数据内容/后端**（用户三条硬约束：①复刻 main UI ②学生「职业信息」加顶层数据栏 ③其他布局内容一律不动——均守住）。34 文件 / +4611 −1398，四类改动：
+
+- **① glass 毛玻璃主题层**：`styles/app-glass.css`（卡片半透明毛玻璃底，深浅色都有）+ `router/index.js` 的 `afterEach` 给 `<body>` 加 `app-glass-ui` 类（**四端含管理员都套**）+ `components/common/AppPageBackground.vue`（动态背景）/`AppThemeToggle.vue`（主题切换），MainLayout 顶部挂背景组件。`main.js` 引入 `app-glass.css`。
+- **② 学生「职业信息」顶部 4 张数据卡**：新组件 `components/home/StudentJobMetrics.vue`（推荐职位/高度匹配≥80%/平均薪资/投递进度），纯前端基于已加载推荐列表 + `getMyApplications` 计算，**零后端**；只在「可投递」标签下显示。
+- **③ 登录页双栏重构**：`LoginView.vue` 拆成 `login/LoginBackground.vue` + `LoginIntro.vue`（左介绍）+ `LoginFormCard.vue`（右表单）+ `config/roles.js`（角色配置）；角色选择/租户下拉等功能保留。
+- **④ 各视图「抽样式 + 加装饰」**：Student/HR/Teacher Dashboard、Applications/Favorites/Resume/MyData、JobCard 的内联 `<style scoped>` 全部搬到独立 `.css`（`<style src>`），模板层只加**装饰元素**（角标 `职业驾驶舱`/`招聘驾驶舱`/`AI简历工作台` 等 + 统计卡图标块 职/投/待/录/生/像/就）。逐个核对：**所有数据绑定/computed/功能一个没丢**。
+- 附带：`.env`（生产环境变量模板，占位值无真实密钥）、`pom.xml` 排除 `slf4j-reload4j` 日志冲突依赖（与 UI 无关但无害）。**无新增 npm 依赖**。
+- **`config/navigation.js` 是孤儿**：main 里也没任何地方 import 它，且内容是旧菜单结构（还写着分开的「数据看板/就业分析/用户管理/班级管理」，与本分支已合并成「数据分析/组织管理」标签中心矛盾）。为「跟 main 一模一样」**原样保留**（惰性死文件、零影响），日后想清理随时可删——**切勿把它接进 MainLayout**，否则菜单退回旧版。
+- **验证**：`npm run build` 通过（chunk 体积警告是 MapExplore/three.js 与主包本来就有的，与本次无关）。**未做真机点验**（glass 效果/数据卡/登录页需浏览器眼看）。合并后已 push 到 `origin/v1-backup` 与 `origin/main`（均快进）。
+
 ## 下次接手前必读的三条
 
 1. **改了非 web 模块，先 `mvn install -DskipTests`**。`spring-boot:run -pl occupation-web` 从 `.m2` 取旧 jar。真实咬过人：曾有两个「bug」（学历不同步、报告下载打不开）在同一份代码上复现不出来，根因就是这个。`mvn clean compile` 治不了——它不往 `.m2` 装 jar
